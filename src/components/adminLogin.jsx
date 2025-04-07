@@ -51,7 +51,7 @@ function AdminLogin({ onBackClick }) {
     <div className="min-h-screen pt-32 pb-20 px-4">
       <div className="container mx-auto max-w-md">
         <button 
-          onClick={onBackClick}
+          onClick={() => navigate('/')}
           className="flex items-center text-emerald-600 mb-8 hover:text-emerald-700 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />

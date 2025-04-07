@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle } from 'lucide-react';
+import { Search, AlertTriangle, Download } from 'lucide-react';
 import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
-import { read, utils } from 'xlsx';
+import { read, utils, write } from 'xlsx';
 
 const Clinic = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +14,7 @@ const Clinic = ({ isOpen }) => {
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [locations, setLocations] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
   const [newClinic, setNewClinic] = useState({ 
     name: '', 
     center: '',
@@ -26,8 +27,72 @@ const Clinic = ({ isOpen }) => {
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
+  // Add handleSelectAll function
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedRows(filteredClinicData.map(row => row._id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  // Add handleSelectRow function
+  const handleSelectRow = (id) => {
+    setSelectedRows(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(rowId => rowId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Add handleBulkDelete function
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+    setDeleteConfirm({ 
+      show: true, 
+      id: selectedRows,
+      isBulk: true 
+    });
+  };
+
+  // Filter data based on search input
+  const filteredClinicData = useMemo(() => {
+    const lowerCaseSearch = searchTerm.toLowerCase().trim();
+    if (!lowerCaseSearch) return clinicData;
+    return clinicData.filter((item) => {
+      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+      return (
+        item.name.toLowerCase().includes(lowerCaseSearch) ||
+        item.center.toLowerCase().includes(lowerCaseSearch) ||
+        item.poll.toLowerCase().includes(lowerCaseSearch) ||
+        locationName.toLowerCase().includes(lowerCaseSearch)
+      );
+    });
+  }, [clinicData, searchTerm, locations]);
+
   // Define the table columns with editable configuration
-  const clinicColumns = [
+  const clinicColumns = useMemo(() => [
+    {
+      key: 'select',
+      title: (
+        <input
+          type="checkbox"
+          checked={selectedRows.length === filteredClinicData.length}
+          onChange={handleSelectAll}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      ),
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedRows.includes(row._id)}
+          onChange={() => handleSelectRow(row._id)}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      )
+    },
     { 
       key: 'name', 
       title: 'Name',
@@ -169,7 +234,7 @@ const Clinic = ({ isOpen }) => {
         </div>
       )
     }
-  ];
+  ], [editingId, selectedRows, filteredClinicData.length, locations]);
 
   // Fetch data from API using Axios
   useEffect(() => {
@@ -200,21 +265,6 @@ const Clinic = ({ isOpen }) => {
 
     fetchLocations();
   }, []);
-
-  // Filter data based on search input
-  const filteredClinicData = useMemo(() => {
-    const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return clinicData;
-    return clinicData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
-      return (
-        item.name.toLowerCase().includes(lowerCaseSearch) ||
-        item.center.toLowerCase().includes(lowerCaseSearch) ||
-        item.poll.toLowerCase().includes(lowerCaseSearch) ||
-        locationName.toLowerCase().includes(lowerCaseSearch)
-      );
-    });
-  }, [clinicData, searchTerm, locations]);
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
@@ -274,12 +324,8 @@ const Clinic = ({ isOpen }) => {
 
   // Add handleDeleteConfirm
   const handleDeleteConfirm = async () => {
-    const id = deleteConfirm.id;
-    if (!id) {
-      console.error("Error: ID is undefined");
-      return;
-    }
-
+    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
+    
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -287,13 +333,17 @@ const Clinic = ({ isOpen }) => {
         return;
       }
 
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/clinic/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Delete all selected items
+      await Promise.all(ids.map(id => 
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/clinic/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      ));
 
-      setClinicData(clinicData.filter(item => item._id !== id));
+      setClinicData(clinicData.filter(item => !ids.includes(item._id)));
+      setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
       console.error('Error deleting clinic data:', error);
@@ -420,6 +470,78 @@ const Clinic = ({ isOpen }) => {
     }
   };
 
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          name: 'Sample Clinic',
+          center: 'Center A',
+          poll: 'Poll 1',
+          latitude: '21.4225',
+          longitude: '39.8262',
+          location_name: 'Sample Location Name'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers with comments
+      utils.sheet_add_aoa(ws, [[
+        'name',
+        'center',
+        'poll',
+        'latitude',
+        'longitude',
+        'location_name'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 20 }, // name
+        { wch: 15 }, // center
+        { wch: 15 }, // poll
+        { wch: 12 }, // latitude
+        { wch: 12 }, // longitude
+        { wch: 30 }  // location_name
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'clinic_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -431,8 +553,28 @@ const Clinic = ({ isOpen }) => {
 
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
+          <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Clinic Management</h1>
+            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+              Total: {filteredClinicData.length} clinics
+            </div>
+          </div>
           <div className="flex gap-4">
+            {selectedRows.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-red-600"
+              >
+                Delete Selected ({selectedRows.length})
+              </button>
+            )}
+            <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600"
+            >
+              <Download size={20} />
+              Download Template
+            </button>
             <input
               type="file"
               onChange={handleFileUpload}
@@ -605,7 +747,9 @@ const Clinic = ({ isOpen }) => {
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this clinic? This action cannot be undone.
+              {Array.isArray(deleteConfirm.id) 
+                ? `Are you sure you want to delete ${deleteConfirm.id.length} selected clinics? This action cannot be undone.`
+                : 'Are you sure you want to delete this clinic? This action cannot be undone.'}
             </p>
             <div className="flex justify-end gap-3">
               <button

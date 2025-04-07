@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle } from 'lucide-react';
+import { Search, AlertTriangle, Download } from 'lucide-react';
 import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
-import { read, utils } from 'xlsx';
+import { read, utils, write } from 'xlsx';
 import AsyncSelect from 'react-select/async';
 import { countries } from 'countries-list';
 
@@ -16,6 +16,7 @@ const Camp = ({ isOpen }) => {
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false); // State to control edit mode
   const [locations, setLocations] = useState([]); // New state for locations
+  const [selectedRows, setSelectedRows] = useState([]);
   const [newCamp, setNewCamp] = useState({ 
     maktab: '', 
     zone: '', 
@@ -85,6 +86,25 @@ const Camp = ({ isOpen }) => {
 
   // Define the table columns
   const campColumns = [
+    {
+      key: 'select',
+      title: (
+        <input
+          type="checkbox"
+          checked={selectedRows.length === campData.length}
+          onChange={(e) => handleSelectAll(e)}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      ),
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedRows.includes(row._id)}
+          onChange={(e) => handleSelectRow(row._id)}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      )
+    },
     { 
       key: 'maktab', 
       title: 'Maktab',
@@ -365,12 +385,8 @@ const Camp = ({ isOpen }) => {
 
   // Add handleDeleteConfirm
   const handleDeleteConfirm = async () => {
-    const id = deleteConfirm.id;
-    if (!id) {
-      console.error("Error: ID is undefined");
-      return;
-    }
-
+    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
+    
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -378,13 +394,17 @@ const Camp = ({ isOpen }) => {
         return;
       }
 
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/camp/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Delete all selected items
+      await Promise.all(ids.map(id => 
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/camp/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      ));
 
-      setCampData(campData.filter(item => item._id !== id));
+      setCampData(campData.filter(item => !ids.includes(item._id)));
+      setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
       console.error('Error deleting camp data:', error);
@@ -521,6 +541,111 @@ const Camp = ({ isOpen }) => {
     }
   };
 
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          maktab: 'Sample Maktab',
+          zone: 'Zone A',
+          country: 'Saudi Arabia',
+          poll: 'Poll 1',
+          latitude: '21.4225',
+          longitude: '39.8262',
+          location_name: 'Sample Location Name'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers with comments
+      utils.sheet_add_aoa(ws, [[
+        'maktab',
+        'zone',
+        'country',
+        'poll',
+        'latitude',
+        'longitude',
+        'location_name'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 20 }, // maktab
+        { wch: 15 }, // zone
+        { wch: 20 }, // country
+        { wch: 15 }, // poll
+        { wch: 12 }, // latitude
+        { wch: 12 }, // longitude
+        { wch: 30 }  // location_name
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'camp_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
+  };
+
+  // Add handleSelectAll function
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedRows(filteredCampData.map(row => row._id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  // Add handleSelectRow function
+  const handleSelectRow = (id) => {
+    setSelectedRows(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(rowId => rowId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Add handleBulkDelete function
+  const handleBulkDelete = () => {
+    if (selectedRows.length === 0) return;
+    setDeleteConfirm({ 
+      show: true, 
+      id: selectedRows,
+      isBulk: true 
+    });
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -532,8 +657,28 @@ const Camp = ({ isOpen }) => {
 
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
+          <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Camp Management</h1>
+            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+              Total: {filteredCampData.length} camps
+            </div>
+          </div>
           <div className="flex gap-4">
+            {selectedRows.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-red-600"
+              >
+                Delete Selected ({selectedRows.length})
+              </button>
+            )}
+            <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600"
+            >
+              <Download size={20} />
+              Download Template
+            </button>
             <input
               type="file"
               onChange={handleFileUpload}
@@ -725,7 +870,9 @@ const Camp = ({ isOpen }) => {
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
               </div>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this camp? This action cannot be undone.
+                {Array.isArray(deleteConfirm.id) 
+                  ? `Are you sure you want to delete ${deleteConfirm.id.length} selected camps? This action cannot be undone.`
+                  : 'Are you sure you want to delete this camp? This action cannot be undone.'}
               </p>
               <div className="flex justify-end gap-3">
                 <button

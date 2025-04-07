@@ -1,12 +1,13 @@
 import React from 'react';
 import { Users, Calendar, Phone, MapPin, Kanban as Kaaba } from 'lucide-react';
-import Header from './Header';
+import { useNavigate } from 'react-router-dom';
 
 function HomePage() {
+  const navigate = useNavigate();
   return (
+    
     <>
       <div>
-        <Header />
       </div>
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
@@ -17,8 +18,10 @@ function HomePage() {
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Experience the spiritual journey of Hajj and Umrah with our expert guidance and comprehensive packages
           </p>
-          <button className="bg-emerald-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors">
-            Explore Packages
+          <button
+          onClick={() => navigate('/admin-login')}
+          className="bg-emerald-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors">
+            Admin Login
           </button>
         </div>
       </section>
