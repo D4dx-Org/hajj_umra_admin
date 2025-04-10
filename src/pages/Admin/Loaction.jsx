@@ -12,7 +12,7 @@ const Location = ({ isOpen }) => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newLocation, setNewLocation] = useState({ id: '', name: '' });
+  const [newLocation, setNewLocation] = useState({ id: '', name: '', description: '' });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
@@ -50,6 +50,23 @@ const Location = ({ isOpen }) => {
           );
         }
         return row.name;
+      }
+    },
+    { 
+      key: 'description', 
+      title: 'Description',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <textarea
+              value={row.description}
+              onChange={(e) => handleEditChange(row._id, 'description', e.target.value)}
+              className="w-full p-1 border rounded"
+              rows="2"
+            />
+          );
+        }
+        return row.description || '-';
       }
     },
     {
@@ -118,7 +135,8 @@ const Location = ({ isOpen }) => {
     return locationData.filter(
       (item) =>
         item.name.toLowerCase().includes(lowerCaseSearch) ||
-        item.id.toString().toLowerCase().includes(lowerCaseSearch) // Ensure id is treated as a string
+        item.id.toString().toLowerCase().includes(lowerCaseSearch) ||
+        (item.description && item.description.toLowerCase().includes(lowerCaseSearch))
     );
   }, [locationData, searchTerm]);
 
@@ -217,7 +235,7 @@ const Location = ({ isOpen }) => {
       if (response.status === 201) {
         const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
         setLocationData(updatedResponse.data);
-        setNewLocation({ id: '', name: '' });
+        setNewLocation({ id: '', name: '', description: '' });
         setShowAddForm(false);
       }
     } catch (error) {
@@ -280,6 +298,15 @@ const Location = ({ isOpen }) => {
                 value={newLocation.name}
                 onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Description</label>
+              <textarea
+                value={newLocation.description}
+                onChange={(e) => setNewLocation({ ...newLocation, description: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                rows="3"
               />
             </div>
             <button
