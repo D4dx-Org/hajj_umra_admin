@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users, Calendar, Phone, MapPin, Kanban as Kaaba } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.jpg';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -71,16 +72,49 @@ function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-6 md:mb-0">
-              <Kaaba className="h-8 w-8 text-emerald-400 mr-2" />
-              <span className="text-2xl font-bold">Al-Safar</span>
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="container mx-auto px-8">
+          <div className="flex items-center justify-between">
+            {/* Logo Section */}
+            <img 
+              src={logo} 
+              alt="Company Logo" 
+              className="h-20 object-contain rounded-2xl"
+            />
+
+            {/* About Us */}
+            <div>
+              <h3 className="text-lg font-bold mb-2">About Us</h3>
+              <p className="text-gray-300 text-sm max-w-xs">
+                We provide expert guidance and comprehensive packages for your spiritual journey to Hajj and Umrah.
+              </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Phone className="h-5 w-5 text-emerald-400" />
-              <span>+1 (234) 567-8900</span>
+
+            {/* Contact Information */}
+            <div>
+              <h3 className="text-lg font-bold mb-2">Contact Us</h3>
+              <div className="space-y-1">
+                <p className="text-gray-300 text-sm">
+                  <Phone className="inline-block h-4 w-4 mr-2" />
+                  +91 9946666139
+                </p>
+                <p className="text-gray-300 text-sm">
+                  <span className="inline-block">✉️</span> admin@d4dx.co
+                </p>
+              </div>
+            </div>
+
+            {/* Privacy Policy */}
+            <div>
+              <h3 className="text-lg font-bold mb-2">Legal</h3>
+              <a 
+                href="https://www.termsfeed.com/live/f6a02e03-eee0-410a-9363-f14f50493b17" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-300 text-sm hover:text-emerald-400"
+              >
+                Privacy Policy
+              </a>
             </div>
           </div>
         </div>

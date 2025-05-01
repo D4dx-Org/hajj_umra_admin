@@ -10,7 +10,7 @@ function AdminLogin({ onBackClick }) {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -67,7 +67,7 @@ function AdminLogin({ onBackClick }) {
               <span className="text-sm">{error}</span>
             </div>
           )}
-
+          
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">

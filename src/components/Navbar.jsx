@@ -35,14 +35,14 @@ const Navbar = ({ toggleSidebar }) => {
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-10 h-16 flex items-center px-4 relative">
       {/* Sidebar Toggle Button */}
       <button onClick={toggleSidebar} className="p-2 rounded-md text-[#333333] hover:bg-gray-100">
-        <Menu size={24} />
-      </button>
+            <Menu size={24} />
+          </button>
 
       {/* Centered Title */}
       <div className="absolute left-1/2 transform -translate-x-1/2">
         <h1 className="text-xl font-bold text-[#002147]">Hajj and Umrah Management System</h1>
-      </div>
-
+        </div>
+        
       {/* Admin Section (Right Side) */}
       <div className="ml-auto flex items-center gap-4">
         <div className="flex items-center gap-2 relative" ref={dropdownRef}>
