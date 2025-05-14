@@ -56,20 +56,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-emerald-50">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-8">Ready to Start Your Journey?</h2>
-          <div className="flex justify-center space-x-4">
-            <button className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors">
-              Book Now
-            </button>
-            <button className="border-2 border-emerald-600 text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-600 hover:text-white transition-colors">
-              Contact Us
-            </button>
-          </div>
-        </div>
-      </section>
+    
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">

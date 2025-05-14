@@ -3,83 +3,54 @@ import { Search, AlertTriangle, Download } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
+import Select from 'react-select';
 import { read, utils, write } from 'xlsx';
 
-const Clinic = ({ isOpen }) => {
+const Branch = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [clinicData, setClinicData] = useState([]);
+  const [branchData, setBranchData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [newClinic, setNewClinic] = useState({ 
-    name: '', 
-    center: '',
-    poll: '',
-    location: { lat: '', lng: '' }, 
+  const [newBranch, setNewBranch] = useState({
+    name: '',
     ref: ''
   });
   const [originalData, setOriginalData] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
-  // Add handleSelectAll function
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelectedRows(filteredClinicData.map(row => row._id));
-    } else {
-      setSelectedRows([]);
-    }
-  };
-
-  // Add handleSelectRow function
-  const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
-      } else {
-        return [...prev, id];
+  // Custom styles for react-select
+  const customStyles = {
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#4A90E2' : state.isFocused ? '#E3F2FD' : 'white',
+      color: state.isSelected ? 'white' : '#333',
+      padding: '8px 12px',
+    }),
+    control: (provided) => ({
+      ...provided,
+      borderColor: '#E5E7EB',
+      boxShadow: 'none',
+      '&:hover': {
+        borderColor: '#4A90E2'
       }
-    });
+    })
   };
 
-  // Add handleBulkDelete function
-  const handleBulkDelete = () => {
-    if (selectedRows.length === 0) return;
-    setDeleteConfirm({ 
-      show: true, 
-      id: selectedRows,
-      isBulk: true 
-    });
-  };
-
-  // Filter data based on search input
-  const filteredClinicData = useMemo(() => {
-    const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return clinicData;
-    return clinicData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
-      return (
-        item.name.toLowerCase().includes(lowerCaseSearch) ||
-        item.center.toLowerCase().includes(lowerCaseSearch) ||
-        item.poll.toLowerCase().includes(lowerCaseSearch) ||
-        locationName.toLowerCase().includes(lowerCaseSearch)
-      );
-    });
-  }, [clinicData, searchTerm, locations]);
-
-  // Define the table columns with editable configuration
-  const clinicColumns = useMemo(() => [
+  // Define the table columns
+  const branchColumns = [
     {
       key: 'select',
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === filteredClinicData.length}
-          onChange={handleSelectAll}
+          checked={selectedRows.length === branchData.length}
+          onChange={(event) => handleSelectAll(event)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -87,13 +58,13 @@ const Clinic = ({ isOpen }) => {
         <input
           type="checkbox"
           checked={selectedRows.includes(row._id)}
-          onChange={() => handleSelectRow(row._id)}
+          onChange={(event) => handleSelectRow(row._id)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
     },
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       title: 'Name',
       render: (row) => {
         if (editingId === row._id) {
@@ -107,67 +78,6 @@ const Clinic = ({ isOpen }) => {
           );
         }
         return row.name;
-      }
-    },
-    { 
-      key: 'center', 
-      title: 'Center',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.center}
-              onChange={(e) => handleEditChange(row._id, 'center', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.center;
-      }
-    },
-    { 
-      key: 'poll', 
-      title: 'Poll',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll}
-              onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.poll;
-      }
-    },
-    { 
-      key: 'location', 
-      title: 'Location',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
-        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
       }
     },
     {
@@ -190,8 +100,7 @@ const Clinic = ({ isOpen }) => {
             </select>
           );
         }
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
-        return locationName;
+        return row.ref?.name || 'N/A';
       }
     },
     {
@@ -233,17 +142,17 @@ const Clinic = ({ isOpen }) => {
         </div>
       )
     }
-  ], [editingId, selectedRows, filteredClinicData.length, locations]);
+  ];
 
-  // Fetch data from API using Axios
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
-        setClinicData(response.data);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranchData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching clinic data:', error);
+        console.error('Error fetching branch data:', error);
         setLoading(false);
       }
     };
@@ -251,7 +160,7 @@ const Clinic = ({ isOpen }) => {
     fetchData();
   }, []);
 
-  // Add useEffect to fetch locations
+  // Fetch locations
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -267,19 +176,16 @@ const Clinic = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setClinicData(clinicData.map(item => {
+    setBranchData(branchData.map(item => {
       if (item._id === id) {
-        if (field === 'location') {
-          return { ...item, location: value };
-        }
         if (field === 'ref') {
           const selectedLocation = locations.find(loc => loc._id === value);
-          return { 
-            ...item, 
-            ref: selectedLocation ? { 
+          return {
+            ...item,
+            ref: selectedLocation ? {
               _id: selectedLocation._id,
-              name: selectedLocation.name 
-            } : value 
+              name: selectedLocation.name
+            } : value
           };
         }
         return { ...item, [field]: value };
@@ -298,7 +204,7 @@ const Clinic = ({ isOpen }) => {
       }
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/clinic/${row._id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/branch/${row._id}`,
         row,
         {
           headers: {
@@ -307,12 +213,12 @@ const Clinic = ({ isOpen }) => {
         }
       );
 
-      setClinicData(clinicData.map(item => 
+      setBranchData(branchData.map(item =>
         item._id === row._id ? { ...item, ...response.data } : item
       ));
       setEditingId(null);
     } catch (error) {
-      console.error("Error updating clinic data:", error);
+      console.error("Error updating branch data:", error);
     }
   };
 
@@ -321,10 +227,10 @@ const Clinic = ({ isOpen }) => {
     setDeleteConfirm({ show: true, id });
   };
 
-  // Add handleDeleteConfirm
+  // Handle Delete Confirmation
   const handleDeleteConfirm = async () => {
     const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -332,30 +238,29 @@ const Clinic = ({ isOpen }) => {
         return;
       }
 
-      // Delete all selected items
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/clinic/${id}`, {
+      await Promise.all(ids.map(id =>
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/branch/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
       ));
 
-      setClinicData(clinicData.filter(item => !ids.includes(item._id)));
+      setBranchData(branchData.filter(item => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting clinic data:', error);
+      console.error('Error deleting branch data:', error);
     }
   };
 
-  // Add handleDeleteCancel
+  // Handle Delete Cancel
   const handleDeleteCancel = () => {
     setDeleteConfirm({ show: false, id: null });
   };
 
-  // Handle Add New Clinic
-  const handleAddClinic = async () => {
+  // Handle Add New Branch
+  const handleAddBranch = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -364,8 +269,8 @@ const Clinic = ({ isOpen }) => {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/clinic`,
-        newClinic,
+        `${import.meta.env.VITE_BACKEND_URL}/branch`,
+        newBranch,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -374,35 +279,76 @@ const Clinic = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
-        setClinicData(updatedResponse.data);
-        setNewClinic({ 
-          name: '', 
-          center: '',
-          poll: '',
-          location: { lat: '', lng: '' }, 
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranchData(updatedResponse.data);
+        setNewBranch({
+          name: '',
           ref: ''
         });
         setShowAddForm(false);
       }
     } catch (error) {
-      console.error("Error adding clinic data:", error);
+      console.error("Error adding branch data:", error);
     }
   };
 
-  // Modify the edit button click handler
+  // Filter data based on search
+  const filteredBranchData = useMemo(() => {
+    const lowerCaseSearch = searchTerm.toLowerCase().trim();
+    if (!lowerCaseSearch) return branchData;
+    return branchData.filter((item) => {
+      const locationName = item.ref?.name || '';
+      return (
+        item.name.toLowerCase().includes(lowerCaseSearch) ||
+        locationName.toLowerCase().includes(lowerCaseSearch)
+      );
+    });
+  }, [branchData, searchTerm]);
+
+  // Handle edit button click
   const handleEditClick = (row) => {
     setOriginalData(row);
     setEditingId(row._id);
   };
 
-  // Modify the cancel button click handler
+  // Handle cancel button click
   const handleCancelEdit = () => {
-    setClinicData(clinicData.map(item => 
+    setBranchData(branchData.map(item =>
       item._id === editingId ? originalData : item
     ));
     setEditingId(null);
     setOriginalData(null);
+  };
+
+  // Handle select all
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedRows(filteredBranchData.map(row => row._id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  // Handle select row
+  const handleSelectRow = (id) => {
+    setSelectedRows(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(rowId => rowId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedRows.length === 0) return;
+    
+    setDeleteConfirm({
+      show: true,
+      id: selectedRows,
+      isBulk: true
+    });
   };
 
   // Handle file upload
@@ -423,25 +369,54 @@ const Clinic = ({ isOpen }) => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
-          const isValid = data.every(row => {
-            const hasRequiredFields = row.name && row.center && row.poll;
-            const hasValidCoordinates = !row.latitude || !row.longitude || 
-              (typeof Number(row.latitude) === 'number' && !isNaN(Number(row.latitude)) &&
-               typeof Number(row.longitude) === 'number' && !isNaN(Number(row.longitude)));
-            return hasRequiredFields && hasValidCoordinates;
-          });
+          console.log('Parsed Excel data:', data);
 
-          if (!isValid) {
-            setUploadError('Invalid data format. Please ensure all required fields (name, center, poll) are present and coordinates are valid numbers if provided.');
+          if (data.length === 0) {
+            setUploadError('The Excel file is empty. Please add some data.');
             return;
+          }
+
+          // Check the first row to understand the column structure
+          const firstRow = data[0];
+          const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow;
+          
+          if (!hasRequiredColumns) {
+            setUploadError('Excel file must have columns: name and location_name. Please check your column headers.');
+            console.log('Required columns missing. Found columns:', Object.keys(firstRow));
+            return;
+          }
+
+          // Validate each row
+          for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const rowNumber = i + 2; // Excel row number (accounting for header)
+
+            if (!row.name || !row.location_name) {
+              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have name and location_name.`);
+              return;
+            }
+
+            // Validate location_name if provided
+            if (row.location_name && locations.length > 0) {
+              const locationExists = locations.some(loc => loc.name === row.location_name);
+              if (!locationExists) {
+                setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
+                return;
+              }
+            }
           }
 
           const formData = new FormData();
           formData.append('file', file);
 
           const token = localStorage.getItem("token");
+          if (!token) {
+            setUploadError('Authentication token not found. Please log in again.');
+            return;
+          }
+
           const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/clinic/bulk-upload`,
+            `${import.meta.env.VITE_BACKEND_URL}/branch/bulk-upload`,
             formData,
             {
               headers: {
@@ -451,20 +426,26 @@ const Clinic = ({ isOpen }) => {
             }
           );
 
-          setUploadSuccess(`Successfully uploaded ${response.data.count} clinics`);
+          setUploadSuccess(`Successfully uploaded ${response.data.count} branches`);
           setUploadError(null);
 
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
-          setClinicData(updatedResponse.data);
+          // Refresh the data
+          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+          setBranchData(updatedResponse.data);
+          
+          // Reset the file input
+          event.target.value = '';
         } catch (error) {
-          setUploadError(error.response?.data?.message || 'Error uploading file');
+          console.error('Excel processing error:', error);
+          setUploadError(error.response?.data?.message || 'Error processing the Excel file. Please check the file format.');
           setUploadSuccess(null);
         }
       };
 
       reader.readAsArrayBuffer(file);
     } catch (error) {
-      setUploadError('Error processing file');
+      console.error('File upload error:', error);
+      setUploadError('Error processing file. Please try again.');
       setUploadSuccess(null);
     }
   };
@@ -475,11 +456,7 @@ const Clinic = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          name: 'Sample Clinic',
-          center: 'Center A',
-          poll: 'Poll 1',
-          latitude: '21.4225',
-          longitude: '39.8262',
+          name: 'Sample Branch Name',
           location_name: 'Sample Location Name'
         }
       ];
@@ -490,10 +467,6 @@ const Clinic = ({ isOpen }) => {
       // Add headers with comments
       utils.sheet_add_aoa(ws, [[
         'name',
-        'center',
-        'poll',
-        'latitude',
-        'longitude',
         'location_name'
       ]], { origin: 'A1' });
 
@@ -505,11 +478,7 @@ const Clinic = ({ isOpen }) => {
 
       // Add column widths
       ws['!cols'] = [
-        { wch: 20 }, // name
-        { wch: 15 }, // center
-        { wch: 15 }, // poll
-        { wch: 12 }, // latitude
-        { wch: 12 }, // longitude
+        { wch: 30 }, // name
         { wch: 30 }  // location_name
       ];
 
@@ -532,7 +501,7 @@ const Clinic = ({ isOpen }) => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'clinic_upload_template.xlsx';
+      link.download = 'branch_upload_template.xlsx';
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -553,9 +522,9 @@ const Clinic = ({ isOpen }) => {
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Clinic Management</h1>
+            <h1 className="text-2xl font-bold">Branch Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              Total: {filteredClinicData.length} clinics
+              Total: {filteredBranchData.length} branches
             </div>
           </div>
           <div className="flex gap-4">
@@ -587,15 +556,16 @@ const Clinic = ({ isOpen }) => {
             >
               Upload Excel
             </label>
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add More'}
+              {showAddForm ? 'Cancel' : 'Add Branch'}
             </button>
           </div>
         </div>
 
+        {/* Add error and success messages */}
         {uploadError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {uploadError}
@@ -607,72 +577,24 @@ const Clinic = ({ isOpen }) => {
           </div>
         )}
 
+        {/* New Branch Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 className="text-lg font-bold mb-4">Add New Clinic</h2>
+            <h2 className="text-lg font-bold mb-4">Add New Branch</h2>
             <div className="mb-4">
               <label className="block text-sm font-medium">Name</label>
               <input
                 type="text"
-                value={newClinic.name}
-                onChange={(e) => setNewClinic({ ...newClinic, name: e.target.value })}
+                value={newBranch.name}
+                onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Center</label>
-              <input
-                type="text"
-                value={newClinic.center}
-                onChange={(e) => setNewClinic({ ...newClinic, center: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Poll</label>
-              <input
-                type="text"
-                value={newClinic.poll}
-                onChange={(e) => setNewClinic({ ...newClinic, poll: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Location</label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Latitude</label>
-                  <input
-                    type="number"
-                    value={newClinic.location.lat}
-                    onChange={(e) => setNewClinic({
-                      ...newClinic,
-                      location: { ...newClinic.location, lat: e.target.value }
-                    })}
-                    placeholder="Enter latitude"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Longitude</label>
-                  <input
-                    type="number"
-                    value={newClinic.location.lng}
-                    onChange={(e) => setNewClinic({
-                      ...newClinic,
-                      location: { ...newClinic.location, lng: e.target.value }
-                    })}
-                    placeholder="Enter longitude"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
-                </div>
-              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Location Reference</label>
               <select
-                value={newClinic.ref}
-                onChange={(e) => setNewClinic({ ...newClinic, ref: e.target.value })}
+                value={newBranch.ref}
+                onChange={(e) => setNewBranch({ ...newBranch, ref: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
@@ -684,19 +606,20 @@ const Clinic = ({ isOpen }) => {
               </select>
             </div>
             <button
-              onClick={handleAddClinic}
+              onClick={handleAddBranch}
               className="bg-blue-500 text-white px-4 py-2 rounded-md"
             >
-              Add Clinic
+              Add Branch
             </button>
           </div>
         )}
 
+        {/* Search Bar */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <div className="relative">
             <input
               type="text"
-              placeholder="Search clinics..."
+              placeholder="Search branches..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
@@ -705,16 +628,48 @@ const Clinic = ({ isOpen }) => {
           </div>
         </div>
 
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm.show && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+              <div className="flex items-center gap-3 text-amber-500 mb-4">
+                <AlertTriangle className="h-6 w-6" />
+                <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                {Array.isArray(deleteConfirm.id)
+                  ? `Are you sure you want to delete ${deleteConfirm.id.length} selected branches? This action cannot be undone.`
+                  : 'Are you sure you want to delete this branch? This action cannot be undone.'}
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
-        ) : filteredClinicData.length === 0 ? (
-          <p className="text-center">No items found</p>
+        ) : filteredBranchData.length === 0 ? (
+          <p className="text-center">No branches found</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  {clinicColumns.map((column) => (
+                  {branchColumns.map((column) => (
                     <th key={column.key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {column.title}
                     </th>
@@ -722,9 +677,9 @@ const Clinic = ({ isOpen }) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClinicData.map((row) => (
+                {filteredBranchData.map((row) => (
                   <tr key={row._id}>
-                    {clinicColumns.map((column) => (
+                    {branchColumns.map((column) => (
                       <td key={`${row._id}-${column.key}`} className="px-6 py-4 whitespace-nowrap">
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
@@ -736,39 +691,8 @@ const Clinic = ({ isOpen }) => {
           </div>
         )}
       </div>
-
-      {/* Add Delete Confirmation Modal */}
-      {deleteConfirm.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-            <div className="flex items-center gap-3 text-amber-500 mb-4">
-              <AlertTriangle className="h-6 w-6" />
-              <h3 className="text-lg font-semibold">Confirm Deletion</h3>
-            </div>
-            <p className="text-gray-600 mb-6">
-              {Array.isArray(deleteConfirm.id) 
-                ? `Are you sure you want to delete ${deleteConfirm.id.length} selected clinics? This action cannot be undone.`
-                : 'Are you sure you want to delete this clinic? This action cannot be undone.'}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={handleDeleteCancel}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default Clinic;
+export default Branch; 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -424,22 +423,59 @@ const Hospital = ({ isOpen }) => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
-          const isValid = data.every(row => {
-            const hasRequiredFields = row.name && row.arabicName && row.phone;
-            const hasValidCoordinates = !row.latitude || !row.longitude || 
-              (typeof Number(row.latitude) === 'number' && !isNaN(Number(row.latitude)) &&
-               typeof Number(row.longitude) === 'number' && !isNaN(Number(row.longitude)));
-            return hasRequiredFields && hasValidCoordinates;
-          });
 
-          if (!isValid) {
-            setUploadError('Invalid data format. Please ensure all required fields (name, arabicName, phone) are present and coordinates are valid numbers if provided.');
+
+          // Pre-process the data to clean up values and remove empty rows
+          const cleanedData = data
+            .filter(row => row.name && row.latitude && row.longitude) // Filter rows with required fields
+            .map(row => {
+              // Base object with required fields
+              const baseObj = {
+                name: String(row.name).trim(),
+                latitude: Number(row.latitude),
+                longitude: Number(row.longitude)
+              };
+
+              // Add optional fields if they exist
+              if (row.arabicName) baseObj.arabicName = String(row.arabicName).trim();
+              if (row.phone) baseObj.phone = String(row.phone).trim();
+              if (row.location_name) baseObj.location_name = String(row.location_name).trim();
+
+              return baseObj;
+            });
+
+          if (cleanedData.length === 0) {
+            setUploadError('No valid data found in Excel file. Please ensure each row has name, latitude, and longitude.');
+            return;
+          }
+
+          // Validate each row
+          const invalidRows = cleanedData.map((row, index) => {
+            const issues = [];
+            
+            if (!row.name) issues.push('missing name');
+            if (isNaN(row.latitude)) issues.push('invalid latitude');
+            if (isNaN(row.longitude)) issues.push('invalid longitude');
+            
+            return issues.length > 0 ? `Row ${index + 2}: ${issues.join(', ')}` : null;
+          }).filter(Boolean);
+
+          if (invalidRows.length > 0) {
+            setUploadError(`Invalid data in Excel file:\n${invalidRows.join('\n')}`);
             return;
           }
 
           const formData = new FormData();
-          formData.append('file', file);
+          const cleanedWorkbook = utils.book_new();
+          const cleanedWorksheet = utils.json_to_sheet(cleanedData);
+          utils.book_append_sheet(cleanedWorkbook, cleanedWorksheet, 'Cleaned Data');
+          
+          // Convert the cleaned workbook to a blob
+          const excelBuffer = write(cleanedWorkbook, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          formData.append('file', blob, 'cleaned_data.xlsx');
 
+          try {
           const token = localStorage.getItem("token");
           const response = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/hospital/bulk-upload`,
@@ -452,11 +488,20 @@ const Hospital = ({ isOpen }) => {
             }
           );
 
-          setUploadSuccess(`Successfully uploaded ${response.data.count} hospitals`);
+            if (response.data) {
+              setUploadSuccess(`Successfully uploaded ${response.data.count || cleanedData.length} hospitals`);
           setUploadError(null);
 
+              // Refresh the hospital list
           const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/hospital`);
           setHospitalData(updatedResponse.data);
+            }
+          } catch (error) {
+            console.error('Upload error:', error.response?.data || error.message);
+            const errorMessage = error.response?.data?.message || 'Error uploading file. Please check the file format and try again.';
+            setUploadError(`Upload failed: ${errorMessage}`);
+            setUploadSuccess(null);
+          }
         } catch (error) {
           setUploadError(error.response?.data?.message || 'Error uploading file');
           setUploadSuccess(null);
@@ -476,12 +521,12 @@ const Hospital = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          name: 'Sample Hospital',
-          arabicName: 'مستشفى العينة',
-          phone: '+966 123456789',
-          latitude: '21.4225',
-          longitude: '39.8262',
-          location_name: 'Sample Location Name'
+          name: 'Sample Hospital (Required)',
+          arabicName: 'مستشفى العينة (Optional)',
+          phone: '+966 123456789 (Optional)',
+          latitude: '21.4225 (Required)',
+          longitude: '39.8262 (Required)',
+          location_name: 'Sample Location Name (Optional)'
         }
       ];
 
@@ -490,11 +535,11 @@ const Hospital = ({ isOpen }) => {
       
       // Add headers with comments
       utils.sheet_add_aoa(ws, [[
-        'name',
+        'name (Required)',
         'arabicName',
         'phone',
-        'latitude',
-        'longitude',
+        'latitude (Required)',
+        'longitude (Required)',
         'location_name'
       ]], { origin: 'A1' });
 

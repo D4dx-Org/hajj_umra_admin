@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -15,14 +14,14 @@ const Ambulance = ({ isOpen }) => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null); // Track which row is being edited
   const [showAddForm, setShowAddForm] = useState(false); // Control add form visibility
-  const [locations, setLocations] = useState([]); // New state for locations
+  const [branches, setBranches] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [newAmbulance, setNewAmbulance] = useState({ 
     category: '', 
     center: '', 
     poll: '', 
     location: { lat: '', lng: '' },
-    ref: '' // Added ref field
+    ref: ''
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -152,7 +151,7 @@ const Ambulance = ({ isOpen }) => {
     },
     { 
       key: 'ref', 
-      title: 'Location Reference',
+      title: 'Branch Reference',
       render: (row) => {
         if (editingId === row._id) {
           return (
@@ -161,18 +160,16 @@ const Ambulance = ({ isOpen }) => {
               onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
               className="w-full p-1 border rounded"
             >
-              <option value="">Select Location</option>
-              {locations.map(location => (
-                <option key={location._id} value={location._id}>
-                  {location.name}
+              <option value="">Select Branch</option>
+              {branches.map(branch => (
+                <option key={branch._id} value={branch._id}>
+                  {branch.name}
                 </option>
               ))}
             </select>
           );
         }
-        // Handle both populated and unpopulated cases
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
-        return locationName;
+        return row.ref?.name || 'N/A';
       }
     },
     {
@@ -233,25 +230,18 @@ const Ambulance = ({ isOpen }) => {
     fetchData();
   }, []);
 
-  // Add this new useEffect to fetch locations
+  // Fetch branches
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchBranches = async () => {
       try {
-        console.log('Fetching locations...');
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
-        console.log('Fetched locations:', response.data);
-        if (!response.data || response.data.length === 0) {
-          console.warn('No locations found in the response');
-        }
-        setLocations(response.data);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranches(response.data);
       } catch (error) {
-        console.error('Error fetching locations:', error.response?.data || error.message);
-        // Show error in UI
-        setUploadError('Failed to load location references. Please refresh the page.');
+        console.error('Error fetching branches:', error);
       }
     };
 
-    fetchLocations();
+    fetchBranches();
   }, []);
 
   // Handle edit change in table row
@@ -263,12 +253,12 @@ const Ambulance = ({ isOpen }) => {
         }
         if (field === 'ref') {
           // When changing ref, update both the ID and the populated data
-          const selectedLocation = locations.find(loc => loc._id === value);
+          const selectedBranch = branches.find(branch => branch._id === value);
           return { 
             ...item, 
-            ref: selectedLocation ? { 
-              _id: selectedLocation._id,
-              name: selectedLocation.name 
+            ref: selectedBranch ? { 
+              _id: selectedBranch._id,
+              name: selectedBranch.name 
             } : value 
           };
         }
@@ -393,14 +383,14 @@ const Ambulance = ({ isOpen }) => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     if (!lowerCaseSearch) return ambulanceData;
     return ambulanceData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+      const branchName = item.ref?.name || branches.find(branch => branch._id === item.ref)?.name || '';
       return (
         (item.category && item.category.toLowerCase().includes(lowerCaseSearch)) ||
         (item.center && item.center.toLowerCase().includes(lowerCaseSearch)) ||
-        (locationName.toLowerCase().includes(lowerCaseSearch))
+        (branchName.toLowerCase().includes(lowerCaseSearch))
       );
     });
-  }, [ambulanceData, searchTerm, locations]);
+  }, [ambulanceData, searchTerm, branches]);
 
   // Modify the edit button click handler
   const handleEditClick = (row) => {
@@ -445,28 +435,26 @@ const Ambulance = ({ isOpen }) => {
 
           // Check the first row to understand the column structure
           const firstRow = data[0];
-          const hasRequiredColumns = 'category' in firstRow && 'center' in firstRow && 'poll' in firstRow;
+          const hasRequiredColumns = 'category' in firstRow && 'center' in firstRow && 'poll' in firstRow && 'branch_name' in firstRow;
           
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have columns: category, center, and poll. Please check your column headers.');
+            setUploadError('Excel file must have columns: category, center, poll, and branch_name. Please check your column headers.');
             console.log('Required columns missing. Found columns:', Object.keys(firstRow));
             return;
           }
-
-          const validCategories = ambulanceCategories.categories.map(cat => cat.value);
 
           // Validate each row
           for (let i = 0; i < data.length; i++) {
             const row = data[i];
             const rowNumber = i + 2; // Excel row number (accounting for header)
 
-            if (!row.category || !row.center || !row.poll) {
-              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have category, center, and poll.`);
+            if (!row.category || !row.center || !row.poll || !row.branch_name) {
+              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have category, center, poll, and branch_name.`);
               return;
             }
 
-            if (!validCategories.includes(row.category)) {
-              setUploadError(`Row ${rowNumber}: Invalid category "${row.category}". Must be one of: ${validCategories.join(', ')}`);
+            if (!ambulanceCategories.categories.some(cat => cat.value === row.category)) {
+              setUploadError(`Row ${rowNumber}: Invalid category "${row.category}". Must be one of: ${ambulanceCategories.categories.map(cat => cat.value).join(', ')}`);
               return;
             }
 
@@ -485,11 +473,11 @@ const Ambulance = ({ isOpen }) => {
               }
             }
 
-            // Validate location_name if provided
-            if (row.location_name && locations.length > 0) {
-              const locationExists = locations.some(loc => loc.name === row.location_name);
-              if (!locationExists) {
-                setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
+            // Validate branch_name
+            if (row.branch_name && branches.length > 0) {
+              const branchExists = branches.some(branch => branch.name === row.branch_name);
+              if (!branchExists) {
+                setUploadError(`Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`);
                 return;
               }
             }
@@ -550,7 +538,7 @@ const Ambulance = ({ isOpen }) => {
           poll: 'Sample Poll',
           latitude: '21.4225',
           longitude: '39.8262',
-          location_name: 'Sample Location Name'
+          branch_name: 'Sample Branch Name'
         }
       ];
 
@@ -564,7 +552,7 @@ const Ambulance = ({ isOpen }) => {
         'poll',
         'latitude',
         'longitude',
-        'location_name'
+        'branch_name'
       ]], { origin: 'A1' });
 
       // Add sample data
@@ -580,7 +568,7 @@ const Ambulance = ({ isOpen }) => {
         { wch: 15 }, // poll
         { wch: 12 }, // latitude
         { wch: 12 }, // longitude
-        { wch: 30 }  // location_name
+        { wch: 30 }  // branch_name
       ];
 
       // Create workbook
@@ -654,7 +642,7 @@ const Ambulance = ({ isOpen }) => {
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Ambulance Management</h1>
+            <h1 className="text-2xl font-bold">Ambulance Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               Total: {filteredAmbulanceData.length} ambulances
             </div>
@@ -688,11 +676,11 @@ const Ambulance = ({ isOpen }) => {
             >
               Upload Excel
             </label>
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add More'}
+              {showAddForm ? 'Cancel' : 'Add Ambulance'}
             </button>
           </div>
         </div>
@@ -709,7 +697,7 @@ const Ambulance = ({ isOpen }) => {
           </div>
         )}
 
-        {/* New Ambulance Form - Only shown when showAddForm is true */}
+        {/* New Ambulance Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Ambulance</h2>
@@ -775,16 +763,16 @@ const Ambulance = ({ isOpen }) => {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Location Reference</label>
+              <label className="block text-sm font-medium">Branch Reference</label>
               <select
                 value={newAmbulance.ref}
                 onChange={(e) => setNewAmbulance({ ...newAmbulance, ref: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
-                <option value="">Select Location</option>
-                {locations.map(location => (
-                  <option key={location._id} value={location._id}>
-                    {location.name}
+                <option value="">Select Branch</option>
+                {branches.map(branch => (
+                  <option key={branch._id} value={branch._id}>
+                    {branch.name}
                   </option>
                 ))}
               </select>
@@ -821,7 +809,7 @@ const Ambulance = ({ isOpen }) => {
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
               </div>
               <p className="text-gray-600 mb-6">
-                {Array.isArray(deleteConfirm.id) 
+                {Array.isArray(deleteConfirm.id)
                   ? `Are you sure you want to delete ${deleteConfirm.id.length} selected ambulances? This action cannot be undone.`
                   : 'Are you sure you want to delete this ambulance? This action cannot be undone.'}
               </p>
@@ -847,7 +835,7 @@ const Ambulance = ({ isOpen }) => {
         {loading ? (
           <p className="text-center">Loading...</p>
         ) : filteredAmbulanceData.length === 0 ? (
-          <p className="text-center">No items found</p>
+          <p className="text-center">No ambulances found</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full">

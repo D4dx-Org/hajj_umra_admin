@@ -11,7 +11,7 @@ import Location from './pages/Admin/Loaction';
 import Nusuk from './pages/Admin/Nusuk';
 import Thanima from './pages/Admin/Thanima';
 import Notification from './pages/Admin/Notification';
-import AdminLayout from './components/AdminLayout';
+import Branch from './pages/Admin/Branch';
 
 const App = () => {
   return (
@@ -31,6 +31,7 @@ const App = () => {
           <Route path="/nusuk" element={<Nusuk />} />
           <Route path="/thanima" element={<Thanima />} />
           <Route path="/notification" element={<Notification />} />
+          <Route path="/branch" element={<Branch />} />
         {/* </Route> */}
       </Routes>
     </Router>
