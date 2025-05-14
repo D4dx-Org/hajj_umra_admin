@@ -15,9 +15,10 @@ import {
     Card,
     Row,
     Col,
-    Typography
+    Typography,
+    Upload
 } from 'antd';
-import { Bell, Search, AlertTriangle, Trash2, Edit, Plus } from 'lucide-react';
+import { Bell, Search, AlertTriangle, Trash2, Edit, Plus, UploadCloud } from 'lucide-react';
 import axios from 'axios';
 import moment from 'moment';
 import Sidebar from '../../components/Sidebar';
@@ -45,6 +46,7 @@ const Notification = () => {
         total: 0
     });
     const [editingId, setEditingId] = useState(null);
+    const [selectedType, setSelectedType] = useState('text');
 
     // Fetch notifications
     const fetchNotifications = async (page = 1, pageSize = 10) => {
@@ -79,7 +81,22 @@ const Notification = () => {
         fetchNotifications();
     }, []);
 
-    // Handle form submission
+    // Add file upload configuration
+    const uploadProps = {
+        beforeUpload: (file) => {
+            // Validate file size (5MB)
+            const isLt5M = file.size / 1024 / 1024 < 5;
+            if (!isLt5M) {
+                message.error('File must be smaller than 5MB!');
+                return Upload.LIST_IGNORE;
+            }
+            return false; // Prevent automatic upload
+        },
+        maxCount: 1,
+        fileList: form.getFieldValue('file') ? [form.getFieldValue('file')] : []
+    };
+
+    // Handle form submission with file upload
     const handleSubmit = async (values) => {
         try {
             const token = localStorage.getItem("token");
@@ -88,32 +105,66 @@ const Notification = () => {
                 return;
             }
 
+            let contentUrl = '';
+            
+            // Handle file upload if type is image or pdf
+            if ((values.type === 'image' || values.type === 'pdf') && values.file?.[0]?.originFileObj) {
+                const formData = new FormData();
+                formData.append('file', values.file[0].originFileObj);
+
+                try {
+                    const uploadResponse = await axios.post(
+                        `${import.meta.env.VITE_BACKEND_URL}/notifications/upload`,
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                Authorization: `Bearer ${token}`
+                            }
+                        }
+                    );
+                    contentUrl = uploadResponse.data.url;
+                } catch (error) {
+                    console.error('Upload error:', error.response?.data || error);
+                    message.error(error.response?.data?.message || 'Failed to upload file');
+                    return;
+                }
+            } else if (values.type === 'link' || values.type === 'text') {
+                contentUrl = values.content;
+            }
+
+            const notificationData = {
+                title: values.title,
+                description: values.description,
+                type: values.type,
+                content: contentUrl
+            };
+
             if (editingId) {
                 // Update existing notification
-                await axios.put(`${import.meta.env.VITE_BACKEND_URL}/notifications/${editingId}`, {
-                    ...values,
-                    expiresAt: values.expiresAt.toISOString()
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+                await axios.put(
+                    `${import.meta.env.VITE_BACKEND_URL}/notifications/${editingId}`,
+                    notificationData,
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
                     }
-                });
+                );
                 message.success('Notification updated successfully');
             } else {
                 // Create new notification
-                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/notifications`, {
-                    ...values,
-                    expiresAt: values.expiresAt.toISOString()
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+                await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/notifications`,
+                    notificationData,
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
                     }
-                });
+                );
                 message.success('Notification created successfully');
             }
             setModalVisible(false);
             setEditingId(null);
             form.resetFields();
+            setSelectedType('text');
             fetchNotifications();
         } catch (error) {
             console.error('Error saving notification:', error.response?.data || error.message);
@@ -137,17 +188,30 @@ const Notification = () => {
                 return;
             }
 
-            await Promise.all(ids.map(id => 
-                axios.delete(`${import.meta.env.VITE_BACKEND_URL}/notifications/${id}`, {
+            if (ids.length > 1) {
+                // Use bulk delete endpoint for multiple notifications
+                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/notifications/bulk-delete`, 
+                    { ids },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+            } else {
+                // Use single delete endpoint for one notification
+                await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/notifications/${ids[0]}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
-                })
-            ));
+                });
+            }
+
             setNotifications(notifications.filter(item => !ids.includes(item._id)));
             setSelectedRows([]);
             setDeleteConfirm({ show: false, id: null });
             message.success('Notification(s) deleted successfully');
+            fetchNotifications(); // Refresh the list
         } catch (error) {
             console.error('Error deleting notifications:', error.response?.data || error.message);
             message.error('Failed to delete notification(s)');
@@ -202,9 +266,8 @@ const Notification = () => {
             const searchStr = searchTerm.toLowerCase();
             return (
                 item.title?.toLowerCase().includes(searchStr) ||
-                item.message?.toLowerCase().includes(searchStr) ||
-                item.type?.toLowerCase().includes(searchStr) ||
-                item.priority?.toLowerCase().includes(searchStr)
+                item.description?.toLowerCase().includes(searchStr) ||
+                item.type?.toLowerCase().includes(searchStr)
             );
         });
     }, [notifications, searchTerm]);
@@ -227,6 +290,82 @@ const Notification = () => {
                 return [...prev, id];
             }
         });
+    };
+
+    // Function to render content field based on type
+    const renderContentField = (type) => {
+        switch (type) {
+            case 'link':
+                return (
+                    <Form.Item
+                        name="content"
+                        label="Link URL"
+                        rules={[
+                            { required: true, message: 'Please enter the link URL' },
+                            { type: 'url', message: 'Please enter a valid URL' }
+                        ]}
+                    >
+                        <Input placeholder="https://example.com" />
+                    </Form.Item>
+                );
+            case 'text':
+                return (
+                    <Form.Item
+                        name="content"
+                        label="Text Content"
+                        rules={[{ required: true, message: 'Please enter the text content' }]}
+                    >
+                        <TextArea rows={4} placeholder="Enter your text content here" />
+                    </Form.Item>
+                );
+            case 'image':
+                return (
+                    <Form.Item
+                        name="file"
+                        label="Upload Image"
+                        rules={[{ required: true, message: 'Please upload an image' }]}
+                        valuePropName="fileList"
+                        getValueFromEvent={(e) => {
+                            if (Array.isArray(e)) {
+                                return e;
+                            }
+                            return e?.fileList;
+                        }}
+                    >
+                        <Upload
+                            {...uploadProps}
+                            accept="image/*"
+                            listType="picture"
+                        >
+                            <Button icon={<UploadCloud size={18} />}>Upload Image</Button>
+                        </Upload>
+                    </Form.Item>
+                );
+            case 'pdf':
+                return (
+                    <Form.Item
+                        name="file"
+                        label="Upload PDF"
+                        rules={[{ required: true, message: 'Please upload a PDF file' }]}
+                        valuePropName="fileList"
+                        getValueFromEvent={(e) => {
+                            if (Array.isArray(e)) {
+                                return e;
+                            }
+                            return e?.fileList;
+                        }}
+                    >
+                        <Upload
+                            {...uploadProps}
+                            accept=".pdf"
+                        >
+                            <Button icon={<UploadCloud size={18} />}>Upload PDF</Button>
+                        </Upload>
+                    </Form.Item>
+                );
+            default:
+                return null;
+        }
     };
 
     // Table columns configuration
@@ -253,13 +392,13 @@ const Notification = () => {
         {
             title: 'Title',
             dataIndex: 'title',
-            key: 'title',
-            render: (text, record) => (
-                <Space>
-                    {record.status === 'unread' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-                    {text}
-                </Space>
-            )
+            key: 'title'
+        },
+        {
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            render: (text) => text || '-'
         },
         {
             title: 'Type',
@@ -267,37 +406,11 @@ const Notification = () => {
             key: 'type',
             render: (type) => (
                 <Tag color={
-                    type === 'success' ? 'success' :
-                    type === 'warning' ? 'warning' :
-                    type === 'error' ? 'error' : 'default'
+                    type === 'link' ? 'blue' :
+                    type === 'image' ? 'green' :
+                    type === 'pdf' ? 'red' : 'default'
                 }>
                     {type.toUpperCase()}
-                </Tag>
-            )
-        },
-        {
-            title: 'Priority',
-            dataIndex: 'priority',
-            key: 'priority',
-            render: (priority) => (
-                <Tag color={
-                    priority === 'high' ? 'red' :
-                    priority === 'medium' ? 'orange' : 'green'
-                }>
-                    {priority.toUpperCase()}
-                </Tag>
-            )
-        },
-        {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={
-                    status === 'unread' ? 'blue' :
-                    status === 'read' ? 'green' : 'default'
-                }>
-                    {status.toUpperCase()}
                 </Tag>
             )
         },
@@ -308,10 +421,22 @@ const Notification = () => {
             render: (date) => moment(date).format('YYYY-MM-DD HH:mm')
         },
         {
-            title: 'Expires At',
-            dataIndex: 'expiresAt',
-            key: 'expiresAt',
-            render: (date) => moment(date).format('YYYY-MM-DD HH:mm')
+            title: 'Content',
+            key: 'content',
+            render: (_, record) => {
+                switch (record.type) {
+                    case 'link':
+                        return <a href={record.content} target="_blank" rel="noopener noreferrer">Open Link</a>;
+                    case 'text':
+                        return <span>{record.content.substring(0, 50)}...</span>;
+                    case 'image':
+                        return <img src={record.content} alt="Preview" style={{ maxWidth: 50, maxHeight: 50 }} />;
+                    case 'pdf':
+                        return <a href={record.content} target="_blank" rel="noopener noreferrer">View PDF</a>;
+                    default:
+                        return '-';
+                }
+            }
         },
         {
             title: 'Actions',
@@ -322,8 +447,7 @@ const Notification = () => {
                         onClick={() => {
                             setEditingId(record._id);
                             form.setFieldsValue({
-                                ...record,
-                                expiresAt: moment(record.expiresAt)
+                                ...record
                             });
                             setModalVisible(true);
                         }}
@@ -463,6 +587,7 @@ const Notification = () => {
                         setModalVisible(false);
                         setEditingId(null);
                         form.resetFields();
+                        setSelectedType('text');
                     }}
                     footer={null}
                 >
@@ -479,9 +604,8 @@ const Notification = () => {
                             <Input />
                         </Form.Item>
                         <Form.Item
-                            name="message"
-                            label="Message"
-                            rules={[{ required: true, message: 'Please enter message' }]}
+                            name="description"
+                            label="Description"
                         >
                             <TextArea rows={4} />
                         </Form.Item>
@@ -490,42 +614,14 @@ const Notification = () => {
                             label="Type"
                             rules={[{ required: true, message: 'Please select type' }]}
                         >
-                            <Select>
-                                <Option value="info">Info</Option>
-                                <Option value="warning">Warning</Option>
-                                <Option value="error">Error</Option>
-                                <Option value="success">Success</Option>
+                            <Select onChange={(value) => setSelectedType(value)}>
+                                <Option value="link">Link</Option>
+                                <Option value="image">Image</Option>
+                                <Option value="pdf">PDF</Option>
+                                <Option value="text">Text</Option>
                             </Select>
                         </Form.Item>
-                        <Form.Item
-                            name="priority"
-                            label="Priority"
-                            rules={[{ required: true, message: 'Please select priority' }]}
-                        >
-                            <Select>
-                                <Option value="low">Low</Option>
-                                <Option value="medium">Medium</Option>
-                                <Option value="high">High</Option>
-                            </Select>
-                        </Form.Item>
-                        <Form.Item
-                            name="targetUsers"
-                            label="Target Users"
-                            rules={[{ required: true, message: 'Please select target users' }]}
-                        >
-                            <Select mode="tags" placeholder="Select or enter target users">
-                                <Option value="all">All Users</Option>
-                                <Option value="admin">Admins</Option>
-                                <Option value="user">Regular Users</Option>
-                            </Select>
-                        </Form.Item>
-                        <Form.Item
-                            name="expiresAt"
-                            label="Expires At"
-                            rules={[{ required: true, message: 'Please select expiration date' }]}
-                        >
-                            <DatePicker showTime />
-                        </Form.Item>
+                        {renderContentField(selectedType)}
                         <Form.Item>
                             <Space>
                                 <Button type="primary" htmlType="submit" icon={<Plus size={18} />}>

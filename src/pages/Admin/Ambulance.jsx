@@ -14,14 +14,14 @@ const Ambulance = ({ isOpen }) => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null); // Track which row is being edited
   const [showAddForm, setShowAddForm] = useState(false); // Control add form visibility
-  const [branches, setBranches] = useState([]);
+  const [locations, setLocations] = useState([]); // Add locations state
   const [selectedRows, setSelectedRows] = useState([]);
   const [newAmbulance, setNewAmbulance] = useState({ 
     category: '', 
     center: '', 
     poll: '', 
     location: { lat: '', lng: '' },
-    ref: ''
+    locationRef: ''
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -150,26 +150,26 @@ const Ambulance = ({ isOpen }) => {
       }
     },
     { 
-      key: 'ref', 
-      title: 'Branch Reference',
+      key: 'locationRef', 
+      title: 'Location Reference',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <select
-              value={row.ref?._id || row.ref || ''}
-              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+              value={row.locationRef?._id || row.locationRef || ''}
+              onChange={(e) => handleEditChange(row._id, 'locationRef', e.target.value)}
               className="w-full p-1 border rounded"
             >
-              <option value="">Select Branch</option>
-              {branches.map(branch => (
-                <option key={branch._id} value={branch._id}>
-                  {branch.name}
+              <option value="">Select Location</option>
+              {locations.map(location => (
+                <option key={location._id} value={location._id}>
+                  {location.name}
                 </option>
               ))}
             </select>
           );
         }
-        return row.ref?.name || 'N/A';
+        return row.locationRef?.name || 'N/A';
       }
     },
     {
@@ -230,18 +230,18 @@ const Ambulance = ({ isOpen }) => {
     fetchData();
   }, []);
 
-  // Fetch branches
+  // Add fetchLocations function
   useEffect(() => {
-    const fetchBranches = async () => {
+    const fetchLocations = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
-        setBranches(response.data);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
+        setLocations(response.data);
       } catch (error) {
-        console.error('Error fetching branches:', error);
+        console.error('Error fetching locations:', error);
       }
     };
 
-    fetchBranches();
+    fetchLocations();
   }, []);
 
   // Handle edit change in table row
@@ -251,14 +251,13 @@ const Ambulance = ({ isOpen }) => {
         if (field === 'location') {
           return { ...item, location: value };
         }
-        if (field === 'ref') {
-          // When changing ref, update both the ID and the populated data
-          const selectedBranch = branches.find(branch => branch._id === value);
+        if (field === 'locationRef') {
+          const selectedLocation = locations.find(location => location._id === value);
           return { 
             ...item, 
-            ref: selectedBranch ? { 
-              _id: selectedBranch._id,
-              name: selectedBranch.name 
+            locationRef: selectedLocation ? { 
+              _id: selectedLocation._id,
+              name: selectedLocation.name 
             } : value 
           };
         }
@@ -369,7 +368,7 @@ const Ambulance = ({ isOpen }) => {
           center: '', 
           poll: '', 
           location: { lat: '', lng: '' },
-          ref: ''
+          locationRef: ''
         });
         setShowAddForm(false);
       }
@@ -383,14 +382,15 @@ const Ambulance = ({ isOpen }) => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     if (!lowerCaseSearch) return ambulanceData;
     return ambulanceData.filter((item) => {
-      const branchName = item.ref?.name || branches.find(branch => branch._id === item.ref)?.name || '';
+      const locationName = item.locationRef?.name || '';
       return (
         (item.category && item.category.toLowerCase().includes(lowerCaseSearch)) ||
         (item.center && item.center.toLowerCase().includes(lowerCaseSearch)) ||
-        (branchName.toLowerCase().includes(lowerCaseSearch))
+        (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+        locationName.toLowerCase().includes(lowerCaseSearch)
       );
     });
-  }, [ambulanceData, searchTerm, branches]);
+  }, [ambulanceData, searchTerm]);
 
   // Modify the edit button click handler
   const handleEditClick = (row) => {
@@ -406,6 +406,71 @@ const Ambulance = ({ isOpen }) => {
     ));
     setEditingId(null);
     setOriginalData(null);
+  };
+
+  // Update download template function
+  const handleDownloadTemplate = () => {
+    try {
+      const sampleData = [
+        {
+          name: 'Sample Ambulance (Required)',
+          location_name: 'Azizia',
+          category: 'Type A',
+          center: 'Sample Center (Optional)',
+          poll: 'Sample Poll (Optional)',
+          latitude: '21.4225',
+          longitude: '39.8262'
+        }
+      ];
+
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers with required/optional indicators
+      utils.sheet_add_aoa(ws, [[
+        'name',
+        'location_name',
+        'category',
+        'center',
+        'poll',
+        'latitude',
+        'longitude'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 25 }, // name
+        { wch: 30 }, // location_name
+        { wch: 20 }, // category
+        { wch: 20 }, // center
+        { wch: 20 }, // poll
+        { wch: 20 }, // latitude
+        { wch: 20 }  // longitude
+      ];
+
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'ambulance_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
   };
 
   // Handle file upload
@@ -426,8 +491,6 @@ const Ambulance = ({ isOpen }) => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
-          console.log('Parsed Excel data:', data); // Debug log
-
           if (data.length === 0) {
             setUploadError('The Excel file is empty. Please add some data.');
             return;
@@ -435,10 +498,10 @@ const Ambulance = ({ isOpen }) => {
 
           // Check the first row to understand the column structure
           const firstRow = data[0];
-          const hasRequiredColumns = 'category' in firstRow && 'center' in firstRow && 'poll' in firstRow && 'branch_name' in firstRow;
+          const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow;
           
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have columns: category, center, poll, and branch_name. Please check your column headers.');
+            setUploadError('Excel file must have required columns: name and location_name');
             console.log('Required columns missing. Found columns:', Object.keys(firstRow));
             return;
           }
@@ -448,17 +511,12 @@ const Ambulance = ({ isOpen }) => {
             const row = data[i];
             const rowNumber = i + 2; // Excel row number (accounting for header)
 
-            if (!row.category || !row.center || !row.poll || !row.branch_name) {
-              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have category, center, poll, and branch_name.`);
+            if (!row.name || !row.location_name) {
+              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have name and location_name.`);
               return;
             }
 
-            if (!ambulanceCategories.categories.some(cat => cat.value === row.category)) {
-              setUploadError(`Row ${rowNumber}: Invalid category "${row.category}". Must be one of: ${ambulanceCategories.categories.map(cat => cat.value).join(', ')}`);
-              return;
-            }
-
-            // Validate coordinates if present
+            // Validate coordinates if present (optional)
             if (row.latitude !== undefined || row.longitude !== undefined) {
               const lat = Number(row.latitude);
               const lng = Number(row.longitude);
@@ -473,13 +531,11 @@ const Ambulance = ({ isOpen }) => {
               }
             }
 
-            // Validate branch_name
-            if (row.branch_name && branches.length > 0) {
-              const branchExists = branches.some(branch => branch.name === row.branch_name);
-              if (!branchExists) {
-                setUploadError(`Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`);
-                return;
-              }
+            // Validate location_name
+            const locationExists = locations.some(location => location.name === row.location_name);
+            if (!locationExists) {
+              setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
+              return;
             }
           }
 
@@ -514,7 +570,7 @@ const Ambulance = ({ isOpen }) => {
           event.target.value = '';
         } catch (error) {
           console.error('Excel processing error:', error);
-          setUploadError(error.response?.data?.message || 'Error processing the Excel file. Please check the file format.');
+          setUploadError(error.response?.data?.message || 'Error processing the Excel file');
           setUploadSuccess(null);
         }
       };
@@ -524,78 +580,6 @@ const Ambulance = ({ isOpen }) => {
       console.error('File upload error:', error);
       setUploadError('Error processing file. Please try again.');
       setUploadSuccess(null);
-    }
-  };
-
-  // Add download template function
-  const handleDownloadTemplate = () => {
-    try {
-      // Create sample data
-      const sampleData = [
-        {
-          category: 'type1',
-          center: 'Sample Center',
-          poll: 'Sample Poll',
-          latitude: '21.4225',
-          longitude: '39.8262',
-          branch_name: 'Sample Branch Name'
-        }
-      ];
-
-      // Create worksheet
-      const ws = utils.json_to_sheet([]);
-      
-      // Add headers with comments
-      utils.sheet_add_aoa(ws, [[
-        'category',
-        'center',
-        'poll',
-        'latitude',
-        'longitude',
-        'branch_name'
-      ]], { origin: 'A1' });
-
-      // Add sample data
-      utils.sheet_add_json(ws, sampleData, { 
-        origin: 'A2',
-        skipHeader: true
-      });
-
-      // Add column widths
-      ws['!cols'] = [
-        { wch: 15 }, // category
-        { wch: 20 }, // center
-        { wch: 15 }, // poll
-        { wch: 12 }, // latitude
-        { wch: 12 }, // longitude
-        { wch: 30 }  // branch_name
-      ];
-
-      // Create workbook
-      const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
-
-      // Generate Excel file
-      write(wb, { 
-        bookType: 'xlsx',
-        type: 'array'
-      });
-
-      // Convert to blob and download
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'ambulance_upload_template.xlsx';
-      link.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
     }
   };
 
@@ -763,16 +747,16 @@ const Ambulance = ({ isOpen }) => {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Branch Reference</label>
+              <label className="block text-sm font-medium">Location Reference</label>
               <select
-                value={newAmbulance.ref}
-                onChange={(e) => setNewAmbulance({ ...newAmbulance, ref: e.target.value })}
+                value={newAmbulance.locationRef}
+                onChange={(e) => setNewAmbulance({ ...newAmbulance, locationRef: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
-                <option value="">Select Branch</option>
-                {branches.map(branch => (
-                  <option key={branch._id} value={branch._id}>
-                    {branch.name}
+                <option value="">Select Location</option>
+                {locations.map(location => (
+                  <option key={location._id} value={location._id}>
+                    {location.name}
                   </option>
                 ))}
               </select>

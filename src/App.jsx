@@ -12,6 +12,7 @@ import Nusuk from './pages/Admin/Nusuk';
 import Thanima from './pages/Admin/Thanima';
 import Notification from './pages/Admin/Notification';
 import Branch from './pages/Admin/Branch';
+import BusStation from './pages/Admin/BusStation';
 
 const App = () => {
   return (
@@ -24,6 +25,8 @@ const App = () => {
         {/* <Route element={<AdminLayout />}> */}
           <Route path="/ambulance" element={<Ambulance />} />
           <Route path="/building" element={<Building />} />
+          <Route path="/branch" element={<Branch />} />
+          <Route path="/bus-station" element={<BusStation />} />
           <Route path="/camp" element={<Camp />} />
           <Route path="/clinic" element={<Clinic />} />
           <Route path="/hospital" element={<Hospital />} />
@@ -31,7 +34,6 @@ const App = () => {
           <Route path="/nusuk" element={<Nusuk />} />
           <Route path="/thanima" element={<Thanima />} />
           <Route path="/notification" element={<Notification />} />
-          <Route path="/branch" element={<Branch />} />
         {/* </Route> */}
       </Routes>
     </Router>
