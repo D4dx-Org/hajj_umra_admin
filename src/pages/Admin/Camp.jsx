@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -475,100 +474,75 @@ const Camp = ({ isOpen }) => {
       const file = event.target.files[0];
       if (!file) return;
 
-      // First, validate the file type
       if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
         setUploadError('Please upload an Excel file (.xlsx or .xls)');
         return;
       }
 
-      // Read the file
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          // Preview the data
-          const workbook = read(e.target.result, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const data = utils.sheet_to_json(worksheet);
+      const formData = new FormData();
+      formData.append('file', file);
 
-          // Validate the data structure
-          const isValid = data.every(row => {
-            const hasRequiredFields = row.maktab && row.zone && row.country && row.poll;
-            const hasValidCoordinates = !row.latitude || !row.longitude || 
-              (typeof Number(row.latitude) === 'number' && !isNaN(Number(row.latitude)) &&
-               typeof Number(row.longitude) === 'number' && !isNaN(Number(row.longitude)));
-            return hasRequiredFields && hasValidCoordinates;
-          });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUploadError('Authentication token not found. Please log in again.');
+        return;
+      }
 
-          if (!isValid) {
-            setUploadError('Invalid data format. Please ensure all required fields (maktab, zone, country, poll) are present and coordinates are valid numbers if provided.');
-            return;
-          }
-
-          // Create FormData for upload
-          const formData = new FormData();
-          formData.append('file', file);
-
-          // Upload to server
-          const token = localStorage.getItem("token");
-          const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/camp/bulk-upload`,
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
-
-          // Update the UI
-          setUploadSuccess(`Successfully uploaded ${response.data.count} camps`);
-          setUploadError(null);
-
-          // Refresh the data
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp`);
-          setCampData(updatedResponse.data);
-        } catch (error) {
-          setUploadError(error.response?.data?.message || 'Error uploading file');
-          setUploadSuccess(null);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/camp/bulk-upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
         }
-      };
+      );
 
-      reader.readAsArrayBuffer(file);
+      setUploadSuccess(`Successfully uploaded ${response.data.count} camps`);
+      setUploadError(null);
+
+      // Refresh the data
+      const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp`);
+      setCampData(updatedResponse.data);
+      
+      // Reset the file input
+      event.target.value = '';
     } catch (error) {
-      setUploadError('Error processing file');
+      console.error('File upload error:', error);
+      setUploadError(error.response?.data?.message || 'Error processing file. Please try again.');
       setUploadSuccess(null);
     }
   };
 
-  // Add download template function
+  // Update download template function
   const handleDownloadTemplate = () => {
     try {
       // Create sample data
       const sampleData = [
         {
           maktab: 'Sample Maktab',
-          zone: 'Zone A',
-          country: 'Saudi Arabia',
-          poll: 'Poll 1',
-          latitude: '21.4225',
-          longitude: '39.8262',
-          location_name: 'Sample Location Name'
+          location_name: 'Azizia',
+          zone: 'Zone A (Optional)',
+          country: 'Saudi Arabia (Optional)',
+          poll: 'Poll 1 (Optional)',
+          latitude: '21.4225 (Optional)',
+          longitude: '39.8262 (Optional)'
         }
       ];
 
       // Create worksheet
       const ws = utils.json_to_sheet([]);
       
-      // Add headers with comments
+      // Add headers
       utils.sheet_add_aoa(ws, [[
         'maktab',
+        'location_name',
         'zone',
         'country',
         'poll',
         'latitude',
-        'longitude',
-        'location_name'
+        'longitude'
       ]], { origin: 'A1' });
 
       // Add sample data
@@ -579,13 +553,13 @@ const Camp = ({ isOpen }) => {
 
       // Add column widths
       ws['!cols'] = [
-        { wch: 20 }, // maktab
-        { wch: 15 }, // zone
-        { wch: 20 }, // country
-        { wch: 15 }, // poll
-        { wch: 12 }, // latitude
-        { wch: 12 }, // longitude
-        { wch: 30 }  // location_name
+        { wch: 25 }, // maktab
+        { wch: 25 }, // location_name
+        { wch: 20 }, // zone
+        { wch: 25 }, // country
+        { wch: 20 }, // poll
+        { wch: 20 }, // latitude
+        { wch: 20 }  // longitude
       ];
 
       // Create workbook

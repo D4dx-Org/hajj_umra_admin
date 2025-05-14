@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -20,12 +19,14 @@ const Clinic = ({ isOpen }) => {
     center: '',
     poll: '',
     location: { lat: '', lng: '' }, 
-    ref: ''
+    ref: '',
+    branchRef: ''
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [branches, setBranches] = useState([]);
 
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
@@ -63,14 +64,16 @@ const Clinic = ({ isOpen }) => {
     if (!lowerCaseSearch) return clinicData;
     return clinicData.filter((item) => {
       const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+      const branchName = item.branchRef?.name || branches.find(branch => branch._id === item.branchRef)?.name || '';
       return (
         item.name.toLowerCase().includes(lowerCaseSearch) ||
         item.center.toLowerCase().includes(lowerCaseSearch) ||
         item.poll.toLowerCase().includes(lowerCaseSearch) ||
-        locationName.toLowerCase().includes(lowerCaseSearch)
+        locationName.toLowerCase().includes(lowerCaseSearch) ||
+        branchName.toLowerCase().includes(lowerCaseSearch)
       );
     });
-  }, [clinicData, searchTerm, locations]);
+  }, [clinicData, searchTerm, locations, branches]);
 
   // Define the table columns with editable configuration
   const clinicColumns = useMemo(() => [
@@ -191,8 +194,30 @@ const Clinic = ({ isOpen }) => {
             </select>
           );
         }
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
-        return locationName;
+        return row.ref?.name || 'N/A';
+      }
+    },
+    {
+      key: 'branchRef',
+      title: 'Branch Reference',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <select
+              value={row.branchRef?._id || row.branchRef || ''}
+              onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value)}
+              className="w-full p-1 border rounded"
+            >
+              <option value="">Select Branch</option>
+              {branches.map(branch => (
+                <option key={branch._id} value={branch._id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          );
+        }
+        return row.branchRef?.name || 'N/A';
       }
     },
     {
@@ -234,7 +259,7 @@ const Clinic = ({ isOpen }) => {
         </div>
       )
     }
-  ], [editingId, selectedRows, filteredClinicData.length, locations]);
+  ], [editingId, selectedRows, filteredClinicData.length, locations, branches]);
 
   // Fetch data from API using Axios
   useEffect(() => {
@@ -266,6 +291,20 @@ const Clinic = ({ isOpen }) => {
     fetchLocations();
   }, []);
 
+  // Add useEffect to fetch branches
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranches(response.data);
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
     setClinicData(clinicData.map(item => {
@@ -280,6 +319,16 @@ const Clinic = ({ isOpen }) => {
             ref: selectedLocation ? { 
               _id: selectedLocation._id,
               name: selectedLocation.name 
+            } : value 
+          };
+        }
+        if (field === 'branchRef') {
+          const selectedBranch = branches.find(branch => branch._id === value);
+          return { 
+            ...item, 
+            branchRef: selectedBranch ? { 
+              _id: selectedBranch._id,
+              name: selectedBranch.name 
             } : value 
           };
         }
@@ -382,7 +431,8 @@ const Clinic = ({ isOpen }) => {
           center: '',
           poll: '',
           location: { lat: '', lng: '' }, 
-          ref: ''
+          ref: '',
+          branchRef: ''
         });
         setShowAddForm(false);
       }
@@ -424,23 +474,55 @@ const Clinic = ({ isOpen }) => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
-          const isValid = data.every(row => {
-            const hasRequiredFields = row.name && row.center && row.poll;
-            const hasValidCoordinates = !row.latitude || !row.longitude || 
-              (typeof Number(row.latitude) === 'number' && !isNaN(Number(row.latitude)) &&
-               typeof Number(row.longitude) === 'number' && !isNaN(Number(row.longitude)));
-            return hasRequiredFields && hasValidCoordinates;
-          });
-
-          if (!isValid) {
-            setUploadError('Invalid data format. Please ensure all required fields (name, center, poll) are present and coordinates are valid numbers if provided.');
+          if (data.length === 0) {
+            setUploadError('The Excel file is empty. Please add some data.');
             return;
+          }
+
+          // Check the first row to understand the column structure
+          const firstRow = data[0];
+          const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow && 'branch_name' in firstRow;
+          
+          if (!hasRequiredColumns) {
+            setUploadError('Excel file must have required columns: name, location_name, and branch_name');
+            return;
+          }
+
+          // Validate each row
+          for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const rowNumber = i + 2; // Excel row number (accounting for header)
+
+            // Check required fields
+            if (!row.name || !row.location_name || !row.branch_name) {
+              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have name, location_name, and branch_name.`);
+              return;
+            }
+
+            // Validate location_name exists
+            const locationExists = locations.some(location => location.name.toLowerCase() === row.location_name.toLowerCase());
+            if (!locationExists) {
+              setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
+              return;
+            }
+
+            // Validate branch_name exists
+            const branchExists = branches.some(branch => branch.name.toLowerCase() === row.branch_name.toLowerCase());
+            if (!branchExists) {
+              setUploadError(`Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`);
+              return;
+            }
           }
 
           const formData = new FormData();
           formData.append('file', file);
 
           const token = localStorage.getItem("token");
+          if (!token) {
+            setUploadError('Authentication token not found. Please log in again.');
+            return;
+          }
+
           const response = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/clinic/bulk-upload`,
             formData,
@@ -452,20 +534,26 @@ const Clinic = ({ isOpen }) => {
             }
           );
 
-          setUploadSuccess(`Successfully uploaded ${response.data.count} clinics`);
-          setUploadError(null);
+          if (response.data) {
+            setUploadSuccess(`Successfully uploaded ${response.data.count} clinics`);
+            setUploadError(null);
 
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
-          setClinicData(updatedResponse.data);
+            // Refresh the clinic list
+            const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
+            setClinicData(updatedResponse.data);
+          }
         } catch (error) {
-          setUploadError(error.response?.data?.message || 'Error uploading file');
+          console.error('Excel processing error:', error);
+          const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Error processing the Excel file';
+          setUploadError(`Upload failed: ${errorMessage}`);
           setUploadSuccess(null);
         }
       };
 
       reader.readAsArrayBuffer(file);
     } catch (error) {
-      setUploadError('Error processing file');
+      console.error('File upload error:', error);
+      setUploadError('Error processing file. Please try again.');
       setUploadSuccess(null);
     }
   };
@@ -476,26 +564,28 @@ const Clinic = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          name: 'Sample Clinic',
-          center: 'Center A',
-          poll: 'Poll 1',
-          latitude: '21.4225',
-          longitude: '39.8262',
-          location_name: 'Sample Location Name'
+          name: 'Medical Dispensary - 01 (Required)',
+          location_name: 'Azizia (Required)',
+          branch_name: 'Branch 1 (Required)',
+          center: 'Center A (Optional)',
+          poll: 'Poll 1 (Optional)',
+          latitude: '21.4225 (Optional)',
+          longitude: '39.8262 (Optional)'
         }
       ];
 
       // Create worksheet
       const ws = utils.json_to_sheet([]);
       
-      // Add headers with comments
+      // Add headers with required/optional indicators
       utils.sheet_add_aoa(ws, [[
-        'name',
-        'center',
-        'poll',
-        'latitude',
-        'longitude',
-        'location_name'
+        'name (Required)',
+        'location_name (Required)',
+        'branch_name (Required)',
+        'center (Optional)',
+        'poll (Optional)',
+        'latitude (Optional)',
+        'longitude (Optional)'
       ]], { origin: 'A1' });
 
       // Add sample data
@@ -506,25 +596,18 @@ const Clinic = ({ isOpen }) => {
 
       // Add column widths
       ws['!cols'] = [
-        { wch: 20 }, // name
-        { wch: 15 }, // center
-        { wch: 15 }, // poll
-        { wch: 12 }, // latitude
-        { wch: 12 }, // longitude
-        { wch: 30 }  // location_name
+        { wch: 30 }, // name
+        { wch: 30 }, // location_name
+        { wch: 30 }, // branch_name
+        { wch: 20 }, // center
+        { wch: 20 }, // poll
+        { wch: 20 }, // latitude
+        { wch: 20 }  // longitude
       ];
 
-      // Create workbook
       const wb = utils.book_new();
       utils.book_append_sheet(wb, ws, 'Template');
 
-      // Generate Excel file
-      write(wb, { 
-        bookType: 'xlsx',
-        type: 'array'
-      });
-
-      // Convert to blob and download
       const blob = new Blob(
         [write(wb, { bookType: 'xlsx', type: 'array' })], 
         { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
@@ -680,6 +763,21 @@ const Clinic = ({ isOpen }) => {
                 {locations.map(location => (
                   <option key={location._id} value={location._id}>
                     {location.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Branch Reference</label>
+              <select
+                value={newClinic.branchRef}
+                onChange={(e) => setNewClinic({ ...newClinic, branchRef: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="">Select Branch</option>
+                {branches.map(branch => (
+                  <option key={branch._id} value={branch._id}>
+                    {branch.name}
                   </option>
                 ))}
               </select>

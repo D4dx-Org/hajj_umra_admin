@@ -3,30 +3,26 @@ import { Search, AlertTriangle, Download } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
-import { read, utils, write } from 'xlsx';
 import Select from 'react-select';
-import ambulanceCategories from '../../data/ambulanceCategories.json';
+import { read, utils, write } from 'xlsx';
 
-const Ambulance = ({ isOpen }) => {
+const Branch = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [ambulanceData, setAmbulanceData] = useState([]);
+  const [branchData, setBranchData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState(null); // Track which row is being edited
-  const [showAddForm, setShowAddForm] = useState(false); // Control add form visibility
-  const [locations, setLocations] = useState([]); // Add locations state
+  const [editingId, setEditingId] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [newAmbulance, setNewAmbulance] = useState({ 
-    category: '', 
-    center: '', 
-    poll: '', 
-    location: { lat: '', lng: '' },
-    locationRef: ''
+  const [newBranch, setNewBranch] = useState({
+    name: '',
+    ref: ''
   });
   const [originalData, setOriginalData] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
   // Custom styles for react-select
   const customStyles = {
@@ -46,14 +42,14 @@ const Ambulance = ({ isOpen }) => {
     })
   };
 
-  // Define the table columns with editable configuration
-  const ambulanceColumns = [
+  // Define the table columns
+  const branchColumns = [
     {
       key: 'select',
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === ambulanceData.length}
+          checked={selectedRows.length === branchData.length}
           onChange={(event) => handleSelectAll(event)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -67,97 +63,32 @@ const Ambulance = ({ isOpen }) => {
         />
       )
     },
-    { 
-      key: 'category', 
-      title: 'Category',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <Select
-              value={ambulanceCategories.categories.find(cat => cat.value === row.category)}
-              onChange={(selected) => handleEditChange(row._id, 'category', selected.value)}
-              options={ambulanceCategories.categories}
-              styles={customStyles}
-              className="w-full"
-              isSearchable
-              placeholder="Select category..."
-            />
-          );
-        }
-        const category = ambulanceCategories.categories.find(cat => cat.value === row.category);
-        return category ? category.label : row.category;
-      }
-    },
-    { 
-      key: 'center', 
-      title: 'Center',
+    {
+      key: 'name',
+      title: 'Name',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
-              value={row.center}
-              onChange={(e) => handleEditChange(row._id, 'center', e.target.value)}
+              value={row.name}
+              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
               className="w-full p-1 border rounded"
             />
           );
         }
-        return row.center;
+        return row.name;
       }
     },
-    { 
-      key: 'poll', 
-      title: 'Poll',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll}
-              onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.poll;
-      }
-    },
-    { 
-      key: 'location', 
-      title: 'Location',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
-        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
-      }
-    },
-    { 
-      key: 'locationRef', 
+    {
+      key: 'ref',
       title: 'Location Reference',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <select
-              value={row.locationRef?._id || row.locationRef || ''}
-              onChange={(e) => handleEditChange(row._id, 'locationRef', e.target.value)}
+              value={row.ref?._id || row.ref || ''}
+              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
               className="w-full p-1 border rounded"
             >
               <option value="">Select Location</option>
@@ -169,7 +100,7 @@ const Ambulance = ({ isOpen }) => {
             </select>
           );
         }
-        return row.locationRef?.name || 'N/A';
+        return row.ref?.name || 'N/A';
       }
     },
     {
@@ -217,12 +148,11 @@ const Ambulance = ({ isOpen }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/ambulance`);
-        console.log('Fetched ambulance data:', response.data); // Add logging
-        setAmbulanceData(response.data);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranchData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching ambulance data:', error);
+        console.error('Error fetching branch data:', error);
         setLoading(false);
       }
     };
@@ -230,7 +160,7 @@ const Ambulance = ({ isOpen }) => {
     fetchData();
   }, []);
 
-  // Add fetchLocations function
+  // Fetch locations
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -246,19 +176,16 @@ const Ambulance = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setAmbulanceData(ambulanceData.map(item => {
+    setBranchData(branchData.map(item => {
       if (item._id === id) {
-        if (field === 'location') {
-          return { ...item, location: value };
-        }
-        if (field === 'locationRef') {
-          const selectedLocation = locations.find(location => location._id === value);
-          return { 
-            ...item, 
-            locationRef: selectedLocation ? { 
+        if (field === 'ref') {
+          const selectedLocation = locations.find(loc => loc._id === value);
+          return {
+            ...item,
+            ref: selectedLocation ? {
               _id: selectedLocation._id,
-              name: selectedLocation.name 
-            } : value 
+              name: selectedLocation.name
+            } : value
           };
         }
         return { ...item, [field]: value };
@@ -276,10 +203,8 @@ const Ambulance = ({ isOpen }) => {
         return;
       }
 
-      console.log('Sending data:', row); // Add logging
-
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/ambulance/${row._id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/branch/${row._id}`,
         row,
         {
           headers: {
@@ -288,14 +213,12 @@ const Ambulance = ({ isOpen }) => {
         }
       );
 
-      console.log('Response data:', response.data); // Add logging
-
-      setAmbulanceData(ambulanceData.map(item => 
+      setBranchData(branchData.map(item =>
         item._id === row._id ? { ...item, ...response.data } : item
       ));
       setEditingId(null);
     } catch (error) {
-      console.error("Error updating ambulance data:", error);
+      console.error("Error updating branch data:", error);
     }
   };
 
@@ -307,7 +230,7 @@ const Ambulance = ({ isOpen }) => {
   // Handle Delete Confirmation
   const handleDeleteConfirm = async () => {
     const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -315,20 +238,19 @@ const Ambulance = ({ isOpen }) => {
         return;
       }
 
-      // Delete all selected items
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/ambulance/${id}`, {
+      await Promise.all(ids.map(id =>
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/branch/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
       ));
 
-      setAmbulanceData(ambulanceData.filter(item => !ids.includes(item._id)));
+      setBranchData(branchData.filter(item => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting ambulance data:', error);
+      console.error('Error deleting branch data:', error);
     }
   };
 
@@ -337,8 +259,8 @@ const Ambulance = ({ isOpen }) => {
     setDeleteConfirm({ show: false, id: null });
   };
 
-  // Handle Add New Ambulance
-  const handleAddAmbulance = async () => {
+  // Handle Add New Branch
+  const handleAddBranch = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -346,11 +268,9 @@ const Ambulance = ({ isOpen }) => {
         return;
       }
 
-      console.log('Sending new ambulance data:', newAmbulance); // Add logging
-
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/ambulance`,
-        newAmbulance,
+        `${import.meta.env.VITE_BACKEND_URL}/branch`,
+        newBranch,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -358,119 +278,77 @@ const Ambulance = ({ isOpen }) => {
         }
       );
 
-      console.log('Response data:', response.data); // Add logging
-
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/ambulance`);
-        setAmbulanceData(updatedResponse.data);
-        setNewAmbulance({ 
-          category: '', 
-          center: '', 
-          poll: '', 
-          location: { lat: '', lng: '' },
-          locationRef: ''
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranchData(updatedResponse.data);
+        setNewBranch({
+          name: '',
+          ref: ''
         });
         setShowAddForm(false);
       }
     } catch (error) {
-      console.error("Error adding ambulance data:", error);
+      console.error("Error adding branch data:", error);
     }
   };
 
   // Filter data based on search
-  const filteredAmbulanceData = useMemo(() => {
+  const filteredBranchData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return ambulanceData;
-    return ambulanceData.filter((item) => {
-      const locationName = item.locationRef?.name || '';
+    if (!lowerCaseSearch) return branchData;
+    return branchData.filter((item) => {
+      const locationName = item.ref?.name || '';
       return (
-        (item.category && item.category.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.center && item.center.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+        item.name.toLowerCase().includes(lowerCaseSearch) ||
         locationName.toLowerCase().includes(lowerCaseSearch)
       );
     });
-  }, [ambulanceData, searchTerm]);
+  }, [branchData, searchTerm]);
 
-  // Modify the edit button click handler
+  // Handle edit button click
   const handleEditClick = (row) => {
-    setOriginalData(row); // Store original data
+    setOriginalData(row);
     setEditingId(row._id);
   };
 
-  // Modify the cancel button click handler
+  // Handle cancel button click
   const handleCancelEdit = () => {
-    // Restore original data
-    setAmbulanceData(ambulanceData.map(item => 
+    setBranchData(branchData.map(item =>
       item._id === editingId ? originalData : item
     ));
     setEditingId(null);
     setOriginalData(null);
   };
 
-  // Update download template function
-  const handleDownloadTemplate = () => {
-    try {
-      const sampleData = [
-        {
-          name: 'Sample Ambulance (Required)',
-          location_name: 'Azizia',
-          category: 'Type A',
-          center: 'Sample Center (Optional)',
-          poll: 'Sample Poll (Optional)',
-          latitude: '21.4225',
-          longitude: '39.8262'
-        }
-      ];
-
-      const ws = utils.json_to_sheet([]);
-      
-      // Add headers with required/optional indicators
-      utils.sheet_add_aoa(ws, [[
-        'name',
-        'location_name',
-        'category',
-        'center',
-        'poll',
-        'latitude',
-        'longitude'
-      ]], { origin: 'A1' });
-
-      // Add sample data
-      utils.sheet_add_json(ws, sampleData, { 
-        origin: 'A2',
-        skipHeader: true
-      });
-
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 25 }, // name
-        { wch: 30 }, // location_name
-        { wch: 20 }, // category
-        { wch: 20 }, // center
-        { wch: 20 }, // poll
-        { wch: 20 }, // latitude
-        { wch: 20 }  // longitude
-      ];
-
-      const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
-
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'ambulance_upload_template.xlsx';
-      link.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
+  // Handle select all
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedRows(filteredBranchData.map(row => row._id));
+    } else {
+      setSelectedRows([]);
     }
+  };
+
+  // Handle select row
+  const handleSelectRow = (id) => {
+    setSelectedRows(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(rowId => rowId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedRows.length === 0) return;
+    
+    setDeleteConfirm({
+      show: true,
+      id: selectedRows,
+      isBulk: true
+    });
   };
 
   // Handle file upload
@@ -491,6 +369,8 @@ const Ambulance = ({ isOpen }) => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
+          console.log('Parsed Excel data:', data);
+
           if (data.length === 0) {
             setUploadError('The Excel file is empty. Please add some data.');
             return;
@@ -501,7 +381,7 @@ const Ambulance = ({ isOpen }) => {
           const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow;
           
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have required columns: name and location_name');
+            setUploadError('Excel file must have columns: name and location_name. Please check your column headers.');
             console.log('Required columns missing. Found columns:', Object.keys(firstRow));
             return;
           }
@@ -516,26 +396,13 @@ const Ambulance = ({ isOpen }) => {
               return;
             }
 
-            // Validate coordinates if present (optional)
-            if (row.latitude !== undefined || row.longitude !== undefined) {
-              const lat = Number(row.latitude);
-              const lng = Number(row.longitude);
-              
-              if (isNaN(lat) || lat < -90 || lat > 90) {
-                setUploadError(`Row ${rowNumber}: Invalid latitude. Must be a number between -90 and 90`);
+            // Validate location_name if provided
+            if (row.location_name && locations.length > 0) {
+              const locationExists = locations.some(loc => loc.name === row.location_name);
+              if (!locationExists) {
+                setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
                 return;
               }
-              if (isNaN(lng) || lng < -180 || lng > 180) {
-                setUploadError(`Row ${rowNumber}: Invalid longitude. Must be a number between -180 and 180`);
-                return;
-              }
-            }
-
-            // Validate location_name
-            const locationExists = locations.some(location => location.name === row.location_name);
-            if (!locationExists) {
-              setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
-              return;
             }
           }
 
@@ -549,7 +416,7 @@ const Ambulance = ({ isOpen }) => {
           }
 
           const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/ambulance/bulk-upload`,
+            `${import.meta.env.VITE_BACKEND_URL}/branch/bulk-upload`,
             formData,
             {
               headers: {
@@ -559,18 +426,18 @@ const Ambulance = ({ isOpen }) => {
             }
           );
 
-          setUploadSuccess(`Successfully uploaded ${response.data.count} ambulances`);
+          setUploadSuccess(`Successfully uploaded ${response.data.count} branches`);
           setUploadError(null);
 
           // Refresh the data
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/ambulance`);
-          setAmbulanceData(updatedResponse.data);
+          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+          setBranchData(updatedResponse.data);
           
           // Reset the file input
           event.target.value = '';
         } catch (error) {
           console.error('Excel processing error:', error);
-          setUploadError(error.response?.data?.message || 'Error processing the Excel file');
+          setUploadError(error.response?.data?.message || 'Error processing the Excel file. Please check the file format.');
           setUploadSuccess(null);
         }
       };
@@ -583,35 +450,64 @@ const Ambulance = ({ isOpen }) => {
     }
   };
 
-  // Add handleSelectAll function
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelectedRows(filteredAmbulanceData.map(row => row._id));
-    } else {
-      setSelectedRows([]);
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          name: 'Sample Branch Name',
+          location_name: 'Sample Location Name'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers with comments
+      utils.sheet_add_aoa(ws, [[
+        'name',
+        'location_name'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 30 }, // name
+        { wch: 30 }  // location_name
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'branch_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
     }
-  };
-
-  // Add handleSelectRow function
-  const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-  };
-
-  // Add handleBulkDelete function
-  const handleBulkDelete = async () => {
-    if (selectedRows.length === 0) return;
-    
-    setDeleteConfirm({ 
-      show: true, 
-      id: selectedRows,
-      isBulk: true 
-    });
   };
 
   return (
@@ -626,9 +522,9 @@ const Ambulance = ({ isOpen }) => {
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">Ambulance Management</h1>
+            <h1 className="text-2xl font-bold">Branch Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              Total: {filteredAmbulanceData.length} ambulances
+              Total: {filteredBranchData.length} branches
             </div>
           </div>
           <div className="flex gap-4">
@@ -664,7 +560,7 @@ const Ambulance = ({ isOpen }) => {
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add Ambulance'}
+              {showAddForm ? 'Cancel' : 'Add Branch'}
             </button>
           </div>
         </div>
@@ -681,76 +577,24 @@ const Ambulance = ({ isOpen }) => {
           </div>
         )}
 
-        {/* New Ambulance Form */}
+        {/* New Branch Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 className="text-lg font-bold mb-4">Add New Ambulance</h2>
+            <h2 className="text-lg font-bold mb-4">Add New Branch</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Category</label>
-              <Select
-                value={ambulanceCategories.categories.find(cat => cat.value === newAmbulance.category)}
-                onChange={(selected) => setNewAmbulance({ ...newAmbulance, category: selected.value })}
-                options={ambulanceCategories.categories}
-                styles={customStyles}
-                className="mt-1"
-                isSearchable
-                placeholder="Select category..."
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Center</label>
+              <label className="block text-sm font-medium">Name</label>
               <input
                 type="text"
-                value={newAmbulance.center}
-                onChange={(e) => setNewAmbulance({ ...newAmbulance, center: e.target.value })}
+                value={newBranch.name}
+                onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Poll</label>
-              <input
-                type="text"
-                value={newAmbulance.poll}
-                onChange={(e) => setNewAmbulance({ ...newAmbulance, poll: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Location</label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Latitude</label>
-                  <input
-                    type="number"
-                    value={newAmbulance.location.lat}
-                    onChange={(e) => setNewAmbulance({
-                      ...newAmbulance,
-                      location: { ...newAmbulance.location, lat: e.target.value }
-                    })}
-                    placeholder="Enter latitude"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Longitude</label>
-                  <input
-                    type="number"
-                    value={newAmbulance.location.lng}
-                    onChange={(e) => setNewAmbulance({
-                      ...newAmbulance,
-                      location: { ...newAmbulance.location, lng: e.target.value }
-                    })}
-                    placeholder="Enter longitude"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
-                </div>
-              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Location Reference</label>
               <select
-                value={newAmbulance.locationRef}
-                onChange={(e) => setNewAmbulance({ ...newAmbulance, locationRef: e.target.value })}
+                value={newBranch.ref}
+                onChange={(e) => setNewBranch({ ...newBranch, ref: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
@@ -762,10 +606,10 @@ const Ambulance = ({ isOpen }) => {
               </select>
             </div>
             <button
-              onClick={handleAddAmbulance}
+              onClick={handleAddBranch}
               className="bg-blue-500 text-white px-4 py-2 rounded-md"
             >
-              Add Ambulance
+              Add Branch
             </button>
           </div>
         )}
@@ -775,7 +619,7 @@ const Ambulance = ({ isOpen }) => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search ambulances..."
+              placeholder="Search branches..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
@@ -794,8 +638,8 @@ const Ambulance = ({ isOpen }) => {
               </div>
               <p className="text-gray-600 mb-6">
                 {Array.isArray(deleteConfirm.id)
-                  ? `Are you sure you want to delete ${deleteConfirm.id.length} selected ambulances? This action cannot be undone.`
-                  : 'Are you sure you want to delete this ambulance? This action cannot be undone.'}
+                  ? `Are you sure you want to delete ${deleteConfirm.id.length} selected branches? This action cannot be undone.`
+                  : 'Are you sure you want to delete this branch? This action cannot be undone.'}
               </p>
               <div className="flex justify-end gap-3">
                 <button
@@ -818,14 +662,14 @@ const Ambulance = ({ isOpen }) => {
         {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
-        ) : filteredAmbulanceData.length === 0 ? (
-          <p className="text-center">No ambulances found</p>
+        ) : filteredBranchData.length === 0 ? (
+          <p className="text-center">No branches found</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  {ambulanceColumns.map((column) => (
+                  {branchColumns.map((column) => (
                     <th key={column.key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {column.title}
                     </th>
@@ -833,9 +677,9 @@ const Ambulance = ({ isOpen }) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAmbulanceData.map((row) => (
+                {filteredBranchData.map((row) => (
                   <tr key={row._id}>
-                    {ambulanceColumns.map((column) => (
+                    {branchColumns.map((column) => (
                       <td key={`${row._id}-${column.key}`} className="px-6 py-4 whitespace-nowrap">
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
@@ -851,4 +695,4 @@ const Ambulance = ({ isOpen }) => {
   );
 };
 
-export default Ambulance;
+export default Branch; 

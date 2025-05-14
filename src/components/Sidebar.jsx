@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell } from 'lucide-react';
+import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus } from 'lucide-react';
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
@@ -8,6 +8,8 @@ const Sidebar = ({ isOpen }) => {
     // { id: 'dashboard', label: 'Dashboard', icon: <Home size={20} />, path: '/dashboard' },
     { id: 'ambulance', label: 'Ambulance', icon: <Ambulance size={20} />, path: '/ambulance' },
     { id: 'building', label: 'Building', icon: <BrickWall size={20} />, path: '/building' },
+    { id: 'branch', label: 'Branch', icon: <GitBranch size={20} />, path: '/branch' },
+    { id: 'bus-station', label: 'Bus Station', icon: <Bus size={20} />, path: '/bus-station' },
     { id: 'camp', label: 'Camp', icon: <TentTree size={20} />, path: '/camp' },
     { id: 'clinic', label: 'Clinic', icon: <BriefcaseMedical size={20} />, path: '/clinic' },
     { id: 'hospital', label: 'Hospital', icon: <Hospital size={20} />, path: '/hospital' },

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import TableComponent from '../../components/TableComponent';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -15,11 +14,13 @@ const Building = ({ isOpen }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [newBuilding, setNewBuilding] = useState({
     name: '',
     location: { lat: '', lng: '' },
     phone: '',
-    ref: ''
+    ref: '',
+    branchRef: ''
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -128,8 +129,30 @@ const Building = ({ isOpen }) => {
             </select>
           );
         }
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
-        return locationName;
+        return row.ref?.name || 'N/A';
+      }
+    },
+    { 
+      key: 'branchRef', 
+      title: 'Branch Reference',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <select
+              value={row.branchRef?._id || row.branchRef || ''}
+              onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value)}
+              className="w-full p-1 border rounded"
+            >
+              <option value="">Select Branch</option>
+              {branches.map(branch => (
+                <option key={branch._id} value={branch._id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          );
+        }
+        return row.branchRef?.name || 'N/A';
       }
     },
     {
@@ -204,6 +227,20 @@ const Building = ({ isOpen }) => {
     fetchLocations();
   }, []);
 
+  // Add useEffect to fetch branches
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        setBranches(response.data);
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
     setBuildingData(buildingData.map(item => {
@@ -232,14 +269,16 @@ const Building = ({ isOpen }) => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     if (!lowerCaseSearch) return buildingData;
     return buildingData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+      const locationName = item.ref?.name || '';
+      const branchName = item.branchRef?.name || '';
       return (
         (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
         (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
-        (locationName.toLowerCase().includes(lowerCaseSearch))
+        locationName.toLowerCase().includes(lowerCaseSearch) ||
+        branchName.toLowerCase().includes(lowerCaseSearch)
       );
     });
-  }, [buildingData, searchTerm, locations]);
+  }, [buildingData, searchTerm]);
 
   // Handle Save Edit
   const handleSaveEdit = async (row) => {
@@ -333,7 +372,8 @@ const Building = ({ isOpen }) => {
           name: '', 
           location: { lat: '', lng: '' },
           phone: '',
-          ref: ''
+          ref: '',
+          branchRef: ''
         });
         setShowAddForm(false);
       }
@@ -361,134 +401,183 @@ const Building = ({ isOpen }) => {
   // Handle file upload
   const handleFileUpload = async (event) => {
     try {
-      const file = event.target.files[0];
-      if (!file) return;
+        const file = event.target.files[0];
+        if (!file) return;
 
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        setUploadError('Please upload an Excel file (.xlsx or .xls)');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const workbook = read(e.target.result, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const data = utils.sheet_to_json(worksheet);
-
-          // Validate the data structure
-          const isValid = data.every(row => {
-            const hasRequiredFields = row.name && row.phone;
-            const hasValidCoordinates = !row.latitude || !row.longitude || 
-              (typeof Number(row.latitude) === 'number' && typeof Number(row.longitude) === 'number');
-            return hasRequiredFields && hasValidCoordinates;
-          });
-
-          if (!isValid) {
-            setUploadError('Invalid data format. Please ensure all required fields (name, phone) are present and coordinates are valid numbers.');
+        if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+            setUploadError('Please upload an Excel file (.xlsx or .xls)');
             return;
-          }
-
-          const formData = new FormData();
-          formData.append('file', file);
-
-          const token = localStorage.getItem("token");
-          const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/building/bulk-upload`,
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
-
-          setUploadSuccess(`Successfully uploaded ${response.data.count} buildings`);
-          setUploadError(null);
-
-          // Refresh the data
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/building`);
-          setBuildingData(updatedResponse.data);
-        } catch (error) {
-          setUploadError(error.response?.data?.message || 'Error uploading file');
-          setUploadSuccess(null);
         }
-      };
 
-      reader.readAsArrayBuffer(file);
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const workbook = read(e.target.result, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = utils.sheet_to_json(worksheet);
+
+                if (data.length === 0) {
+                    setUploadError('The Excel file is empty. Please add some data.');
+                    return;
+                }
+
+                // Check the first row to understand the column structure
+                const firstRow = data[0];
+                const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow && 'branch_name' in firstRow;
+                
+                if (!hasRequiredColumns) {
+                    setUploadError('Excel file must have required columns: name, location_name, and branch_name');
+                    console.log('Required columns missing. Found columns:', Object.keys(firstRow));
+                    return;
+                }
+
+                // Validate each row
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const rowNumber = i + 2; // Excel row number (accounting for header)
+
+                    if (!row.name || !row.location_name || !row.branch_name) {
+                        const missing = [];
+                        if (!row.name) missing.push('name');
+                        if (!row.location_name) missing.push('location_name');
+                        if (!row.branch_name) missing.push('branch_name');
+                        setUploadError(`Row ${rowNumber}: Missing required fields: ${missing.join(', ')}`);
+                        return;
+                    }
+
+                    // Validate coordinates if present (optional)
+                    if (row.latitude !== undefined || row.longitude !== undefined) {
+                        const lat = Number(row.latitude);
+                        const lng = Number(row.longitude);
+                        
+                        if (isNaN(lat) || lat < -90 || lat > 90) {
+                            setUploadError(`Row ${rowNumber}: Invalid latitude. Must be a number between -90 and 90`);
+                            return;
+                        }
+                        if (isNaN(lng) || lng < -180 || lng > 180) {
+                            setUploadError(`Row ${rowNumber}: Invalid longitude. Must be a number between -180 and 180`);
+                            return;
+                        }
+                    }
+
+                    // Validate location_name exists
+                    const locationExists = locations.some(location => location.name === row.location_name);
+                    if (!locationExists) {
+                        setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
+                        return;
+                    }
+
+                    // Validate branch_name exists
+                    const branchExists = branches.some(branch => branch.name === row.branch_name);
+                    if (!branchExists) {
+                        setUploadError(`Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`);
+                        return;
+                    }
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    setUploadError('Authentication token not found. Please log in again.');
+                    return;
+                }
+
+                const response = await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/building/bulk-upload`,
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                setUploadSuccess(`Successfully uploaded ${response.data.count} buildings`);
+                setUploadError(null);
+
+                // Refresh the data
+                const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/building`);
+                setBuildingData(updatedResponse.data);
+                
+                // Reset the file input
+                event.target.value = '';
+            } catch (error) {
+                console.error('Excel processing error:', error);
+                setUploadError(error.response?.data?.message || 'Error processing the Excel file');
+                setUploadSuccess(null);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
     } catch (error) {
-      setUploadError('Error processing file');
-      setUploadSuccess(null);
+        console.error('File upload error:', error);
+        setUploadError('Error processing file. Please try again.');
+        setUploadSuccess(null);
     }
   };
 
-  // Add download template function
+  // Update download template function
   const handleDownloadTemplate = () => {
     try {
-      // Create sample data
-      const sampleData = [
-        {
-          name: 'Sample Building',
-          phone: '1234567890',
-          latitude: '21.4225',
-          longitude: '39.8262',
-          location_name: 'Sample Location Name'
-        }
-      ];
+        const sampleData = [
+            {
+                name: 'Sample Building',
+                location_name: 'Azizia',
+                branch_name: 'Branch 1',
+                phone: '+966 123456789',
+                latitude: '21.4225',
+                longitude: '39.8262'
+            }
+        ];
 
-      // Create worksheet
-      const ws = utils.json_to_sheet([]);
-      
-      // Add headers with comments
-      utils.sheet_add_aoa(ws, [[
-        'name',
-        'phone',
-        'latitude',
-        'longitude',
-        'location_name'
-      ]], { origin: 'A1' });
+        const ws = utils.json_to_sheet([]);
+        
+        // Add headers with required/optional indicators
+        utils.sheet_add_aoa(ws, [[
+            'name',
+            'location_name',
+            'branch_name',
+            'phone',
+            'latitude',
+            'longitude'
+        ]], { origin: 'A1' });
 
-      // Add sample data
-      utils.sheet_add_json(ws, sampleData, { 
-        origin: 'A2',
-        skipHeader: true
-      });
+        // Add sample data
+        utils.sheet_add_json(ws, sampleData, { 
+            origin: 'A2',
+            skipHeader: true
+        });
 
-      // Add column widths
-      ws['!cols'] = [
-        { wch: 20 }, // name
-        { wch: 15 }, // phone
-        { wch: 12 }, // latitude
-        { wch: 12 }, // longitude
-        { wch: 30 }  // location_name
-      ];
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 25 }, // name
+            { wch: 30 }, // location_name
+            { wch: 30 }, // branch_name
+            { wch: 20 }, // phone
+            { wch: 15 }, // latitude
+            { wch: 15 }  // longitude
+        ];
 
-      // Create workbook
-      const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
+        const wb = utils.book_new();
+        utils.book_append_sheet(wb, ws, 'Template');
 
-      // Generate Excel file
-      write(wb, { 
-        bookType: 'xlsx',
-        type: 'array'
-      });
-
-      // Convert to blob and download
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'building_upload_template.xlsx';
-      link.click();
-      window.URL.revokeObjectURL(url);
+        const blob = new Blob(
+            [write(wb, { bookType: 'xlsx', type: 'array' })], 
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        );
+        
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'building_upload_template.xlsx';
+        link.click();
+        window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
+        console.error('Error creating template:', error);
+        setUploadError('Failed to download template. Please try again.');
     }
   };
 
@@ -535,7 +624,7 @@ const Building = ({ isOpen }) => {
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Building Management</h1>
+            <h1 className="text-2xl font-bold">Building Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               Total: {filteredBuildingData.length} buildings
             </div>
@@ -578,7 +667,20 @@ const Building = ({ isOpen }) => {
           </div>
         </div>
 
-        {/* Add error and success messages */}
+        {/* Search Bar */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search buildings..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+            />
+            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+          </div>
+        </div>
+
         {uploadError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {uploadError}
@@ -590,7 +692,6 @@ const Building = ({ isOpen }) => {
           </div>
         )}
 
-        {/* New Building Form - Only shown when showAddForm is true */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Building</h2>
@@ -659,6 +760,21 @@ const Building = ({ isOpen }) => {
                 ))}
               </select>
             </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Branch Reference</label>
+              <select
+                value={newBuilding.branchRef}
+                onChange={(e) => setNewBuilding({ ...newBuilding, branchRef: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="">Select Branch</option>
+                {branches.map(branch => (
+                  <option key={branch._id} value={branch._id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleAddBuilding}
               className="bg-blue-500 text-white px-4 py-2 rounded-md"
@@ -667,20 +783,6 @@ const Building = ({ isOpen }) => {
             </button>
           </div>
         )}
-
-        {/* Search Bar */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search buildings..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-            />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
-          </div>
-        </div>
 
         {/* Table */}
         {loading ? (
@@ -714,7 +816,7 @@ const Building = ({ isOpen }) => {
           </div>
         )}
 
-        {/* Modify Delete Confirmation Modal */}
+        {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
