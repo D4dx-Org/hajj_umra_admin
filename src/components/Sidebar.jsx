@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus } from 'lucide-react';
+import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus, Flag } from 'lucide-react';
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
@@ -12,6 +12,7 @@ const Sidebar = ({ isOpen }) => {
     { id: 'bus-station', label: 'Bus Station', icon: <Bus size={20} />, path: '/bus-station' },
     { id: 'camp', label: 'Camp', icon: <TentTree size={20} />, path: '/camp' },
     { id: 'clinic', label: 'Clinic', icon: <BriefcaseMedical size={20} />, path: '/clinic' },
+    { id: 'countries', label: 'Countries', icon: <Flag size={20} />, path: '/countries' },
     { id: 'hospital', label: 'Hospital', icon: <Hospital size={20} />, path: '/hospital' },
     { id: 'location', label: 'Location', icon: <MapPin size={20} />, path: '/location' },
     { id: 'nusuk', label: 'Nusuk', icon: <Building size={20} />, path: '/nusuk' },

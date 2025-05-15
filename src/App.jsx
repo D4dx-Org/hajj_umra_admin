@@ -13,6 +13,7 @@ import Thanima from './pages/Admin/Thanima';
 import Notification from './pages/Admin/Notification';
 import Branch from './pages/Admin/Branch';
 import BusStation from './pages/Admin/BusStation';
+import Countries from './pages/Admin/Countries';
 
 const App = () => {
   return (
@@ -29,6 +30,7 @@ const App = () => {
           <Route path="/bus-station" element={<BusStation />} />
           <Route path="/camp" element={<Camp />} />
           <Route path="/clinic" element={<Clinic />} />
+          <Route path="/countries" element={<Countries />} />
           <Route path="/hospital" element={<Hospital />} />
           <Route path="/location" element={<Location />} />
           <Route path="/nusuk" element={<Nusuk />} />

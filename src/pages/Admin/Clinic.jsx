@@ -565,12 +565,12 @@ const Clinic = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Medical Dispensary - 01 (Required)',
-          location_name: 'Azizia (Required)',
-          branch_name: 'Branch 1 (Required)',
+          location_name: 'Azizia',
+          branch_name: 'Branch 1',
           center: 'Center A (Optional)',
           poll: 'Poll 1 (Optional)',
-          latitude: '21.4225 (Optional)',
-          longitude: '39.8262 (Optional)'
+          latitude: '21.4225',
+          longitude: '39.8262'
         }
       ];
 
@@ -579,13 +579,13 @@ const Clinic = ({ isOpen }) => {
       
       // Add headers with required/optional indicators
       utils.sheet_add_aoa(ws, [[
-        'name (Required)',
-        'location_name (Required)',
-        'branch_name (Required)',
-        'center (Optional)',
-        'poll (Optional)',
-        'latitude (Optional)',
-        'longitude (Optional)'
+        'name',
+        'location_name',
+        'branch_name',
+        'center',
+        'poll',
+        'latitude',
+        'longitude'
       ]], { origin: 'A1' });
 
       // Add sample data
