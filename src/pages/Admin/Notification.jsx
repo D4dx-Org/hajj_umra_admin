@@ -143,6 +143,12 @@ const Notification = () => {
                 }
             } else if (values.type === 'link' || values.type === 'text') {
                 contentUrl = values.content;
+            } else if (editingId) {
+                // If editing and no new file is uploaded, keep the existing content
+                const existingNotification = notifications.find(n => n._id === editingId);
+                if (existingNotification) {
+                    contentUrl = existingNotification.content;
+                }
             }
 
             const notificationData = {
@@ -152,9 +158,11 @@ const Notification = () => {
                 content: contentUrl
             };
 
+            console.log('Submitting notification data:', notificationData);
+
             if (editingId) {
                 // Update existing notification
-                await axios.put(
+                const response = await axios.put(
                     `${import.meta.env.VITE_BACKEND_URL}/notifications/${editingId}`,
                     notificationData,
                     {
@@ -162,6 +170,7 @@ const Notification = () => {
                     }
                 );
                 message.success('Notification updated successfully');
+                console.log('Update response:', response.data);
             } else {
                 // Create new notification
                 await axios.post(
@@ -173,6 +182,7 @@ const Notification = () => {
                 );
                 message.success('Notification created successfully');
             }
+
             setModalVisible(false);
             setEditingId(null);
             form.resetFields();
@@ -180,7 +190,7 @@ const Notification = () => {
             fetchNotifications();
         } catch (error) {
             console.error('Error saving notification:', error.response?.data || error.message);
-            message.error('Failed to save notification');
+            message.error(error.response?.data?.message || 'Failed to save notification');
         }
     };
 
