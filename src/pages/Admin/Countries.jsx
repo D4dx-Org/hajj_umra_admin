@@ -119,8 +119,8 @@ const Countries = () => {
       const flagUrl = uploadResponse.data.url;
 
       if (countryId) {
-        // Update existing country
-        await handleEditChange(countryId, 'flag', flagUrl);
+        // For editing existing country
+        handleEditChange(countryId, 'flag', flagUrl);
       } else {
         // For new country
         setNewCountry(prev => ({ ...prev, flag: flagUrl }));
@@ -128,31 +128,17 @@ const Countries = () => {
 
       message.success('Flag uploaded successfully to DigitalOcean CDN');
       setUploadSuccess('File uploaded successfully to DigitalOcean CDN');
-      setTimeout(() => setUploadSuccess(null), 3000); // Clear success message after 3 seconds
+      setTimeout(() => setUploadSuccess(null), 3000);
       return flagUrl;
     } catch (error) {
       console.error('Error uploading flag to DigitalOcean:', error);
       const errorMessage = error.response?.data?.message || 'Failed to upload flag to DigitalOcean';
       message.error(errorMessage);
       setUploadError(errorMessage);
-      setTimeout(() => setUploadError(null), 3000); // Clear error message after 3 seconds
+      setTimeout(() => setUploadError(null), 3000);
       return null;
     }
   };
-
-  // Update the Upload component usage
-  const renderUploadButton = (countryId = null) => (
-    <Upload {...uploadProps} onChange={async (info) => {
-      if (info.file.status !== 'uploading') {
-        await handleFlagUpload(info, countryId);
-      }
-    }}>
-      <button className="px-2 py-1 border rounded hover:bg-gray-50 flex items-center gap-1">
-        <UploadIcon size={16} />
-        Upload Flag
-      </button>
-    </Upload>
-  );
 
   // Update the flag column render function
   const flagColumn = {
@@ -164,18 +150,30 @@ const Countries = () => {
           <div className="flex items-center gap-2">
             {row.flag && (
               <img
-                src={row.flag}  // CDN URL is now returned directly
+                src={row.flag}
                 alt="Flag"
                 className="w-8 h-8 object-cover rounded"
               />
             )}
-            {renderUploadButton(row._id)}
+            <Upload
+              {...uploadProps}
+              onChange={async (info) => {
+                if (info.file.status !== 'uploading') {
+                  await handleFlagUpload(info, row._id);
+                }
+              }}
+            >
+              <button className="px-2 py-1 border rounded hover:bg-gray-50 flex items-center gap-1">
+                <UploadIcon size={16} />
+                Upload Flag
+              </button>
+            </Upload>
           </div>
         );
       }
       return row.flag ? (
         <img
-          src={row.flag}  // CDN URL is now returned directly
+          src={row.flag}
           alt="Flag"
           className="w-8 h-8 object-cover rounded"
         />
@@ -320,7 +318,10 @@ const Countries = () => {
   const handleEditChange = (id, field, value) => {
     setCountryData(countryData.map(item => {
       if (item._id === id) {
-        return { ...item, [field]: value };
+        // Create a new object without flagUrl
+        const updatedItem = { ...item, [field]: value };
+        delete updatedItem.flagUrl;  // Remove flagUrl if it exists
+        return updatedItem;
       }
       return item;
     }));
@@ -335,9 +336,15 @@ const Countries = () => {
         return;
       }
 
+      // Create a clean copy of the row data without flagUrl
+      const cleanRowData = { ...row };
+      delete cleanRowData.flagUrl;  // Remove flagUrl if it exists
+
+      console.log('Attempting to update country with data:', JSON.stringify(cleanRowData, null, 2));
+
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/countries/${row._id}`,
-        row,
+        cleanRowData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -350,7 +357,14 @@ const Countries = () => {
       ));
       setEditingId(null);
     } catch (error) {
-      console.error("Error updating country data:", error);
+      console.error("Error updating country data:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      // Show error message to user
+      message.error(error.response?.data?.message || "Error updating country");
     }
   };
 
