@@ -21,7 +21,7 @@ const Hospital = ({ isOpen }) => {
     location: { lat: '', lng: '' }, 
     phone: '',
     ref: '',
-    branchRef: ''
+    branchRef: null
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -244,16 +244,16 @@ const Hospital = ({ isOpen }) => {
     },
     {
       key: 'branchRef',
-      title: 'Branch Reference',
+      title: 'Branch Reference (Optional)',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <select
               value={row.branchRef?._id || row.branchRef || ''}
-              onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value)}
+              onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value || null)}
               className="w-full p-1 border rounded"
             >
-              <option value="">Select Branch</option>
+              <option value="">No Branch</option>
               {branches.map(branch => (
                 <option key={branch._id} value={branch._id}>
                   {branch.name}
@@ -262,7 +262,7 @@ const Hospital = ({ isOpen }) => {
             </select>
           );
         }
-        const branchName = row.branchRef?.name || branches.find(branch => branch._id === row.branchRef)?.name || 'N/A';
+        const branchName = row.branchRef?.name || branches.find(branch => branch._id === row.branchRef)?.name || 'No Branch';
         return branchName;
       }
     },
@@ -325,6 +325,9 @@ const Hospital = ({ isOpen }) => {
           };
         }
         if (field === 'branchRef') {
+          if (!value) {
+            return { ...item, branchRef: null };
+          }
           const selectedBranch = branches.find(branch => branch._id === value);
           return { 
             ...item, 
@@ -349,9 +352,17 @@ const Hospital = ({ isOpen }) => {
         return;
       }
 
+      // Create a copy of the row data
+      const hospitalData = { ...row };
+      
+      // Only include branchRef if it has a value
+      if (!hospitalData.branchRef || hospitalData.branchRef === '') {
+        delete hospitalData.branchRef;
+      }
+
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/hospital/${row._id}`,
-        row,
+        hospitalData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -415,9 +426,17 @@ const Hospital = ({ isOpen }) => {
         return;
       }
 
+      // Create a copy of the hospital data
+      const hospitalData = { ...newHospital };
+      
+      // Only include branchRef if it has a value
+      if (!hospitalData.branchRef) {
+        delete hospitalData.branchRef;
+      }
+
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/hospital`,
-        newHospital,
+        hospitalData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -434,7 +453,7 @@ const Hospital = ({ isOpen }) => {
           location: { lat: '', lng: '' }, 
           phone: '',
           ref: '',
-          branchRef: ''
+          branchRef: null
         });
         setShowAddForm(false);
       }
@@ -556,10 +575,10 @@ const Hospital = ({ isOpen }) => {
 
           // Check the first row to understand the column structure
           const firstRow = data[0];
-          const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow && 'branch_name' in firstRow;
+          const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow;
           
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have required columns: name, location_name, and branch_name');
+            setUploadError('Excel file must have required columns: name and location_name');
             return;
           }
 
@@ -606,6 +625,25 @@ const Hospital = ({ isOpen }) => {
       setUploadSuccess(null);
     }
   };
+
+  // Update the branch reference select in the add form
+  const renderBranchSelect = () => (
+    <div className="mb-4">
+      <label className="block text-sm font-medium">Branch Reference (Optional)</label>
+      <select
+        value={newHospital.branchRef || ''}
+        onChange={(e) => setNewHospital({ ...newHospital, branchRef: e.target.value || null })}
+        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+      >
+        <option value="">No Branch</option>
+        {branches.map(branch => (
+          <option key={branch._id} value={branch._id}>
+            {branch.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <div>
@@ -750,21 +788,7 @@ const Hospital = ({ isOpen }) => {
                 ))}
               </select>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Branch Reference</label>
-              <select
-                value={newHospital.branchRef}
-                onChange={(e) => setNewHospital({ ...newHospital, branchRef: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="">Select Branch</option>
-                {branches.map(branch => (
-                  <option key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {renderBranchSelect()}
             <button
               onClick={handleAddHospital}
               className="bg-blue-500 text-white px-4 py-2 rounded-md"

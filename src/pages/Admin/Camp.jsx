@@ -5,7 +5,6 @@ import Navbar from '../../components/Navbar';
 import axios from 'axios';
 import { read, utils, write } from 'xlsx';
 import AsyncSelect from 'react-select/async';
-import { countries } from 'countries-list';
 
 const Camp = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,21 +20,40 @@ const Camp = ({ isOpen }) => {
     zone: '', 
     country: '', 
     poll: '', 
+    road: '',
+    tent: '',
     location: { lat: '', lng: '' },
-    ref: '' // Added ref field
+    ref: '',
+    otherCountry: ''
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [countries, setCountries] = useState([]); // Add state for countries
 
-  // Convert countries object to array format for react-select
+  // Convert our countries to react-select format
   const countryOptions = useMemo(() => {
-    return Object.entries(countries).map(([code, country]) => ({
-      value: country.name,
-      label: `${country.name} (${code})`,
-      emoji: country.emoji
+    return countries.map(country => ({
+      value: country._id,
+      label: country.name,
+      arabicName: country.arabicName,
+      flag: country.flag,
+      category: country.category
     }));
+  }, [countries]);
+
+  // Fetch countries from our API
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp/countries/list`);
+        setCountries(response.data);
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
+    };
+    fetchCountries();
   }, []);
 
   // Filter countries based on input
@@ -44,7 +62,8 @@ const Camp = ({ isOpen }) => {
       setTimeout(() => {
         resolve(
           countryOptions.filter((option) =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase())
+            option.label.toLowerCase().includes(inputValue.toLowerCase()) ||
+            option.arabicName.toLowerCase().includes(inputValue.toLowerCase())
           )
         );
       }, 100);
@@ -70,16 +89,16 @@ const Camp = ({ isOpen }) => {
   // Custom Option component for react-select
   const CustomOption = ({ data, ...props }) => (
     <div {...props.innerProps} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span>{data.emoji}</span>
       <span>{data.label}</span>
+      {data.arabicName && <span className="text-gray-500">({data.arabicName})</span>}
     </div>
   );
 
   // Custom SingleValue component for react-select
   const CustomSingleValue = ({ data }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span>{data.emoji}</span>
       <span>{data.label}</span>
+      {data.arabicName && <span className="text-gray-500">({data.arabicName})</span>}
     </div>
   );
 
@@ -144,28 +163,41 @@ const Camp = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <AsyncSelect
-              cacheOptions
-              defaultOptions={countryOptions}
-              loadOptions={loadCountryOptions}
-              value={countryOptions.find(option => option.value === row.country)}
-              onChange={(selected) => handleEditChange(row._id, 'country', selected.value)}
-              styles={customStyles}
-              components={{
-                Option: CustomOption,
-                SingleValue: CustomSingleValue
-              }}
-              className="w-full"
-            />
+            <div className="flex flex-col gap-2">
+            <select
+                value={row.country?._id || row.country || ''}
+              onChange={(e) => handleEditChange(row._id, 'country', e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Select Country</option>
+                <option value="others">Others</option>
+              {countries.map(country => (
+                <option key={country._id} value={country._id}>
+                  {country.name} {country.arabicName ? `(${country.arabicName})` : ''}
+                </option>
+              ))}
+            </select>
+              {(row.country === 'others' || row.otherCountry) && (
+                <input
+                  type="text"
+                  value={row.otherCountry || ''}
+                  onChange={(e) => handleEditChange(row._id, 'otherCountry', e.target.value)}
+                  placeholder="Enter other country name"
+                  className="w-full p-2 border rounded mt-2"
+                />
+              )}
+            </div>
           );
         }
-        const countryOption = countryOptions.find(option => option.value === row.country);
-        return countryOption ? (
+        if (row.otherCountry) {
+          return <span>{row.otherCountry} (Other)</span>;
+        }
+        return row.country ? (
           <div className="flex items-center gap-2">
-            <span>{countryOption.emoji}</span>
-            <span>{countryOption.value}</span>
+            <span>{row.country.name}</span>
+            {row.country.arabicName && <span className="text-gray-500">({row.country.arabicName})</span>}
           </div>
-        ) : row.country;
+        ) : 'N/A';
       }
     },
     { 
@@ -210,7 +242,12 @@ const Camp = ({ isOpen }) => {
             </div>
           );
         }
-        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
+        const lat = row.location?.lat;
+        const lng = row.location?.lng;
+        if (lat === undefined && lng === undefined) return 'N/A';
+        if ((lat === undefined || lat === '') && (lng !== undefined && lng !== '')) return `N/A, ${lng}`;
+        if ((lng === undefined || lng === '') && (lat !== undefined && lat !== '')) return `${lat}, N/A`;
+        return `${lat ?? 'N/A'}, ${lng ?? 'N/A'}`;
       }
     },
     {
@@ -235,6 +272,40 @@ const Camp = ({ isOpen }) => {
         }
         const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
         return locationName;
+      }
+    },
+    {
+      key: 'road', 
+      title: 'Road',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.road}
+              onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.road || 'N/A';
+      }
+    },
+    {
+      key: 'tent', 
+      title: 'Tent',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.tent}
+              onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.tent || 'N/A';
       }
     },
     {
@@ -314,11 +385,12 @@ const Camp = ({ isOpen }) => {
     if (!lowerCaseSearch) return campData;
     return campData.filter((item) => {
       const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+      const countryName = item.country?.name || item.otherCountry || '';
       return (
-        item.maktab.toLowerCase().includes(lowerCaseSearch) ||
-        item.zone.toLowerCase().includes(lowerCaseSearch) ||
-        item.country.toLowerCase().includes(lowerCaseSearch) ||
-        item.poll.toLowerCase().includes(lowerCaseSearch) ||
+        item.maktab?.toLowerCase().includes(lowerCaseSearch) ||
+        item.zone?.toLowerCase().includes(lowerCaseSearch) ||
+        countryName.toLowerCase().includes(lowerCaseSearch) ||
+        item.poll?.toLowerCase().includes(lowerCaseSearch) ||
         locationName.toLowerCase().includes(lowerCaseSearch)
       );
     });
@@ -328,6 +400,12 @@ const Camp = ({ isOpen }) => {
   const handleEditChange = (id, field, value) => {
     setCampData(campData.map(item => {
       if (item._id === id) {
+        if (field === 'country') {
+          if (value === 'others') {
+            return { ...item, country: 'others', otherCountry: item.otherCountry || '' };
+          }
+          return { ...item, country: value, otherCountry: '' };
+        }
         if (field === 'location') {
           return { ...item, location: value };
         }
@@ -350,30 +428,44 @@ const Camp = ({ isOpen }) => {
   // Handle Save Edit
   const handleSaveEdit = async (row) => {
     try {
-      const token = localStorage.getItem("token"); // Retrieve token from localStorage
-
+      const token = localStorage.getItem("token");
       if (!token) {
         console.error("No token found. Please log in again.");
         return;
       }
 
+      // Prepare the data for saving
+      const dataToSave = {
+        maktab: row.maktab || '',
+        zone: row.zone || '',
+        poll: row.poll || '',
+        road: row.road || '',
+        tent: row.tent || '',
+        location: row.location || {},
+        ref: row.ref?._id || row.ref,
+        country: row.country === 'others' ? null : (row.country?._id || row.country || null),
+        otherCountry: row.country === 'others' ? row.otherCountry : ''
+      };
+
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/camp/${row._id}`,
-        row,
+        dataToSave,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Include token in headers
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
+      // Update the campData with the populated response
       setCampData(campData.map(item => 
-        item._id === row._id ? { ...item, ...response.data } : item
+        item._id === row._id ? response.data : item
       ));
 
       setEditingId(null);
+      setOriginalData(null);
     } catch (error) {
-      console.error("Error updating building data:", error);
+      console.error("Error updating camp data:", error);
     }
   };
 
@@ -425,9 +517,16 @@ const Camp = ({ isOpen }) => {
         return;
       }
 
+      // Prepare the data for submission
+      const campData = {
+        ...newCamp,
+        country: newCamp.country === 'others' ? null : newCamp.country,
+        otherCountry: newCamp.country === 'others' ? newCamp.otherCountry : ''
+      };
+
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/camp`,
-        newCamp,
+        campData,
         {
           headers: {
             Authorization: `Bearer ${token}`, // Include token in headers
@@ -443,8 +542,11 @@ const Camp = ({ isOpen }) => {
           zone: '', 
           country: '', 
           poll: '', 
+          road: '',
+          tent: '',
           location: { lat: '', lng: '' },
-          ref: ''
+          ref: '',
+          otherCountry: ''
         });
         setShowAddForm(false);
       }
@@ -454,8 +556,17 @@ const Camp = ({ isOpen }) => {
   };
   // Modify the edit button click handler
   const handleEditClick = (row) => {
+    // Make a deep copy of the row data to preserve the country object
+    const rowCopy = {
+      ...row,
+      country: row.country ? row.country._id : ''  // Store the country ID for editing
+    };
     setOriginalData(row); // Store original data
     setEditingId(row._id);
+    // Update the campData with the prepared row data
+    setCampData(campData.map(item => 
+      item._id === row._id ? rowCopy : item
+    ));
   };
 
   // Modify the cancel button click handler
@@ -496,16 +607,24 @@ const Camp = ({ isOpen }) => {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
+          validateStatus: (status) => status >= 200 && status < 300 || status === 207
         }
       );
 
+      if (response.status === 207 && response.data.failedRows && response.data.failedRows.length > 0) {
+        setUploadError(
+          `Some rows failed to upload:\n` +
+          response.data.failedRows.map(r => `Row ${r.row}: ${r.error}`).join('\n')
+        );
+        setUploadSuccess(`Successfully uploaded ${response.data.count} camps (with some errors)`);
+      } else {
       setUploadSuccess(`Successfully uploaded ${response.data.count} camps`);
       setUploadError(null);
+      }
 
       // Refresh the data
       const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp`);
       setCampData(updatedResponse.data);
-      
       // Reset the file input
       event.target.value = '';
     } catch (error) {
@@ -521,26 +640,30 @@ const Camp = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          maktab: 'Sample Maktab',
+          maktab: '', // Optional
           location_name: 'Azizia',
           zone: 'Zone A (Optional)',
-          country: 'Saudi Arabia (Optional)',
+          country: 'India',
           poll: 'Poll 1 (Optional)',
-          latitude: '21.4225 (Optional)',
-          longitude: '39.8262 (Optional)'
+          road: 'Road 1 (Optional)',
+          tent: 'Tent 1 (Optional)',
+          latitude: '21.4225',
+          longitude: '39.8262'
         }
       ];
 
       // Create worksheet
       const ws = utils.json_to_sheet([]);
       
-      // Add headers
+      // Add headers with descriptions
       utils.sheet_add_aoa(ws, [[
-        'maktab',
+        'maktab (Optional)',
         'location_name',
         'zone',
         'country',
         'poll',
+        'road',
+        'tent',
         'latitude',
         'longitude'
       ]], { origin: 'A1' });
@@ -558,6 +681,8 @@ const Camp = ({ isOpen }) => {
         { wch: 20 }, // zone
         { wch: 25 }, // country
         { wch: 20 }, // poll
+        { wch: 20 }, // road
+        { wch: 20 }, // tent
         { wch: 20 }, // latitude
         { wch: 20 }  // longitude
       ];
@@ -692,7 +817,7 @@ const Camp = ({ isOpen }) => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Camp</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Maktab</label>
+              <label className="block text-sm font-medium">Maktab (Optional)</label>
               <input
                 type="text"
                 value={newCamp.maktab}
@@ -711,19 +836,35 @@ const Camp = ({ isOpen }) => {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Country</label>
-              <AsyncSelect
-                cacheOptions
-                defaultOptions={countryOptions}
-                loadOptions={loadCountryOptions}
-                value={countryOptions.find(option => option.value === newCamp.country)}
-                onChange={(selected) => setNewCamp({ ...newCamp, country: selected.value })}
-                styles={customStyles}
-                components={{
-                  Option: CustomOption,
-                  SingleValue: CustomSingleValue
+              <select
+                value={newCamp.country || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setNewCamp({ 
+                    ...newCamp, 
+                    country: value,
+                    otherCountry: value === 'others' ? newCamp.otherCountry : ''
+                  });
                 }}
-                className="mt-1"
-              />
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              >
+                <option value="">Select Country</option>
+                <option value="others">Others</option>
+                {countries.map(country => (
+                  <option key={country._id} value={country._id}>
+                    {country.name} {country.arabicName ? `(${country.arabicName})` : ''}
+                  </option>
+                ))}
+              </select>
+              {(newCamp.country === 'others') && (
+                <input
+                  type="text"
+                  value={newCamp.otherCountry || ''}
+                  onChange={(e) => setNewCamp({ ...newCamp, otherCountry: e.target.value })}
+                  placeholder="Enter other country name"
+                  className="mt-2 block w-full border border-gray-300 rounded-md p-2"
+                />
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Poll</label>
@@ -731,6 +872,24 @@ const Camp = ({ isOpen }) => {
                 type="text"
                 value={newCamp.poll}
                 onChange={(e) => setNewCamp({ ...newCamp, poll: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Road</label>
+              <input
+                type="text"
+                value={newCamp.road}
+                onChange={(e) => setNewCamp({ ...newCamp, road: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Tent</label>
+              <input
+                type="text"
+                value={newCamp.tent}
+                onChange={(e) => setNewCamp({ ...newCamp, tent: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>

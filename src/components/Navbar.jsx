@@ -32,7 +32,7 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-10 h-16 flex items-center px-4 relative">
+    <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-10 h-16 flex items-center px-4 ">
       {/* Sidebar Toggle Button */}
       <button onClick={toggleSidebar} className="p-2 rounded-md text-[#333333] hover:bg-gray-100">
             <Menu size={24} />

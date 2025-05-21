@@ -67,10 +67,10 @@ const Countries = () => {
         message.error('You can only upload image files!');
         return Upload.LIST_IGNORE;
       }
-      // Validate file size (2MB)
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error('Image must be smaller than 2MB!');
+      // Validate file size (5MB to match backend)
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Image must be smaller than 5MB!');
         return Upload.LIST_IGNORE;
       }
       return false; // Prevent default upload behavior
@@ -95,7 +95,7 @@ const Countries = () => {
       const formData = new FormData();
       formData.append('flag', file);
 
-      console.log('Uploading file:', {
+      console.log('Uploading file to DigitalOcean:', {
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size
@@ -106,10 +106,15 @@ const Countries = () => {
         formData,
         {
           headers: {
+            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
           }
         }
       );
+
+      if (!uploadResponse.data.url) {
+        throw new Error('No URL returned from server');
+      }
 
       const flagUrl = uploadResponse.data.url;
 
@@ -121,11 +126,16 @@ const Countries = () => {
         setNewCountry(prev => ({ ...prev, flag: flagUrl }));
       }
 
-      message.success('Flag uploaded successfully');
+      message.success('Flag uploaded successfully to DigitalOcean CDN');
+      setUploadSuccess('File uploaded successfully to DigitalOcean CDN');
+      setTimeout(() => setUploadSuccess(null), 3000); // Clear success message after 3 seconds
       return flagUrl;
     } catch (error) {
-      console.error('Error uploading flag:', error);
-      message.error(error.response?.data?.message || 'Failed to upload flag');
+      console.error('Error uploading flag to DigitalOcean:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to upload flag to DigitalOcean';
+      message.error(errorMessage);
+      setUploadError(errorMessage);
+      setTimeout(() => setUploadError(null), 3000); // Clear error message after 3 seconds
       return null;
     }
   };
@@ -154,7 +164,7 @@ const Countries = () => {
           <div className="flex items-center gap-2">
             {row.flag && (
               <img
-                src={`${import.meta.env.VITE_BACKEND_URL.replace('/api', '')}${row.flag}`}
+                src={row.flag}  // CDN URL is now returned directly
                 alt="Flag"
                 className="w-8 h-8 object-cover rounded"
               />
@@ -165,7 +175,7 @@ const Countries = () => {
       }
       return row.flag ? (
         <img
-          src={`${import.meta.env.VITE_BACKEND_URL.replace('/api', '')}${row.flag}`}
+          src={row.flag}  // CDN URL is now returned directly
           alt="Flag"
           className="w-8 h-8 object-cover rounded"
         />
@@ -551,7 +561,7 @@ const Countries = () => {
                 <div className="flex items-center gap-2 mt-1">
                   {newCountry.flag && (
                     <img
-                      src={`${import.meta.env.VITE_BACKEND_URL.replace('/api', '')}${newCountry.flag}`}
+                      src={newCountry.flag}
                       alt="Flag Preview"
                       className="w-8 h-8 object-cover rounded"
                     />
@@ -567,7 +577,7 @@ const Countries = () => {
                   >
                     <button className="px-3 py-2 border rounded hover:bg-gray-50 flex items-center gap-2">
                       <UploadIcon size={18} />
-                      Upload Flag
+                      Upload to DigitalOcean
                     </button>
                   </Upload>
                 </div>

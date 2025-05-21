@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus, Flag } from 'lucide-react';
+import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus, Flag, PhoneCall, Newspaper } from 'lucide-react';
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
@@ -13,8 +13,10 @@ const Sidebar = ({ isOpen }) => {
     { id: 'camp', label: 'Camp', icon: <TentTree size={20} />, path: '/camp' },
     { id: 'clinic', label: 'Clinic', icon: <BriefcaseMedical size={20} />, path: '/clinic' },
     { id: 'countries', label: 'Countries', icon: <Flag size={20} />, path: '/countries' },
+    { id: 'emergency', label: 'Emergency', icon: <PhoneCall size={20} />, path: '/emergency' },
     { id: 'hospital', label: 'Hospital', icon: <Hospital size={20} />, path: '/hospital' },
     { id: 'location', label: 'Location', icon: <MapPin size={20} />, path: '/location' },
+    { id: 'news', label: 'News', icon: <Newspaper size={20} />, path: '/news' },
     { id: 'nusuk', label: 'Nusuk', icon: <Building size={20} />, path: '/nusuk' },
     { id: 'thanima', label: 'Thanima', icon: <HandHelping size={20} />, path: '/thanima' },
     { id: 'notification', label: 'Notifications', icon: <Bell size={20} />, path: '/notification' },
@@ -22,10 +24,10 @@ const Sidebar = ({ isOpen }) => {
 
   return (
     <aside 
-      className={`fixed bg-[#002147] text-white h-screen z-10 transition-all duration-300 top-14 
+      className={`fixed bg-[#002147] text-white h-[calc(100vh-3.5rem)] z-10 transition-all duration-300 top-14 
         ${isOpen ? 'w-64' : 'w-0 md:w-16'}`}
     >
-      <div className="h-16 flex items-center justify-center border-b border-blue-900">
+      <div className="h-16 flex items-center justify-center border-b border-blue-900 bg-[#002147] sticky top-0 z-20">
         {isOpen ? (
           <h2 className="text-xl font-bold">Admin Panel</h2>
         ) : (
@@ -35,25 +37,41 @@ const Sidebar = ({ isOpen }) => {
         )}
       </div>
       
-      <nav className="mt-6">
-        <ul>
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <Link 
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 transition-colors rounded-md
-                  ${location.pathname === item.path
-                    ? 'bg-[#4A90E2] text-white' 
-                    : 'text-gray-300 hover:bg-blue-900'
-                  }`}
-              >
-                <span>{item.icon}</span>
-                {isOpen && <span className="text-sm">{item.label}</span>}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div 
+        className="h-[calc(100%-4rem)] overflow-y-auto"
+        style={{
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        <style>
+          {`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}
+        </style>
+        <nav className="py-2">
+          <ul>
+            {menuItems.map((item) => (
+              <li key={item.id} className="px-2">
+                <Link 
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors rounded-md
+                    ${location.pathname === item.path
+                      ? 'bg-[#4A90E2] text-white' 
+                      : 'text-gray-300 hover:bg-blue-900'
+                    }`}
+                >
+                  <span>{item.icon}</span>
+                  {isOpen && <span className="text-sm">{item.label}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </aside>
   );
 };
