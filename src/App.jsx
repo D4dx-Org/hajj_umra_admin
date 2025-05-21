@@ -14,6 +14,8 @@ import Notification from './pages/Admin/Notification';
 import Branch from './pages/Admin/Branch';
 import BusStation from './pages/Admin/BusStation';
 import Countries from './pages/Admin/Countries';
+import Emergency from './pages/Admin/Emergency';
+import News from './pages/Admin/News';
 
 const App = () => {
   return (
@@ -31,8 +33,10 @@ const App = () => {
           <Route path="/camp" element={<Camp />} />
           <Route path="/clinic" element={<Clinic />} />
           <Route path="/countries" element={<Countries />} />
+          <Route path="/emergency" element={<Emergency />} />
           <Route path="/hospital" element={<Hospital />} />
           <Route path="/location" element={<Location />} />
+          <Route path="/news" element={<News />} />
           <Route path="/nusuk" element={<Nusuk />} />
           <Route path="/thanima" element={<Thanima />} />
           <Route path="/notification" element={<Notification />} />

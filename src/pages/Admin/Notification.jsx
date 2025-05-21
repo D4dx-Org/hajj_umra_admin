@@ -112,6 +112,12 @@ const Notification = () => {
                 const formData = new FormData();
                 formData.append('file', values.file[0].originFileObj);
 
+                console.log('Uploading file to DigitalOcean:', {
+                    fileName: values.file[0].originFileObj.name,
+                    fileType: values.file[0].originFileObj.type,
+                    fileSize: values.file[0].originFileObj.size
+                });
+
                 try {
                     const uploadResponse = await axios.post(
                         `${import.meta.env.VITE_BACKEND_URL}/notifications/upload`,
@@ -123,10 +129,16 @@ const Notification = () => {
                             }
                         }
                     );
+
+                    if (!uploadResponse.data.url) {
+                        throw new Error('No URL returned from server');
+                    }
+
                     contentUrl = uploadResponse.data.url;
+                    console.log('File uploaded successfully to DigitalOcean:', contentUrl);
                 } catch (error) {
                     console.error('Upload error:', error.response?.data || error);
-                    message.error(error.response?.data?.message || 'Failed to upload file');
+                    message.error(error.response?.data?.message || 'Failed to upload file to DigitalOcean');
                     return;
                 }
             } else if (values.type === 'link' || values.type === 'text') {
