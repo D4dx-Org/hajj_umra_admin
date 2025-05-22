@@ -17,7 +17,8 @@ const Branch = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newBranch, setNewBranch] = useState({
     name: '',
-    ref: ''
+    ref: '',
+    phoneNumber: ''
   });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
@@ -78,6 +79,23 @@ const Branch = ({ isOpen }) => {
           );
         }
         return row.name;
+      }
+    },
+    {
+      key: 'phoneNumber',
+      title: 'Phone Number',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.phoneNumber || ''}
+              onChange={(e) => handleEditChange(row._id, 'phoneNumber', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.phoneNumber || 'N/A';
       }
     },
     {
@@ -283,7 +301,8 @@ const Branch = ({ isOpen }) => {
         setBranchData(updatedResponse.data);
         setNewBranch({
           name: '',
-          ref: ''
+          ref: '',
+          phoneNumber: ''
         });
         setShowAddForm(false);
       }
@@ -404,6 +423,12 @@ const Branch = ({ isOpen }) => {
                 return;
               }
             }
+
+            // Phone number validation (optional)
+            if (row.phone_number && typeof row.phone_number !== 'string') {
+              setUploadError(`Row ${rowNumber}: Phone number must be a text value.`);
+              return;
+            }
           }
 
           const formData = new FormData();
@@ -457,7 +482,8 @@ const Branch = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Sample Branch Name',
-          location_name: 'Sample Location Name'
+          location_name: 'Sample Location Name',
+          phone_number: '+1234567890'
         }
       ];
 
@@ -467,7 +493,8 @@ const Branch = ({ isOpen }) => {
       // Add headers with comments
       utils.sheet_add_aoa(ws, [[
         'name',
-        'location_name'
+        'location_name',
+        'phone_number'
       ]], { origin: 'A1' });
 
       // Add sample data
@@ -479,7 +506,8 @@ const Branch = ({ isOpen }) => {
       // Add column widths
       ws['!cols'] = [
         { wch: 30 }, // name
-        { wch: 30 }  // location_name
+        { wch: 30 }, // location_name
+        { wch: 20 }  // phone_number
       ];
 
       // Create workbook
@@ -587,6 +615,15 @@ const Branch = ({ isOpen }) => {
                 type="text"
                 value={newBranch.name}
                 onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Phone Number (Optional)</label>
+              <input
+                type="text"
+                value={newBranch.phoneNumber}
+                onChange={(e) => setNewBranch({ ...newBranch, phoneNumber: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
