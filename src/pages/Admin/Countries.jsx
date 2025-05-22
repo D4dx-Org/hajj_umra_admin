@@ -380,9 +380,12 @@ const Countries = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found. Please log in again.");
+        message.error("No token found. Please log in again.");
         return;
       }
+
+      // Show loading message
+      message.loading('Deleting country...', 0);
 
       await Promise.all(ids.map(id =>
         axios.delete(`${import.meta.env.VITE_BACKEND_URL}/countries/${id}`, {
@@ -392,11 +395,25 @@ const Countries = () => {
         })
       ));
 
+      // Hide loading message and show success
+      message.destroy();
+      message.success('Country deleted successfully');
+
       setCountryData(countryData.filter(item => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting country data:', error);
+      // Hide loading message
+      message.destroy();
+      
+      console.error('Error deleting country data:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // Show error message to user
+      message.error(error.response?.data?.message || 'Failed to delete country');
     }
   };
 
