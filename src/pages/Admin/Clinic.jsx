@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -27,6 +27,19 @@ const Clinic = ({ isOpen }) => {
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [branches, setBranches] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
+
+  // Add sorting options
+  const sortOptions = [
+    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
+    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'phone-alpha-asc', label: 'Phone (A-Z)', field: 'phone', direction: 'asc', type: 'alpha' },
+    { value: 'phone-alpha-desc', label: 'Phone (Z-A)', field: 'phone', direction: 'desc', type: 'alpha' },
+    { value: 'ref-alpha-asc', label: 'Location (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
+    { value: 'ref-alpha-desc', label: 'Location (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' },
+    { value: 'branchRef-alpha-asc', label: 'Branch (A-Z)', field: 'branchRef', direction: 'asc', type: 'alpha' },
+    { value: 'branchRef-alpha-desc', label: 'Branch (Z-A)', field: 'branchRef', direction: 'desc', type: 'alpha' }
+  ];
 
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
@@ -58,22 +71,59 @@ const Clinic = ({ isOpen }) => {
     });
   };
 
-  // Filter data based on search input
+  // Add handle sort change
+  const handleSortChange = (event) => {
+    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    if (selectedOption) {
+      setSortConfig({
+        field: selectedOption.field,
+        direction: selectedOption.direction,
+        type: selectedOption.type
+      });
+    }
+  };
+
+  // Add sort function
+  const sortData = (data) => {
+    return [...data].sort((a, b) => {
+      let aValue = sortConfig.field === 'ref' || sortConfig.field === 'branchRef'
+        ? a[sortConfig.field]?.name || ''
+        : a[sortConfig.field] || '';
+      let bValue = sortConfig.field === 'ref' || sortConfig.field === 'branchRef'
+        ? b[sortConfig.field]?.name || ''
+        : b[sortConfig.field] || '';
+      
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+      
+      if (sortConfig.direction === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+  };
+
+  // Update filtered data to include sorting
   const filteredClinicData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return clinicData;
-    return clinicData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
-      const branchName = item.branchRef?.name || branches.find(branch => branch._id === item.branchRef)?.name || '';
-      return (
-        item.name.toLowerCase().includes(lowerCaseSearch) ||
-        item.center.toLowerCase().includes(lowerCaseSearch) ||
-        item.poll.toLowerCase().includes(lowerCaseSearch) ||
-        locationName.toLowerCase().includes(lowerCaseSearch) ||
-        branchName.toLowerCase().includes(lowerCaseSearch)
-      );
-    });
-  }, [clinicData, searchTerm, locations, branches]);
+    let filtered = clinicData;
+    
+    if (lowerCaseSearch) {
+      filtered = clinicData.filter((item) => {
+        const locationName = item.ref?.name || '';
+        const branchName = item.branchRef?.name || '';
+        return (
+          (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
+          locationName.toLowerCase().includes(lowerCaseSearch) ||
+          branchName.toLowerCase().includes(lowerCaseSearch)
+        );
+      });
+    }
+    
+    return sortData(filtered);
+  }, [clinicData, searchTerm, sortConfig]);
 
   // Define the table columns with editable configuration
   const clinicColumns = useMemo(() => [
@@ -792,15 +842,31 @@ const Clinic = ({ isOpen }) => {
         )}
 
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search clinics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-            />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search clinics..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              />
+              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={20} className="text-gray-400" />
+              <select
+                onChange={handleSortChange}
+                value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
+                className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -15,6 +15,7 @@ const Branch = ({ isOpen }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
   const [newBranch, setNewBranch] = useState({
     name: '',
     ref: '',
@@ -160,6 +161,18 @@ const Branch = ({ isOpen }) => {
         </div>
       )
     }
+  ];
+
+  // Updated sorting options with consistent value format
+  const sortOptions = [
+    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
+    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'name-numeric-asc', label: 'Name (1-9)', field: 'name', direction: 'asc', type: 'numeric' },
+    { value: 'name-numeric-desc', label: 'Name (9-1)', field: 'name', direction: 'desc', type: 'numeric' },
+    { value: 'ref-alpha-asc', label: 'Location (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
+    { value: 'ref-alpha-desc', label: 'Location (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' },
+    { value: 'phoneNumber-alpha-asc', label: 'Phone Number (A-Z)', field: 'phoneNumber', direction: 'asc', type: 'alpha' },
+    { value: 'phoneNumber-alpha-desc', label: 'Phone Number (Z-A)', field: 'phoneNumber', direction: 'desc', type: 'alpha' }
   ];
 
   // Fetch data from API
@@ -311,18 +324,67 @@ const Branch = ({ isOpen }) => {
     }
   };
 
-  // Filter data based on search
+  // Updated handle sort change
+  const handleSortChange = (event) => {
+    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    if (selectedOption) {
+      setSortConfig({
+        field: selectedOption.field,
+        direction: selectedOption.direction,
+        type: selectedOption.type
+      });
+    }
+  };
+
+  // Updated sort function with numeric sorting support
+  const sortData = (data) => {
+    return [...data].sort((a, b) => {
+      let aValue = sortConfig.field === 'ref' ? a[sortConfig.field]?.name || '' : a[sortConfig.field] || '';
+      let bValue = sortConfig.field === 'ref' ? b[sortConfig.field]?.name || '' : b[sortConfig.field] || '';
+
+      if (sortConfig.type === 'numeric' && sortConfig.field === 'name') {
+        // Extract numbers from branch names for numeric sorting
+        const aMatch = aValue.match(/\d+/);
+        const bMatch = bValue.match(/\d+/);
+        const aNum = aMatch ? parseInt(aMatch[0]) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+        
+        if (sortConfig.direction === 'asc') {
+          return aNum - bNum;
+        } else {
+          return bNum - aNum;
+        }
+      } else {
+        // Regular alphabetical sorting
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+        
+        if (sortConfig.direction === 'asc') {
+          return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        } else {
+          return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+        }
+      }
+    });
+  };
+
+  // Filter and sort data based on search and sort config
   const filteredBranchData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return branchData;
-    return branchData.filter((item) => {
-      const locationName = item.ref?.name || '';
-      return (
-        item.name.toLowerCase().includes(lowerCaseSearch) ||
-        locationName.toLowerCase().includes(lowerCaseSearch)
-      );
-    });
-  }, [branchData, searchTerm]);
+    let filtered = branchData;
+    
+    if (lowerCaseSearch) {
+      filtered = branchData.filter((item) => {
+        const locationName = item.ref?.name || '';
+        return (
+          item.name.toLowerCase().includes(lowerCaseSearch) ||
+          locationName.toLowerCase().includes(lowerCaseSearch)
+        );
+      });
+    }
+    
+    return sortData(filtered);
+  }, [branchData, searchTerm, sortConfig]);
 
   // Handle edit button click
   const handleEditClick = (row) => {
@@ -538,6 +600,12 @@ const Branch = ({ isOpen }) => {
     }
   };
 
+  // Get current sort option value
+  const getCurrentSortValue = () => {
+    const { field, direction, type } = sortConfig;
+    return `${field}-${type}-${direction}`;
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -651,17 +719,33 @@ const Branch = ({ isOpen }) => {
           </div>
         )}
 
-        {/* Search Bar */}
+        {/* Search and Sort Bar */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search branches..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-            />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search branches..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              />
+              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={20} className="text-gray-400" />
+              <select
+                onChange={handleSortChange}
+                value={getCurrentSortValue()}
+                className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
