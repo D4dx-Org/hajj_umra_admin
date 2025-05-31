@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, Upload as UploadIcon } from 'lucide-react';
+import { Search, AlertTriangle, Download, Upload as UploadIcon, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -34,6 +34,7 @@ const Countries = () => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
 
   // Custom styles for react-select
   const customStyles = {
@@ -298,6 +299,45 @@ const Countries = () => {
     }
   ];
 
+  // Add sorting options
+  const sortOptions = [
+    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
+    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'arabicName-alpha-asc', label: 'Arabic Name (A-Z)', field: 'arabicName', direction: 'asc', type: 'alpha' },
+    { value: 'arabicName-alpha-desc', label: 'Arabic Name (Z-A)', field: 'arabicName', direction: 'desc', type: 'alpha' },
+    { value: 'category-alpha-asc', label: 'Category (A-Z)', field: 'category', direction: 'asc', type: 'alpha' },
+    { value: 'category-alpha-desc', label: 'Category (Z-A)', field: 'category', direction: 'desc', type: 'alpha' }
+  ];
+
+  // Add handle sort change
+  const handleSortChange = (event) => {
+    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    if (selectedOption) {
+      setSortConfig({
+        field: selectedOption.field,
+        direction: selectedOption.direction,
+        type: selectedOption.type
+      });
+    }
+  };
+
+  // Add sort function
+  const sortData = (data) => {
+    return [...data].sort((a, b) => {
+      let aValue = a[sortConfig.field] || '';
+      let bValue = b[sortConfig.field] || '';
+      
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+      
+      if (sortConfig.direction === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+  };
+
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
@@ -460,15 +500,20 @@ const Countries = () => {
   // Filter data based on search
   const filteredCountryData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return countryData;
-    return countryData.filter((item) => {
-      return (
-        (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.arabicName && item.arabicName.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.category && item.category.toLowerCase().includes(lowerCaseSearch))
-      );
-    });
-  }, [countryData, searchTerm]);
+    let filtered = countryData;
+    
+    if (lowerCaseSearch) {
+      filtered = countryData.filter((item) => {
+        return (
+          (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.arabicName && item.arabicName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.category && item.category.toLowerCase().includes(lowerCaseSearch))
+        );
+      });
+    }
+    
+    return sortData(filtered);
+  }, [countryData, searchTerm, sortConfig]);
 
   // Handle edit click
   const handleEditClick = (row) => {
@@ -637,15 +682,31 @@ const Countries = () => {
 
         {/* Search Bar */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search countries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-            />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search countries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              />
+              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={20} className="text-gray-400" />
+              <select
+                onChange={handleSortChange}
+                value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
+                className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

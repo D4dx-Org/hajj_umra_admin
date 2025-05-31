@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -28,6 +28,7 @@ const BusStation = ({ isOpen }) => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
 
   // Define the table columns
   const busStationColumns = [
@@ -203,6 +204,20 @@ const BusStation = ({ isOpen }) => {
         </div>
       )
     }
+  ];
+
+  // Add sorting options
+  const sortOptions = [
+    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
+    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'stationPoint-alpha-asc', label: 'Station Point (A-Z)', field: 'stationPoint', direction: 'asc', type: 'alpha' },
+    { value: 'stationPoint-alpha-desc', label: 'Station Point (Z-A)', field: 'stationPoint', direction: 'desc', type: 'alpha' },
+    { value: 'destinationPoint-alpha-asc', label: 'Destination (A-Z)', field: 'destinationPoint', direction: 'asc', type: 'alpha' },
+    { value: 'destinationPoint-alpha-desc', label: 'Destination (Z-A)', field: 'destinationPoint', direction: 'desc', type: 'alpha' },
+    { value: 'locationRef-alpha-asc', label: 'Location (A-Z)', field: 'locationRef', direction: 'asc', type: 'alpha' },
+    { value: 'locationRef-alpha-desc', label: 'Location (Z-A)', field: 'locationRef', direction: 'desc', type: 'alpha' },
+    { value: 'ref-alpha-asc', label: 'Branch (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
+    { value: 'ref-alpha-desc', label: 'Branch (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' }
   ];
 
   // Fetch data from API
@@ -533,20 +548,58 @@ const BusStation = ({ isOpen }) => {
     });
   };
 
-  // Filter data based on search
+  // Add handle sort change
+  const handleSortChange = (event) => {
+    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    if (selectedOption) {
+      setSortConfig({
+        field: selectedOption.field,
+        direction: selectedOption.direction,
+        type: selectedOption.type
+      });
+    }
+  };
+
+  // Add sort function
+  const sortData = (data) => {
+    return [...data].sort((a, b) => {
+      let aValue = sortConfig.field === 'ref' || sortConfig.field === 'locationRef'
+        ? a[sortConfig.field]?.name || ''
+        : a[sortConfig.field] || '';
+      let bValue = sortConfig.field === 'ref' || sortConfig.field === 'locationRef'
+        ? b[sortConfig.field]?.name || ''
+        : b[sortConfig.field] || '';
+      
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+      
+      if (sortConfig.direction === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+  };
+
+  // Update filtered data to include sorting
   const filteredBusStationData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return busStationData;
-    return busStationData.filter((item) => {
-      return (
-        (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.stationPoint && item.stationPoint.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.destinationPoint && item.destinationPoint.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.ref?.name && item.ref.name.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.locationRef?.name && item.locationRef.name.toLowerCase().includes(lowerCaseSearch))
-      );
-    });
-  }, [busStationData, searchTerm]);
+    let filtered = busStationData;
+    
+    if (lowerCaseSearch) {
+      filtered = busStationData.filter((item) => {
+        return (
+          (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.stationPoint && item.stationPoint.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.destinationPoint && item.destinationPoint.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.ref?.name && item.ref.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.locationRef?.name && item.locationRef.name.toLowerCase().includes(lowerCaseSearch))
+        );
+      });
+    }
+    
+    return sortData(filtered);
+  }, [busStationData, searchTerm, sortConfig]);
 
   return (
     <div>
@@ -700,15 +753,31 @@ const BusStation = ({ isOpen }) => {
 
         {/* Search Bar */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search bus stations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-            />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search bus stations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              />
+              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={20} className="text-gray-400" />
+              <select
+                onChange={handleSortChange}
+                value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
+                className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

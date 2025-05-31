@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -31,6 +31,65 @@ const Camp = ({ isOpen }) => {
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [countries, setCountries] = useState([]); // Add state for countries
+  const [sortConfig, setSortConfig] = useState({ field: 'maktab', direction: 'asc', type: 'alpha' });
+
+  // Add sorting options
+  const sortOptions = [
+    { value: 'maktab-alpha-asc', label: 'Maktab (A-Z)', field: 'maktab', direction: 'asc', type: 'alpha' },
+    { value: 'maktab-alpha-desc', label: 'Maktab (Z-A)', field: 'maktab', direction: 'desc', type: 'alpha' },
+    { value: 'maktab-numeric-asc', label: 'Maktab (1-9)', field: 'maktab', direction: 'asc', type: 'numeric' },
+    { value: 'maktab-numeric-desc', label: 'Maktab (9-1)', field: 'maktab', direction: 'desc', type: 'numeric' },
+    { value: 'locationRef-alpha-asc', label: 'Location (A-Z)', field: 'locationRef', direction: 'asc', type: 'alpha' },
+    { value: 'locationRef-alpha-desc', label: 'Location (Z-A)', field: 'locationRef', direction: 'desc', type: 'alpha' },
+    { value: 'ref-alpha-asc', label: 'Branch (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
+    { value: 'ref-alpha-desc', label: 'Branch (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' }
+  ];
+
+  // Add handle sort change
+  const handleSortChange = (event) => {
+    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    if (selectedOption) {
+      setSortConfig({
+        field: selectedOption.field,
+        direction: selectedOption.direction,
+        type: selectedOption.type
+      });
+    }
+  };
+
+  // Add sort function
+  const sortData = (data) => {
+    return [...data].sort((a, b) => {
+      let aValue, bValue;
+
+      if (sortConfig.field === 'country') {
+        aValue = a.otherCountry || (a.country?.name || '');
+        bValue = b.otherCountry || (b.country?.name || '');
+      } else if (sortConfig.field === 'ref') {
+        aValue = a[sortConfig.field]?.name || '';
+        bValue = b[sortConfig.field]?.name || '';
+      } else {
+        aValue = a[sortConfig.field] || '';
+        bValue = b[sortConfig.field] || '';
+      }
+
+      if (sortConfig.type === 'numeric') {
+        // Extract numbers from strings for numeric sorting
+        const aNum = parseInt(aValue.match(/\d+/) || [0]);
+        const bNum = parseInt(bValue.match(/\d+/) || [0]);
+        return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+      } else {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+        
+        if (sortConfig.direction === 'asc') {
+          return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        } else {
+          return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+        }
+      }
+    });
+  };
 
   // Convert our countries to react-select format
   const countryOptions = useMemo(() => {
@@ -379,22 +438,27 @@ const Camp = ({ isOpen }) => {
     fetchLocations();
   }, []);
 
-  // Filter data based on search input
+  // Update filtered data to include sorting
   const filteredCampData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return campData;
-    return campData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
-      const countryName = item.country?.name || item.otherCountry || '';
-      return (
-        item.maktab?.toLowerCase().includes(lowerCaseSearch) ||
-        item.zone?.toLowerCase().includes(lowerCaseSearch) ||
-        countryName.toLowerCase().includes(lowerCaseSearch) ||
-        item.poll?.toLowerCase().includes(lowerCaseSearch) ||
-        locationName.toLowerCase().includes(lowerCaseSearch)
-      );
-    });
-  }, [campData, searchTerm, locations]);
+    let filtered = campData;
+    
+    if (lowerCaseSearch) {
+      filtered = campData.filter((item) => {
+        const locationName = item.ref?.name || '';
+        const countryName = item.country?.name || item.otherCountry || '';
+        return (
+          item.maktab?.toLowerCase().includes(lowerCaseSearch) ||
+          item.zone?.toLowerCase().includes(lowerCaseSearch) ||
+          countryName.toLowerCase().includes(lowerCaseSearch) ||
+          item.poll?.toLowerCase().includes(lowerCaseSearch) ||
+          locationName.toLowerCase().includes(lowerCaseSearch)
+        );
+      });
+    }
+    
+    return sortData(filtered);
+  }, [campData, searchTerm, sortConfig]);
 
   // Handle Edit
   const handleEditChange = (id, field, value) => {
@@ -948,17 +1012,33 @@ const Camp = ({ isOpen }) => {
           </div>
         )}
 
-        {/* Search Bar */}
+        {/* Update Search Bar to include sort */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search camps..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-            />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search camps..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              />
+              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={20} className="text-gray-400" />
+              <select
+                onChange={handleSortChange}
+                value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
+                className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
