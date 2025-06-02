@@ -170,6 +170,7 @@ const Notification = () => {
                     }
                 );
                 message.success('Notification updated successfully');
+                message.success('Push notification sent to all users');
                 console.log('Update response:', response.data);
             } else {
                 // Create new notification
@@ -181,6 +182,7 @@ const Notification = () => {
                     }
                 );
                 message.success('Notification created successfully');
+                message.success('Push notification sent to all users');
             }
 
             setModalVisible(false);
@@ -191,6 +193,9 @@ const Notification = () => {
         } catch (error) {
             console.error('Error saving notification:', error.response?.data || error.message);
             message.error(error.response?.data?.message || 'Failed to save notification');
+            if (error.response?.data?.pushError) {
+                message.warning('Notification saved but failed to send push notification');
+            }
         }
     };
 

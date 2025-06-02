@@ -721,7 +721,7 @@ const Camp = ({ isOpen }) => {
       
       // Add headers with descriptions
       utils.sheet_add_aoa(ws, [[
-        'maktab (Optional)',
+        'maktab',
         'location_name',
         'zone',
         'country',
