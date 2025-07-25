@@ -55,6 +55,7 @@ const PlaceKSA = () => {
         images: [],
         video: []
     });
+    const [existingImages, setExistingImages] = useState([]);
 
     // Fetch only locations
     const fetchLocations = async () => {
@@ -228,10 +229,60 @@ const PlaceKSA = () => {
 
     // Remove specific image from multiple images
     const removeImageFile = (index) => {
+        console.log('Removing new image at index:', index);
+        setUploadedFiles(prev => {
+            const newImages = prev.images.filter((_, i) => i !== index);
+            console.log('Updated uploaded files:', newImages);
+            return {
+                ...prev,
+                images: newImages
+            };
+        });
+        setFileList(prev => {
+            const newFileList = prev.images.filter((_, i) => i !== index);
+            console.log('Updated file list:', newFileList);
+            return {
+                ...prev,
+                images: newFileList
+            };
+        });
+        message.success('Image removed successfully');
+    };
+
+    // Remove existing image from form
+    const removeExistingImage = (index) => {
+        console.log('Removing existing image at index:', index);
+        console.log('Current existingImages state:', existingImages);
+        const updatedImages = existingImages.filter((_, i) => i !== index);
+        console.log('Updated images:', updatedImages);
+        setExistingImages(updatedImages);
+        form.setFieldsValue({ images: updatedImages });
+        // Force form to re-render
+        form.validateFields(['images']);
+        message.success('Existing image removed successfully');
+    };
+
+    // Clear all new uploaded images
+    const clearAllNewImages = () => {
+        console.log('Clearing all new images');
         setUploadedFiles(prev => ({
             ...prev,
-            images: prev.images.filter((_, i) => i !== index)
+            images: []
         }));
+        setFileList(prev => ({
+            ...prev,
+            images: []
+        }));
+        message.success('All new images cleared');
+    };
+
+    // Clear all existing images
+    const clearAllExistingImages = () => {
+        console.log('Clearing all existing images');
+        setExistingImages([]);
+        form.setFieldsValue({ images: [] });
+        form.validateFields(['images']);
+        message.success('All existing images cleared');
     };
 
     // Upload file to server
@@ -283,7 +334,7 @@ const PlaceKSA = () => {
                 return;
             }
 
-            let imageUrls = values.images || []; // Keep existing URLs if editing
+            let imageUrls = existingImages || []; // Keep existing URLs if editing
 
             // Upload multiple images if they exist
             if (uploadedFiles.images && uploadedFiles.images.length > 0) {
@@ -370,6 +421,7 @@ const PlaceKSA = () => {
         form.resetFields();
         setUploadedFiles({ images: [], video: null });
         setFileList({ images: [], video: [] });
+        setExistingImages([]);
     };
 
     // Handle place deletion
@@ -584,15 +636,24 @@ const PlaceKSA = () => {
                     <button
                         onClick={() => {
                             setEditingId(record._id);
+                            const recordImages = record.images || [];
+                            console.log('Setting up edit for record:', record);
+                            console.log('Record images:', recordImages);
+                            
+                            setExistingImages(recordImages);
                             form.setFieldsValue({
                                 id: record.id,
                                 title: record.title,
                                 description: record.description || '',
-                                image: record.image || '',
+                                images: recordImages,
                                 video: record.video || '',
                                 map: record.map || '',
                                 locationRef: record.locationRef?._id || undefined
                             });
+
+                            // Reset upload state for editing
+                            setUploadedFiles({ images: [], video: null });
+                            setFileList({ images: [], video: [] });
                             setModalVisible(true);
                         }}
                         className="p-2 hover:bg-gray-100 rounded-full"
@@ -791,12 +852,12 @@ const PlaceKSA = () => {
                         {/* File Upload Sections */}
                         <Row gutter={16}>
                             <Col span={12}>
-                                <Form.Item label={`Multiple Images Upload (${uploadedFiles.images?.length || 0}/5)`}>
+                                <Form.Item label={`Multiple Images Upload (${uploadedFiles.images?.length || 0}/20)`}>
                                     <Dragger
                                         {...uploadProps}
                                         accept="image/*"
                                         multiple={true}
-                                        maxCount={5}
+                                        maxCount={20}
                                         onChange={(info) => handleFileChange(info, 'images')}
                                         beforeUpload={(file) => uploadProps.beforeUpload(file, 'images')}
                                     >
@@ -805,27 +866,135 @@ const PlaceKSA = () => {
                                         </p>
                                         <p className="ant-upload-text">Click or drag images to upload</p>
                                         <p className="ant-upload-hint">
-                                            Support for jpg, png, gif. Max size 5MB each. Maximum 5 images allowed.
+                                            Support for jpg, png, gif. Max size 5MB each. Maximum 20 images allowed.
                                         </p>
                                     </Dragger>
 
-                                    {/* Display uploaded images */}
-                                    {uploadedFiles.images && uploadedFiles.images.length > 0 && (
-                                        <div className="mt-4 grid grid-cols-3 gap-2">
-                                            {uploadedFiles.images.map((file, index) => (
-                                                <div key={index} className="relative border rounded-lg p-2">
-                                                    <div className="text-xs text-gray-600 truncate">
-                                                        {file.name}
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeImageFile(index)}
-                                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                                                    >
-                                                        ×
-                                                    </button>
+                                    {/* Display all images in a compact grid */}
+                                    {((editingId && existingImages && existingImages.length > 0) || 
+                                      (uploadedFiles.images && uploadedFiles.images.length > 0)) && (
+                                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="text-sm font-medium text-gray-700">
+                                                    Images ({(existingImages?.length || 0) + (uploadedFiles.images?.length || 0)}/20)
+                                                    <span className="ml-2 text-xs text-gray-500">
+                                                        (Existing: {existingImages?.length || 0}, New: {uploadedFiles.images?.length || 0})
+                                                    </span>
                                                 </div>
-                                            ))}
+                                                <div className="flex gap-2">
+                                                    {editingId && existingImages && existingImages.length > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={clearAllExistingImages}
+                                                            className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                                                            title="Clear all existing images"
+                                                        >
+                                                            Clear Existing
+                                                        </button>
+                                                    )}
+                                                    {uploadedFiles.images && uploadedFiles.images.length > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={clearAllNewImages}
+                                                            className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                                                            title="Clear all new images"
+                                                        >
+                                                            Clear New
+                                                        </button>
+                                                    )}
+
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-6 gap-2">
+                                                {/* Existing images */}
+                                                {editingId && existingImages && existingImages.map((imageUrl, index) => (
+                                                    <div key={`existing-${index}`} className="relative group">
+                                                        <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={`Existing ${index + 1}`}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextSibling.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                                                                IMG
+                                                            </div>
+                                                            <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
+                                                                E{index + 1}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                console.log('Clicked remove existing image button for index:', index);
+                                                                removeExistingImage(index);
+                                                            }}
+                                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                                            title="Remove this existing image"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                
+                                                {/* New images */}
+                                                {uploadedFiles.images && uploadedFiles.images.map((file, index) => (
+                                                    <div key={`new-${index}`} className="relative group">
+                                                        <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                                                            {file && file.type?.startsWith('image/') ? (
+                                                                <img
+                                                                    src={URL.createObjectURL(file)}
+                                                                    alt={`New ${index + 1}`}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextSibling.style.display = 'flex';
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
+                                                                IMG
+                                                            </div>
+                                                            <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
+                                                                N{index + 1}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                console.log('Clicked remove new image button for index:', index);
+                                                                removeImageFile(index);
+                                                            }}
+                                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                                            title="Remove this new image"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            {/* Legend */}
+                                            <div className="mt-2 flex gap-4 text-xs text-gray-600">
+                                                <div className="flex items-center gap-1">
+                                                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                                                    <span>Existing Images</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                                    <span>New Images</span>
+                                                </div>
+                                                <div className="text-gray-500">
+                                                    Hover to delete
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </Form.Item>
