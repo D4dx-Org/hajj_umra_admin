@@ -16,6 +16,8 @@ import BusStation from './pages/Admin/BusStation';
 import Countries from './pages/Admin/Countries';
 import Emergency from './pages/Admin/Emergency';
 import News from './pages/Admin/News';
+import LocationKSA from './pages/Admin/ExploreKSA/locationKSA';
+import PlaceKSA from './pages/Admin/ExploreKSA/placeKSA';
 
 const App = () => {
   return (
@@ -23,23 +25,26 @@ const App = () => {
       <Routes>
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/" element={<HomePage />} />
-        
+
         {/* Admin Routes */}
         {/* <Route element={<AdminLayout />}> */}
-          <Route path="/ambulance" element={<Ambulance />} />
-          <Route path="/building" element={<Building />} />
-          <Route path="/branch" element={<Branch />} />
-          <Route path="/bus-station" element={<BusStation />} />
-          <Route path="/camp" element={<Camp />} />
-          <Route path="/clinic" element={<Clinic />} />
-          <Route path="/countries" element={<Countries />} />
-          <Route path="/emergency" element={<Emergency />} />
-          <Route path="/hospital" element={<Hospital />} />
-          <Route path="/location" element={<Location />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/nusuk" element={<Nusuk />} />
-          <Route path="/thanima" element={<Thanima />} />
-          <Route path="/notification" element={<Notification />} />
+        <Route path="/ambulance" element={<Ambulance />} />
+        <Route path="/building" element={<Building />} />
+        <Route path="/branch" element={<Branch />} />
+        <Route path="/bus-station" element={<BusStation />} />
+        <Route path="/camp" element={<Camp />} />
+        <Route path="/clinic" element={<Clinic />} />
+        <Route path="/countries" element={<Countries />} />
+        <Route path="/emergency" element={<Emergency />} />
+        <Route path="/hospital" element={<Hospital />} />
+        <Route path="/location" element={<Location />} />
+        <Route path="/news" element={<News />} />
+        <Route path="/nusuk" element={<Nusuk />} />
+        <Route path="/thanima" element={<Thanima />} />
+        <Route path="/notification" element={<Notification />} />
+        <Route path="/locationKSA" element={<LocationKSA />} />
+        <Route path="/placeKSA" element={<PlaceKSA />} />
+
         {/* </Route> */}
       </Routes>
     </Router>
