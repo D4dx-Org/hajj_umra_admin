@@ -371,10 +371,9 @@ const PlaceKSA = () => {
             console.log('Available locations:', locations.map(l => ({ id: l._id, title: l.title })));
 
             if (editingId) {
-                // Update existing place - backend expects custom id field
-                const placeToUpdate = places.find(p => p._id === editingId);
+                // Update existing place - backend expects _id
                 const response = await axios.put(
-                    `${import.meta.env.VITE_BACKEND_URL_V2}/places/${placeToUpdate.id}`,
+                    `${import.meta.env.VITE_BACKEND_URL_V2}/places/${editingId}`,
                     placeData,
                     {
                         headers: { Authorization: `Bearer ${token}` }
@@ -450,6 +449,7 @@ const PlaceKSA = () => {
                     }
                 );
             } else {
+                // Send _id directly to backend
                 await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/places/${ids[0]}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -457,7 +457,7 @@ const PlaceKSA = () => {
                 });
             }
 
-            setPlaces(places.filter(item => !ids.includes(item.id)));
+            setPlaces(places.filter(item => !ids.includes(item._id)));
             setSelectedRows([]);
             setDeleteConfirm({ show: false, id: null });
             message.success('Place(s) deleted successfully');
@@ -661,7 +661,7 @@ const PlaceKSA = () => {
                         <Edit size={18} className="text-blue-500" />
                     </button>
                     <button
-                        onClick={() => handleDelete(record.id)}
+                        onClick={() => handleDelete(record._id)}
                         className="p-2 hover:bg-gray-100 rounded-full"
                     >
                         <Trash2 size={18} className="text-red-500" />

@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Ambulance, BrickWall, TentTree, Hospital, HandHelping,
   BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus, Flag, PhoneCall,
-  Newspaper, Navigation
+  Newspaper, Navigation, Calendar, PlaneLanding, BookOpen,
+  Video, PlaneTakeoff
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen }) => {
@@ -13,8 +14,18 @@ const Sidebar = ({ isOpen }) => {
   // Automatically set the correct tab based on current route
   useEffect(() => {
     const ksaRoutes = ['/locationKSA', '/placeKSA'];
+    const umrahRoutes = [
+      '/umrah-preparation',
+      '/umrah-arrived',
+      '/umrah-duas',
+      '/umrah-virtual-tour',
+      '/umrah-post',
+    ];
+
     if (ksaRoutes.includes(location.pathname)) {
       setActiveTab('explore-ksa');
+    } else if (umrahRoutes.includes(location.pathname)) {
+      setActiveTab('umrah');
     } else {
       setActiveTab('hajj');
     }
@@ -22,7 +33,7 @@ const Sidebar = ({ isOpen }) => {
 
   // Hajj related menu items
   const hajjMenuItems = [
-    // { id: 'dashboard', label: 'Dashboard', icon: <Home size={20} />, path: '/dashboard' },
+
     { id: 'ambulance', label: 'Ambulance', icon: <Ambulance size={20} />, path: '/ambulance' },
     { id: 'building', label: 'Building', icon: <BrickWall size={20} />, path: '/building' },
     { id: 'branch', label: 'Branch', icon: <GitBranch size={20} />, path: '/branch' },
@@ -39,14 +50,76 @@ const Sidebar = ({ isOpen }) => {
     { id: 'notification', label: 'Notifications', icon: <Bell size={20} />, path: '/notification' },
   ];
 
-  // Explore KSA related menu items (location and place focused)
+  // Umrah related menu items
+  const umrahMenuItems = [
+    {
+      id: 'umrah-preparation',
+      label: 'Preparation',
+      icon: <Calendar size={20} />,
+      path: '/umrah-preparation'
+    },
+    {
+      id: 'umrah-arrived',
+      label: 'Arrived In Makkah',
+      icon: <PlaneLanding size={20} />,
+      path: '/umrah-arrived'
+    },
+    {
+      id: 'umrah-duas',
+      label: 'Duas & Supplication',
+      icon: <BookOpen size={20} />,
+      path: '/umrah-duas'
+    },
+    {
+      id: 'umrah-virtual-tour',
+      label: 'Virtual Umrah Tour',
+      icon: <Video size={20} />,
+      path: '/umrah-virtual-tour'
+    },
+    {
+      id: 'umrah-post',
+      label: 'Post Umrah',
+      icon: <PlaneTakeoff size={20} />,
+      path: '/umrah-post'
+    },
+
+  ];
+
+  // Explore KSA related menu items
   const exploreKsaMenuItems = [
     { id: 'ksa-location', label: 'Location', icon: <MapPin size={20} />, path: '/locationKSA' },
     { id: 'ksa-places', label: 'Places', icon: <Navigation size={20} />, path: '/placeKSA' },
   ];
 
   const getCurrentMenuItems = () => {
-    return activeTab === 'hajj' ? hajjMenuItems : exploreKsaMenuItems;
+    switch (activeTab) {
+      case 'hajj':
+        return hajjMenuItems;
+      case 'umrah':
+        return umrahMenuItems;
+      case 'explore-ksa':
+        return exploreKsaMenuItems;
+      default:
+        return hajjMenuItems;
+    }
+  };
+
+  const renderTabButton = (tabId, label) => {
+    return (
+      <button
+        onClick={() => setActiveTab(tabId)}
+        className={`w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all duration-200 relative overflow-hidden
+          ${activeTab === tabId
+            ? 'bg-gradient-to-r from-[#4A90E2] to-[#357ABD] text-white shadow-lg transform scale-[1.02]'
+            : 'text-gray-400 hover:text-white hover:bg-[#1e3a8a]/50'
+          }`}
+      >
+        <span className="relative z-10">{label}</span>
+        {activeTab === tabId && (
+          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-50"></div>
+        )}
+      </button>
+    );
   };
 
   return (
@@ -69,32 +142,9 @@ const Sidebar = ({ isOpen }) => {
       {isOpen && (
         <div className="bg-[#001836] border-b border-[#1e3a8a]/30 px-3 py-2">
           <div className="bg-[#0f1729] rounded-lg p-1 flex flex-col gap-1">
-            <button
-              onClick={() => setActiveTab('hajj')}
-              className={`w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all duration-200 relative overflow-hidden
-                ${activeTab === 'hajj'
-                  ? 'bg-gradient-to-r from-[#4A90E2] to-[#357ABD] text-white shadow-lg transform scale-[1.02]'
-                  : 'text-gray-400 hover:text-white hover:bg-[#1e3a8a]/50'
-                }`}
-            >
-              <span className="relative z-10">Hajj Services</span>
-              {activeTab === 'hajj' && (
-                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-50"></div>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('explore-ksa')}
-              className={`w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all duration-200 relative overflow-hidden
-                ${activeTab === 'explore-ksa'
-                  ? 'bg-gradient-to-r from-[#4A90E2] to-[#357ABD] text-white shadow-lg transform scale-[1.02]'
-                  : 'text-gray-400 hover:text-white hover:bg-[#1e3a8a]/50'
-                }`}
-            >
-              <span className="relative z-10">Explore KSA</span>
-              {activeTab === 'explore-ksa' && (
-                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-50"></div>
-              )}
-            </button>
+            {renderTabButton('hajj', 'Hajj Services')}
+            {renderTabButton('umrah', 'Umrah Services')}
+            {renderTabButton('explore-ksa', 'Explore KSA')}
           </div>
         </div>
       )}

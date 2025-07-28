@@ -19,6 +19,12 @@ import News from './pages/Admin/News';
 import LocationKSA from './pages/Admin/ExploreKSA/locationKSA';
 import PlaceKSA from './pages/Admin/ExploreKSA/placeKSA';
 
+import Arrived from './pages/Admin/Umrah/Arrived';
+import Duas from './pages/Admin/Umrah/Duaas';
+import Post from './pages/Admin/Umrah/postUmrah';
+import Preparation from './pages/Admin/Umrah/preparations';
+import Tour from './pages/Admin/Umrah/tour';
+
 const App = () => {
   return (
     <Router>
@@ -45,6 +51,12 @@ const App = () => {
         <Route path="/locationKSA" element={<LocationKSA />} />
         <Route path="/placeKSA" element={<PlaceKSA />} />
 
+        
+        <Route path="/umrah-arrived" element={<Arrived />} />
+        <Route path="/umrah-preparation" element={<Preparation />} />
+        <Route path="/umrah-duas" element={<Duas />} />
+        <Route path="/umrah-post" element={<Post />} />
+        <Route path="/umrah-virtual-tour" element={<Tour />} />
         {/* </Route> */}
       </Routes>
     </Router>
