@@ -1,10 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Users, CreditCard, BarChart2, Calendar, Award, Briefcase, ScrollText, NotebookPen, Ambulance, BrickWall, TentTree, Hospital, HandHelping, BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus, Flag, PhoneCall, Newspaper } from 'lucide-react';
+import {
+  Ambulance, BrickWall, TentTree, Hospital, HandHelping,
+  BriefcaseMedical, Building, MapPin, Bell, GitBranch, Bus, Flag, PhoneCall,
+  Newspaper, Navigation
+} from 'lucide-react';
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
-  const menuItems = [
+  const [activeTab, setActiveTab] = useState('hajj');
+
+  // Automatically set the correct tab based on current route
+  useEffect(() => {
+    const ksaRoutes = ['/locationKSA', '/placeKSA'];
+    if (ksaRoutes.includes(location.pathname)) {
+      setActiveTab('explore-ksa');
+    } else {
+      setActiveTab('hajj');
+    }
+  }, [location.pathname]);
+
+  // Hajj related menu items
+  const hajjMenuItems = [
     // { id: 'dashboard', label: 'Dashboard', icon: <Home size={20} />, path: '/dashboard' },
     { id: 'ambulance', label: 'Ambulance', icon: <Ambulance size={20} />, path: '/ambulance' },
     { id: 'building', label: 'Building', icon: <BrickWall size={20} />, path: '/building' },
@@ -22,11 +39,22 @@ const Sidebar = ({ isOpen }) => {
     { id: 'notification', label: 'Notifications', icon: <Bell size={20} />, path: '/notification' },
   ];
 
+  // Explore KSA related menu items (location and place focused)
+  const exploreKsaMenuItems = [
+    { id: 'ksa-location', label: 'Location', icon: <MapPin size={20} />, path: '/locationKSA' },
+    { id: 'ksa-places', label: 'Places', icon: <Navigation size={20} />, path: '/placeKSA' },
+  ];
+
+  const getCurrentMenuItems = () => {
+    return activeTab === 'hajj' ? hajjMenuItems : exploreKsaMenuItems;
+  };
+
   return (
-    <aside 
+    <aside
       className={`fixed bg-[#002147] text-white h-[calc(100vh-3.5rem)] z-10 transition-all duration-300 top-14 
         ${isOpen ? 'w-64' : 'w-0 md:w-16'}`}
     >
+      {/* Header */}
       <div className="h-16 flex items-center justify-center border-b border-blue-900 bg-[#002147] sticky top-0 z-20">
         {isOpen ? (
           <h2 className="text-xl font-bold">Admin Panel</h2>
@@ -36,9 +64,44 @@ const Sidebar = ({ isOpen }) => {
           </div>
         )}
       </div>
-      
-      <div 
-        className="h-[calc(100%-4rem)] overflow-y-auto"
+
+      {/* Vertical Tab Navigation */}
+      {isOpen && (
+        <div className="bg-[#001836] border-b border-[#1e3a8a]/30 px-3 py-2">
+          <div className="bg-[#0f1729] rounded-lg p-1 flex flex-col gap-1">
+            <button
+              onClick={() => setActiveTab('hajj')}
+              className={`w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all duration-200 relative overflow-hidden
+                ${activeTab === 'hajj'
+                  ? 'bg-gradient-to-r from-[#4A90E2] to-[#357ABD] text-white shadow-lg transform scale-[1.02]'
+                  : 'text-gray-400 hover:text-white hover:bg-[#1e3a8a]/50'
+                }`}
+            >
+              <span className="relative z-10">Hajj Services</span>
+              {activeTab === 'hajj' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-50"></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('explore-ksa')}
+              className={`w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all duration-200 relative overflow-hidden
+                ${activeTab === 'explore-ksa'
+                  ? 'bg-gradient-to-r from-[#4A90E2] to-[#357ABD] text-white shadow-lg transform scale-[1.02]'
+                  : 'text-gray-400 hover:text-white hover:bg-[#1e3a8a]/50'
+                }`}
+            >
+              <span className="relative z-10">Explore KSA</span>
+              {activeTab === 'explore-ksa' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-50"></div>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Menu Items */}
+      <div
+        className={`${isOpen ? 'h-[calc(100%-9.5rem)]' : 'h-[calc(100%-4rem)]'} overflow-y-auto`}
         style={{
           msOverflowStyle: 'none',
           scrollbarWidth: 'none',
@@ -54,13 +117,13 @@ const Sidebar = ({ isOpen }) => {
         </style>
         <nav className="py-2">
           <ul>
-            {menuItems.map((item) => (
+            {getCurrentMenuItems().map((item) => (
               <li key={item.id} className="px-2">
-                <Link 
+                <Link
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 transition-colors rounded-md
                     ${location.pathname === item.path
-                      ? 'bg-[#4A90E2] text-white' 
+                      ? 'bg-[#4A90E2] text-white'
                       : 'text-gray-300 hover:bg-blue-900'
                     }`}
                 >
