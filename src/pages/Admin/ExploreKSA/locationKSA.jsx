@@ -176,7 +176,7 @@ const LocationKSA = ({ isOpen }) => {
         return;
       }
 
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/locations/${mongoId}`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/locations/${mongoId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -214,7 +214,7 @@ const LocationKSA = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/locations`);
         setLocationData(updatedResponse.data);
         setNewLocation({ id: '', title: '' });
         setShowAddForm(false);

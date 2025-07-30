@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 import axios from 'axios';
 import { read, utils, write } from 'xlsx';
 
 const Thanima = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [thanimaData, setThanimaData] = useState([]);
+  const [thanimaData, setThanimaData] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -68,7 +68,7 @@ const Thanima = ({ isOpen }) => {
 
       // Delete all selected items
       await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/thanima/${id}`, {
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/thanima/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -90,7 +90,7 @@ const Thanima = ({ isOpen }) => {
       title: (
         <input
           type="checkbox"
-          checked={thanimaData.length > 0 && selectedRows.length === thanimaData.length}
+          checked={thanimaData?.length > 0 && selectedRows.length === thanimaData?.length}
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -167,15 +167,15 @@ const Thanima = ({ isOpen }) => {
               className="w-full p-1 border rounded"
             >
               <option value="">Select Location</option>
-              {Array.isArray(locations) && locations.map(location => (
+              {locations.map(location => (
                 <option key={location._id} value={location._id}>
-                  {location.name}
+                  {location.title}
                 </option>
               ))}
             </select>
           );
         }
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
+        const locationName = row.ref?.title || locations.find(loc => loc._id === row.ref)?.title || 'N/A';
         return locationName;
       }
     },
@@ -218,14 +218,15 @@ const Thanima = ({ isOpen }) => {
         </div>
       )
     }
-  ], [editingId, selectedRows, thanimaData.length, locations]);
+  ], [editingId, selectedRows, (thanimaData || []).length, locations]);
 
   // Fetch data from API using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/thanima`);
-        setThanimaData(response.data);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/thanima`);
+        setThanimaData(Array.isArray(response.data) ? response.data: []);
+        console.log(response.data)
         setLoading(false);
       } catch (error) {
         console.error('Error fetching Thanima data:', error);
@@ -240,7 +241,7 @@ const Thanima = ({ isOpen }) => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
         setLocations(response.data);
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -252,15 +253,11 @@ const Thanima = ({ isOpen }) => {
 
   // Filter data based on search input
   const filteredThanimaData = useMemo(() => {
-    // Ensure thanimaData is an array
-    if (!Array.isArray(thanimaData)) {
-      return [];
-    }
-    
+    if (!thanimaData) return []; 
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     if (!lowerCaseSearch) return thanimaData;
     return thanimaData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+      const locationName = item.ref?.title || locations.find(loc => loc._id === item.ref)?.title || '';
       return (
         item.name.toLowerCase().includes(lowerCaseSearch) ||
         item.id.toString().toLowerCase().includes(lowerCaseSearch) ||
@@ -280,7 +277,7 @@ const Thanima = ({ isOpen }) => {
             ...item, 
             ref: selectedLocation ? { 
               _id: selectedLocation._id,
-              name: selectedLocation.name 
+              title: selectedLocation.title 
             } : value 
           };
         }
@@ -300,7 +297,7 @@ const Thanima = ({ isOpen }) => {
       }
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/thanima/${row._id}`,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/thanima/${row._id}`,
         row,
         {
           headers: {
@@ -330,6 +327,10 @@ const Thanima = ({ isOpen }) => {
 
   // Handle Add New Thanima
   const handleAddThanima = async () => {
+    if (!newThanima.name || !newThanima.phone || !newThanima.id) {
+      alert("Name, Phone, and ID are required.");
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -337,9 +338,16 @@ const Thanima = ({ isOpen }) => {
         return;
       }
 
+      const payload = {
+        name: newThanima.name,
+        phone: newThanima.phone,
+        id: newThanima.id,
+      };
+      if (newThanima.ref) payload.ref = newThanima.ref;
+
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/thanima`,
-        newThanima,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/thanima`,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -348,7 +356,7 @@ const Thanima = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/thanima`);
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/thanima`);
         setThanimaData(updatedResponse.data);
         setNewThanima({ 
           name: '', 
@@ -407,7 +415,7 @@ const Thanima = ({ isOpen }) => {
 
           const token = localStorage.getItem("token");
           const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/thanima/bulk-upload`,
+            `${import.meta.env.VITE_BACKEND_URL_V2}/thanima/bulk-upload`,
             formData,
             {
               headers: {
@@ -420,7 +428,7 @@ const Thanima = ({ isOpen }) => {
           setUploadSuccess(`Successfully uploaded ${response.data.count} thanimas`);
           setUploadError(null);
 
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/thanima`);
+          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/thanima`);
           setThanimaData(updatedResponse.data);
         } catch (error) {
           setUploadError(error.response?.data?.message || 'Error uploading file');
@@ -605,9 +613,9 @@ const Thanima = ({ isOpen }) => {
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
-                {Array.isArray(locations) && locations.map(location => (
+                {locations.map(location => (
                   <option key={location._id} value={location._id}>
-                    {location.name}
+                    {location.title}
                   </option>
                 ))}
               </select>

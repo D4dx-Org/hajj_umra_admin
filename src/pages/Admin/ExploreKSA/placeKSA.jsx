@@ -103,9 +103,10 @@ const PlaceKSA = () => {
                     return { data: [] }; // Return empty data instead of failing completely
                 })
             ]);
+            console.log("placeResponse", placesResponse);
 
             // Handle places response
-            setPlaces(placesResponse.data.places || []);
+            setPlaces(placesResponse.data.placesKSA || []);
             setPagination({
                 ...pagination,
                 total: placesResponse.data.count || 0
@@ -639,7 +640,7 @@ const PlaceKSA = () => {
                             const recordImages = record.images || [];
                             console.log('Setting up edit for record:', record);
                             console.log('Record images:', recordImages);
-                            
+
                             setExistingImages(recordImages);
                             form.setFieldsValue({
                                 id: record.id,
@@ -871,132 +872,132 @@ const PlaceKSA = () => {
                                     </Dragger>
 
                                     {/* Display all images in a compact grid */}
-                                    {((editingId && existingImages && existingImages.length > 0) || 
-                                      (uploadedFiles.images && uploadedFiles.images.length > 0)) && (
-                                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="text-sm font-medium text-gray-700">
-                                                    Images ({(existingImages?.length || 0) + (uploadedFiles.images?.length || 0)}/20)
-                                                    <span className="ml-2 text-xs text-gray-500">
-                                                        (Existing: {existingImages?.length || 0}, New: {uploadedFiles.images?.length || 0})
-                                                    </span>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    {editingId && existingImages && existingImages.length > 0 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={clearAllExistingImages}
-                                                            className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                                                            title="Clear all existing images"
-                                                        >
-                                                            Clear Existing
-                                                        </button>
-                                                    )}
-                                                    {uploadedFiles.images && uploadedFiles.images.length > 0 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={clearAllNewImages}
-                                                            className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                                                            title="Clear all new images"
-                                                        >
-                                                            Clear New
-                                                        </button>
-                                                    )}
-
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-6 gap-2">
-                                                {/* Existing images */}
-                                                {editingId && existingImages && existingImages.map((imageUrl, index) => (
-                                                    <div key={`existing-${index}`} className="relative group">
-                                                        <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
-                                                            <img
-                                                                src={imageUrl}
-                                                                alt={`Existing ${index + 1}`}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e) => {
-                                                                    e.target.style.display = 'none';
-                                                                    e.target.nextSibling.style.display = 'flex';
-                                                                }}
-                                                            />
-                                                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                                                                IMG
-                                                            </div>
-                                                            <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
-                                                                E{index + 1}
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                e.stopPropagation();
-                                                                console.log('Clicked remove existing image button for index:', index);
-                                                                removeExistingImage(index);
-                                                            }}
-                                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                                            title="Remove this existing image"
-                                                        >
-                                                            ×
-                                                        </button>
+                                    {((editingId && existingImages && existingImages.length > 0) ||
+                                        (uploadedFiles.images && uploadedFiles.images.length > 0)) && (
+                                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <div className="text-sm font-medium text-gray-700">
+                                                        Images ({(existingImages?.length || 0) + (uploadedFiles.images?.length || 0)}/20)
+                                                        <span className="ml-2 text-xs text-gray-500">
+                                                            (Existing: {existingImages?.length || 0}, New: {uploadedFiles.images?.length || 0})
+                                                        </span>
                                                     </div>
-                                                ))}
-                                                
-                                                {/* New images */}
-                                                {uploadedFiles.images && uploadedFiles.images.map((file, index) => (
-                                                    <div key={`new-${index}`} className="relative group">
-                                                        <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
-                                                            {file && file.type?.startsWith('image/') ? (
+                                                    <div className="flex gap-2">
+                                                        {editingId && existingImages && existingImages.length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={clearAllExistingImages}
+                                                                className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                                                                title="Clear all existing images"
+                                                            >
+                                                                Clear Existing
+                                                            </button>
+                                                        )}
+                                                        {uploadedFiles.images && uploadedFiles.images.length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={clearAllNewImages}
+                                                                className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                                                                title="Clear all new images"
+                                                            >
+                                                                Clear New
+                                                            </button>
+                                                        )}
+
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-6 gap-2">
+                                                    {/* Existing images */}
+                                                    {editingId && existingImages && existingImages.map((imageUrl, index) => (
+                                                        <div key={`existing-${index}`} className="relative group">
+                                                            <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
                                                                 <img
-                                                                    src={URL.createObjectURL(file)}
-                                                                    alt={`New ${index + 1}`}
+                                                                    src={imageUrl}
+                                                                    alt={`Existing ${index + 1}`}
                                                                     className="w-full h-full object-cover"
                                                                     onError={(e) => {
                                                                         e.target.style.display = 'none';
                                                                         e.target.nextSibling.style.display = 'flex';
                                                                     }}
                                                                 />
-                                                            ) : null}
-                                                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
-                                                                IMG
+                                                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                                                                    IMG
+                                                                </div>
+                                                                <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
+                                                                    E{index + 1}
+                                                                </div>
                                                             </div>
-                                                            <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
-                                                                N{index + 1}
-                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    console.log('Clicked remove existing image button for index:', index);
+                                                                    removeExistingImage(index);
+                                                                }}
+                                                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                                                title="Remove this existing image"
+                                                            >
+                                                                ×
+                                                            </button>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                e.stopPropagation();
-                                                                console.log('Clicked remove new image button for index:', index);
-                                                                removeImageFile(index);
-                                                            }}
-                                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                                            title="Remove this new image"
-                                                        >
-                                                            ×
-                                                        </button>
+                                                    ))}
+
+                                                    {/* New images */}
+                                                    {uploadedFiles.images && uploadedFiles.images.map((file, index) => (
+                                                        <div key={`new-${index}`} className="relative group">
+                                                            <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                                                                {file && file.type?.startsWith('image/') ? (
+                                                                    <img
+                                                                        src={URL.createObjectURL(file)}
+                                                                        alt={`New ${index + 1}`}
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => {
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.nextSibling.style.display = 'flex';
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
+                                                                    IMG
+                                                                </div>
+                                                                <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
+                                                                    N{index + 1}
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    console.log('Clicked remove new image button for index:', index);
+                                                                    removeImageFile(index);
+                                                                }}
+                                                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                                                title="Remove this new image"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Legend */}
+                                                <div className="mt-2 flex gap-4 text-xs text-gray-600">
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                                                        <span>Existing Images</span>
                                                     </div>
-                                                ))}
-                                            </div>
-                                            
-                                            {/* Legend */}
-                                            <div className="mt-2 flex gap-4 text-xs text-gray-600">
-                                                <div className="flex items-center gap-1">
-                                                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                                                    <span>Existing Images</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <div className="w-3 h-3 bg-green-500 rounded"></div>
-                                                    <span>New Images</span>
-                                                </div>
-                                                <div className="text-gray-500">
-                                                    Hover to delete
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                                        <span>New Images</span>
+                                                    </div>
+                                                    <div className="text-gray-500">
+                                                        Hover to delete
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
                                 </Form.Item>
                             </Col>
 

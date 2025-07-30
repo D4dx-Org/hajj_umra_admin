@@ -21,8 +21,8 @@ import {
 import { Bell, Search, AlertTriangle, Trash2, Edit, Plus, UploadCloud } from 'lucide-react';
 import axios from 'axios';
 import moment from 'moment';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -58,7 +58,7 @@ const Notification = () => {
                 return;
             }
 
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/notifications`, {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/notifications`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -120,7 +120,7 @@ const Notification = () => {
 
                 try {
                     const uploadResponse = await axios.post(
-                        `${import.meta.env.VITE_BACKEND_URL}/notifications/upload`,
+                        `${import.meta.env.VITE_BACKEND_URL_V2}/notifications/upload`,
                         formData,
                         {
                             headers: {
@@ -163,7 +163,7 @@ const Notification = () => {
             if (editingId) {
                 // Update existing notification
                 const response = await axios.put(
-                    `${import.meta.env.VITE_BACKEND_URL}/notifications/${editingId}`,
+                    `${import.meta.env.VITE_BACKEND_URL_V2}/notifications/${editingId}`,
                     notificationData,
                     {
                         headers: { Authorization: `Bearer ${token}` }
@@ -175,7 +175,7 @@ const Notification = () => {
             } else {
                 // Create new notification
                 await axios.post(
-                    `${import.meta.env.VITE_BACKEND_URL}/notifications`,
+                    `${import.meta.env.VITE_BACKEND_URL_V2}/notifications`,
                     notificationData,
                     {
                         headers: { Authorization: `Bearer ${token}` }
@@ -217,7 +217,7 @@ const Notification = () => {
 
             if (ids.length > 1) {
                 // Use bulk delete endpoint for multiple notifications
-                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/notifications/bulk-delete`, 
+                await axios.post(`${import.meta.env.VITE_BACKEND_URL_V2}/notifications/bulk-delete`, 
                     { ids },
                     {
                         headers: {
@@ -227,7 +227,7 @@ const Notification = () => {
                 );
             } else {
                 // Use single delete endpoint for one notification
-                await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/notifications/${ids[0]}`, {
+                await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/notifications/${ids[0]}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -270,7 +270,7 @@ const Notification = () => {
                 return;
             }
 
-            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/notifications/bulk-update`, {
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL_V2}/notifications/bulk-update`, {
                 ids: selectedRows,
                 status: action
             }, {
@@ -289,11 +289,6 @@ const Notification = () => {
 
     // Filter data based on search
     const filteredNotifications = useMemo(() => {
-        // Ensure notifications is an array
-        if (!Array.isArray(notifications)) {
-            return [];
-        }
-        
         return notifications.filter(item => {
             const searchStr = searchTerm.toLowerCase();
             return (
