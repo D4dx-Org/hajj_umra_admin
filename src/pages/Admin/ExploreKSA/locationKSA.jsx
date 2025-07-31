@@ -17,8 +17,8 @@ const LocationKSA = ({ isOpen }) => {
 
   // Define the table columns with editable configuration
   const locationColumns = [
-    { 
-      key: 'id', 
+    {
+      key: 'id',
       title: 'ID',
       render: (row) => {
         if (editingId === row._id) {
@@ -34,8 +34,8 @@ const LocationKSA = ({ isOpen }) => {
         return row.id;
       }
     },
-    { 
-      key: 'title', 
+    {
+      key: 'title',
       title: 'Title',
       render: (row) => {
         if (editingId === row._id) {
@@ -80,7 +80,7 @@ const LocationKSA = ({ isOpen }) => {
                 Edit
               </button>
               <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDelete(row)}
                 className="bg-red-500 text-white px-2 py-1 rounded text-sm"
               >
                 Delete
@@ -123,7 +123,7 @@ const LocationKSA = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setLocationData(locationData.map(item => 
+    setLocationData(locationData.map(item =>
       item._id === id ? { ...item, [field]: value } : item
     ));
   };
@@ -138,8 +138,8 @@ const LocationKSA = ({ isOpen }) => {
       }
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL_V2}/locations/${row.id}`,
-        { title: row.title },
+        `${import.meta.env.VITE_BACKEND_URL_V2}/locations/${row._id}`,
+        { id: row.id, title: row.title },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,7 +147,7 @@ const LocationKSA = ({ isOpen }) => {
         }
       );
 
-      setLocationData(locationData.map(item => 
+      setLocationData(locationData.map(item =>
         item._id === row._id ? { ...item, ...response.data } : item
       ));
       setEditingId(null);
@@ -157,15 +157,15 @@ const LocationKSA = ({ isOpen }) => {
   };
 
   // Handle Delete
-  const handleDelete = async (id) => {
-    setDeleteConfirm({ show: true, id });
+  const handleDelete = async (row) => {
+    setDeleteConfirm({ show: true, id: row._id, customId: row.id });
   };
 
   // Add handleDeleteConfirm
   const handleDeleteConfirm = async () => {
-    const id = deleteConfirm.id;
-    if (!id) {
-      console.error("Error: ID is undefined");
+    const mongoId = deleteConfirm.id;
+    if (!mongoId) {
+      console.error("Error: MongoDB ID is undefined");
       return;
     }
 
@@ -176,14 +176,14 @@ const LocationKSA = ({ isOpen }) => {
         return;
       }
 
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/locations/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/locations/${mongoId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      setLocationData(locationData.filter(item => item.id !== id));
-      setDeleteConfirm({ show: false, id: null });
+      setLocationData(locationData.filter(item => item._id !== mongoId));
+      setDeleteConfirm({ show: false, id: null, customId: null });
     } catch (error) {
       console.error('Error deleting location data:', error);
     }
@@ -191,7 +191,7 @@ const LocationKSA = ({ isOpen }) => {
 
   // Add handleDeleteCancel
   const handleDeleteCancel = () => {
-    setDeleteConfirm({ show: false, id: null });
+    setDeleteConfirm({ show: false, id: null, customId: null });
   };
 
   // Handle Add New Location
@@ -214,7 +214,7 @@ const LocationKSA = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/locations`);
         setLocationData(updatedResponse.data);
         setNewLocation({ id: '', title: '' });
         setShowAddForm(false);
@@ -233,7 +233,7 @@ const LocationKSA = ({ isOpen }) => {
   // Modify the cancel button click handler
   const handleCancelEdit = () => {
     // Restore original data
-    setLocationData(locationData.map(item => 
+    setLocationData(locationData.map(item =>
       item._id === editingId ? originalData : item
     ));
     setEditingId(null);
@@ -252,7 +252,7 @@ const LocationKSA = ({ isOpen }) => {
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <h1 className="text-2xl font-bold">Location Management</h1>
-          <button 
+          <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md"
           >

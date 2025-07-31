@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 import axios from 'axios';
 import { read, utils, write } from 'xlsx';
 
-const Thanima = ({ isOpen }) => {
+const Nusuk = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [thanimaData, setThanimaData] = useState([]);
+  const [nusukData, setNusukData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [newThanima, setNewThanima] = useState({ 
-    name: '', 
-    phone: '', 
-    id: '',
+  const [newNusuk, setNewNusuk] = useState({
+    name: '',
+    building: '',
+    location: { lat: '', lng: '' },
     ref: ''
   });
   const [originalData, setOriginalData] = useState(null);
@@ -28,7 +28,7 @@ const Thanima = ({ isOpen }) => {
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(thanimaData.map(row => row._id));
+      setSelectedRows(nusukData.map(row => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -48,17 +48,17 @@ const Thanima = ({ isOpen }) => {
   // Add handleBulkDelete function
   const handleBulkDelete = () => {
     if (selectedRows.length === 0) return;
-    setDeleteConfirm({ 
-      show: true, 
+    setDeleteConfirm({
+      show: true,
       id: selectedRows,
-      isBulk: true 
+      isBulk: true
     });
   };
 
   // Modify handleDeleteConfirm to handle bulk delete
   const handleDeleteConfirm = async () => {
     const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -67,30 +67,30 @@ const Thanima = ({ isOpen }) => {
       }
 
       // Delete all selected items
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/thanima/${id}`, {
+      await Promise.all(ids.map(id =>
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/nusuk/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
       ));
 
-      setThanimaData(thanimaData.filter(item => !ids.includes(item._id)));
+      setNusukData(nusukData.filter(item => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting thanima data:', error);
+      console.error('Error deleting nusuk data:', error);
     }
   };
 
   // Define the table columns with editable configuration
-  const thanimaColumns = useMemo(() => [
+  const nusukColumns = useMemo(() => [
     {
       key: 'select',
       title: (
         <input
           type="checkbox"
-          checked={thanimaData.length > 0 && selectedRows.length === thanimaData.length}
+          checked={nusukData.length > 0 && selectedRows.length === nusukData.length}
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -104,8 +104,8 @@ const Thanima = ({ isOpen }) => {
         />
       )
     },
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       title: 'Name',
       render: (row) => {
         if (editingId === row._id) {
@@ -121,38 +121,48 @@ const Thanima = ({ isOpen }) => {
         return row.name;
       }
     },
-    { 
-      key: 'phone', 
-      title: 'Phone',
+    {
+      key: 'building',
+      title: 'Building',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
-              value={row.phone}
-              onChange={(e) => handleEditChange(row._id, 'phone', e.target.value)}
+              value={row.building}
+              onChange={(e) => handleEditChange(row._id, 'building', e.target.value)}
               className="w-full p-1 border rounded"
             />
           );
         }
-        return row.phone;
+        return row.building;
       }
     },
-    { 
-      key: 'id', 
-      title: 'ID',
+    {
+      key: 'location',
+      title: 'Location',
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.id}
-              onChange={(e) => handleEditChange(row._id, 'id', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={row.location?.lat || ''}
+                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
+                placeholder="Latitude"
+                className="w-1/2 p-1 border rounded"
+              />
+              <input
+                type="number"
+                value={row.location?.lng || ''}
+                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
+                placeholder="Longitude"
+                className="w-1/2 p-1 border rounded"
+              />
+            </div>
           );
         }
-        return row.id;
+        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
       }
     },
     {
@@ -167,15 +177,15 @@ const Thanima = ({ isOpen }) => {
               className="w-full p-1 border rounded"
             >
               <option value="">Select Location</option>
-              {Array.isArray(locations) && locations.map(location => (
+              {locations.map(location => (
                 <option key={location._id} value={location._id}>
-                  {location.name}
+                  {location.title}
                 </option>
               ))}
             </select>
           );
         }
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
+        const locationName = row.ref?.title || locations.find(loc => loc._id === row.ref)?.title || 'N/A';
         return locationName;
       }
     },
@@ -218,17 +228,17 @@ const Thanima = ({ isOpen }) => {
         </div>
       )
     }
-  ], [editingId, selectedRows, thanimaData.length, locations]);
+  ], [editingId, selectedRows, nusukData.length, locations]);
 
   // Fetch data from API using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/thanima`);
-        setThanimaData(response.data);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/nusuk`);
+        setNusukData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching Thanima data:', error);
+        console.error('Error fetching Nusuk data:', error);
         setLoading(false);
       }
     };
@@ -240,7 +250,7 @@ const Thanima = ({ isOpen }) => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
         setLocations(response.data);
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -251,37 +261,34 @@ const Thanima = ({ isOpen }) => {
   }, []);
 
   // Filter data based on search input
-  const filteredThanimaData = useMemo(() => {
-    // Ensure thanimaData is an array
-    if (!Array.isArray(thanimaData)) {
-      return [];
-    }
-    
+  const filteredNusukData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearch) return thanimaData;
-    return thanimaData.filter((item) => {
-      const locationName = item.ref?.name || locations.find(loc => loc._id === item.ref)?.name || '';
+    if (!lowerCaseSearch) return nusukData;
+    return nusukData.filter((item) => {
+      const locationName = item.ref?.title || locations.find(loc => loc._id === item.ref)?.title || '';
       return (
         item.name.toLowerCase().includes(lowerCaseSearch) ||
-        item.id.toString().toLowerCase().includes(lowerCaseSearch) ||
-        item.phone.toLowerCase().includes(lowerCaseSearch) ||
+        item.building.toLowerCase().includes(lowerCaseSearch) ||
         locationName.toLowerCase().includes(lowerCaseSearch)
       );
     });
-  }, [thanimaData, searchTerm, locations]);
+  }, [nusukData, searchTerm, locations]);
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setThanimaData(thanimaData.map(item => {
+    setNusukData(nusukData.map(item => {
       if (item._id === id) {
+        if (field === 'location') {
+          return { ...item, location: value };
+        }
         if (field === 'ref') {
           const selectedLocation = locations.find(loc => loc._id === value);
-          return { 
-            ...item, 
-            ref: selectedLocation ? { 
+          return {
+            ...item,
+            ref: selectedLocation ? {
               _id: selectedLocation._id,
-              name: selectedLocation.name 
-            } : value 
+              title: selectedLocation.title
+            } : value
           };
         }
         return { ...item, [field]: value };
@@ -300,7 +307,7 @@ const Thanima = ({ isOpen }) => {
       }
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/thanima/${row._id}`,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/nusuk/${row._id}`,
         row,
         {
           headers: {
@@ -309,12 +316,12 @@ const Thanima = ({ isOpen }) => {
         }
       );
 
-      setThanimaData(thanimaData.map(item => 
+      setNusukData(nusukData.map(item =>
         item._id === row._id ? { ...item, ...response.data } : item
       ));
       setEditingId(null);
     } catch (error) {
-      console.error("Error updating thanima data:", error);
+      console.error("Error updating nusuk data:", error);
     }
   };
 
@@ -328,8 +335,8 @@ const Thanima = ({ isOpen }) => {
     setDeleteConfirm({ show: false, id: null });
   };
 
-  // Handle Add New Thanima
-  const handleAddThanima = async () => {
+  // Handle Add New Nusuk
+  const handleAddNusuk = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -338,8 +345,8 @@ const Thanima = ({ isOpen }) => {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/thanima`,
-        newThanima,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/nusuk`,
+        newNusuk,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -348,18 +355,18 @@ const Thanima = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/thanima`);
-        setThanimaData(updatedResponse.data);
-        setNewThanima({ 
-          name: '', 
-          phone: '', 
-          id: '',
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/nusuk`);
+        setNusukData(updatedResponse.data);
+        setNewNusuk({
+          name: '',
+          building: '',
+          location: { lat: '', lng: '' },
           ref: ''
         });
         setShowAddForm(false);
       }
     } catch (error) {
-      console.error("Error adding thanima data:", error);
+      console.error("Error adding nusuk data:", error);
     }
   };
 
@@ -371,7 +378,7 @@ const Thanima = ({ isOpen }) => {
 
   // Modify the cancel button click handler
   const handleCancelEdit = () => {
-    setThanimaData(thanimaData.map(item => 
+    setNusukData(nusukData.map(item =>
       item._id === editingId ? originalData : item
     ));
     setEditingId(null);
@@ -396,9 +403,16 @@ const Thanima = ({ isOpen }) => {
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
-          const isValid = data.every(row => row.name && row.phone && row.id);
+          const isValid = data.every(row => {
+            const hasRequiredFields = row.name && row.building;
+            const hasValidCoordinates = !row.latitude || !row.longitude ||
+              (typeof Number(row.latitude) === 'number' && !isNaN(Number(row.latitude)) &&
+                typeof Number(row.longitude) === 'number' && !isNaN(Number(row.longitude)));
+            return hasRequiredFields && hasValidCoordinates;
+          });
+
           if (!isValid) {
-            setUploadError('Invalid data format. Please ensure all required fields are present.');
+            setUploadError('Invalid data format. Please ensure all required fields (name, building) are present and coordinates are valid numbers if provided.');
             return;
           }
 
@@ -407,7 +421,7 @@ const Thanima = ({ isOpen }) => {
 
           const token = localStorage.getItem("token");
           const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/thanima/bulk-upload`,
+            `${import.meta.env.VITE_BACKEND_URL_V2}/nusuk/bulk-upload`,
             formData,
             {
               headers: {
@@ -417,11 +431,11 @@ const Thanima = ({ isOpen }) => {
             }
           );
 
-          setUploadSuccess(`Successfully uploaded ${response.data.count} thanimas`);
+          setUploadSuccess(`Successfully uploaded ${response.data.count} nusuks`);
           setUploadError(null);
 
-          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/thanima`);
-          setThanimaData(updatedResponse.data);
+          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/nusuk`);
+          setNusukData(updatedResponse.data);
         } catch (error) {
           setUploadError(error.response?.data?.message || 'Error uploading file');
           setUploadSuccess(null);
@@ -441,26 +455,28 @@ const Thanima = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          name: 'Sample Thanima',
-          phone: '+966500000000',
-          id: 'THN001',
-          location: 'Sample Location Name'
+          name: 'Sample Nusuk',
+          building: 'Building A',
+          latitude: '21.4225',
+          longitude: '39.8262',
+          location_name: 'Sample Location Name'
         }
       ];
 
       // Create worksheet
       const ws = utils.json_to_sheet([]);
-      
-      // Add headers
+
+      // Add headers with comments
       utils.sheet_add_aoa(ws, [[
         'name',
-        'phone',
-        'id',
-        'location'
+        'building',
+        'latitude',
+        'longitude',
+        'location_name'
       ]], { origin: 'A1' });
 
       // Add sample data
-      utils.sheet_add_json(ws, sampleData, { 
+      utils.sheet_add_json(ws, sampleData, {
         origin: 'A2',
         skipHeader: true
       });
@@ -468,9 +484,10 @@ const Thanima = ({ isOpen }) => {
       // Add column widths
       ws['!cols'] = [
         { wch: 20 }, // name
-        { wch: 15 }, // phone
-        { wch: 10 }, // id
-        { wch: 30 }  // location
+        { wch: 20 }, // building
+        { wch: 12 }, // latitude
+        { wch: 12 }, // longitude
+        { wch: 30 }  // location_name
       ];
 
       // Create workbook
@@ -478,21 +495,21 @@ const Thanima = ({ isOpen }) => {
       utils.book_append_sheet(wb, ws, 'Template');
 
       // Generate Excel file
-      write(wb, { 
+      write(wb, {
         bookType: 'xlsx',
         type: 'array'
       });
 
       // Convert to blob and download
       const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        [write(wb, { bookType: 'xlsx', type: 'array' })],
         { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
       );
-      
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'thanima_upload_template.xlsx';
+      link.download = 'nusuk_upload_template.xlsx';
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -513,9 +530,9 @@ const Thanima = ({ isOpen }) => {
       <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Thanima Management</h1>
+            <h1 className="text-2xl font-bold">Nusuk Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              Total: {filteredThanimaData.length} thanimas
+              Total: {filteredNusukData.length} nusuks
             </div>
           </div>
           <div className="flex gap-4">
@@ -547,7 +564,7 @@ const Thanima = ({ isOpen }) => {
             >
               Upload Excel
             </label>
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
@@ -569,54 +586,76 @@ const Thanima = ({ isOpen }) => {
 
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 className="text-lg font-bold mb-4">Add New Thanima</h2>
+            <h2 className="text-lg font-bold mb-4">Add New Nusuk</h2>
             <div className="mb-4">
               <label className="block text-sm font-medium">Name</label>
               <input
                 type="text"
-                value={newThanima.name}
-                onChange={(e) => setNewThanima({ ...newThanima, name: e.target.value })}
+                value={newNusuk.name}
+                onChange={(e) => setNewNusuk({ ...newNusuk, name: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Phone</label>
+              <label className="block text-sm font-medium">Building</label>
               <input
                 type="text"
-                value={newThanima.phone}
-                onChange={(e) => setNewThanima({ ...newThanima, phone: e.target.value })}
+                value={newNusuk.building}
+                onChange={(e) => setNewNusuk({ ...newNusuk, building: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">ID</label>
-              <input
-                type="text"
-                value={newThanima.id}
-                onChange={(e) => setNewThanima({ ...newThanima, id: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
+              <label className="block text-sm font-medium">Location</label>
+              <div className="flex gap-4">
+                <div className="w-1/2">
+                  <label className="block text-xs text-gray-500">Latitude</label>
+                  <input
+                    type="number"
+                    value={newNusuk.location.lat}
+                    onChange={(e) => setNewNusuk({
+                      ...newNusuk,
+                      location: { ...newNusuk.location, lat: e.target.value }
+                    })}
+                    placeholder="Enter latitude"
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
+                </div>
+                <div className="w-1/2">
+                  <label className="block text-xs text-gray-500">Longitude</label>
+                  <input
+                    type="number"
+                    value={newNusuk.location.lng}
+                    onChange={(e) => setNewNusuk({
+                      ...newNusuk,
+                      location: { ...newNusuk.location, lng: e.target.value }
+                    })}
+                    placeholder="Enter longitude"
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
+                </div>
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Location Reference</label>
               <select
-                value={newThanima.ref}
-                onChange={(e) => setNewThanima({ ...newThanima, ref: e.target.value })}
+                value={newNusuk.ref}
+                onChange={(e) => setNewNusuk({ ...newNusuk, ref: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
-                {Array.isArray(locations) && locations.map(location => (
+                {locations.map(location => (
                   <option key={location._id} value={location._id}>
-                    {location.name}
+                    {location.title}
                   </option>
                 ))}
               </select>
             </div>
             <button
-              onClick={handleAddThanima}
+              onClick={handleAddNusuk}
               className="bg-blue-500 text-white px-4 py-2 rounded-md"
             >
-              Add Thanima
+              Add Nusuk
             </button>
           </div>
         )}
@@ -625,7 +664,7 @@ const Thanima = ({ isOpen }) => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search thanimas..."
+              placeholder="Search nusuks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
@@ -636,14 +675,14 @@ const Thanima = ({ isOpen }) => {
 
         {loading ? (
           <p className="text-center">Loading...</p>
-        ) : filteredThanimaData.length === 0 ? (
+        ) : filteredNusukData.length === 0 ? (
           <p className="text-center">No items found</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  {thanimaColumns.map((column) => (
+                  {nusukColumns.map((column) => (
                     <th key={column.key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {column.title}
                     </th>
@@ -651,9 +690,9 @@ const Thanima = ({ isOpen }) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredThanimaData.map((row) => (
+                {filteredNusukData.map((row) => (
                   <tr key={row._id}>
-                    {thanimaColumns.map((column) => (
+                    {nusukColumns.map((column) => (
                       <td key={`${row._id}-${column.key}`} className="px-6 py-4 whitespace-nowrap">
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
@@ -675,9 +714,9 @@ const Thanima = ({ isOpen }) => {
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              {Array.isArray(deleteConfirm.id) 
-                ? `Are you sure you want to delete ${deleteConfirm.id.length} selected thanimas? This action cannot be undone.`
-                : 'Are you sure you want to delete this thanima? This action cannot be undone.'}
+              {Array.isArray(deleteConfirm.id)
+                ? `Are you sure you want to delete ${deleteConfirm.id.length} selected nusuks? This action cannot be undone.`
+                : 'Are you sure you want to delete this nusuk? This action cannot be undone.'}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -700,4 +739,4 @@ const Thanima = ({ isOpen }) => {
   );
 };
 
-export default Thanima;
+export default Nusuk;
