@@ -1,0 +1,24 @@
+{
+  "categories": [
+    {
+      "value": "Type A",
+      "label": "Type A - Advanced Life Support",
+      "description": "For emergency and critical care transport"
+    },
+    {
+      "value": "Type B",
+      "label": "Type B - Basic Life Support",
+      "description": "For non-emergency medical transport"
+    },
+    {
+      "value": "Type C",
+      "label": "Type C - Mobile Intensive Care",
+      "description": "For intensive care transport"
+    },
+    {
+      "value": "Type D",
+      "label": "Type D - Patient Transport",
+      "description": "For routine medical transport"
+    }
+  ]
+} 
