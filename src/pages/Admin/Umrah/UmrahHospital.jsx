@@ -755,13 +755,13 @@ const UmrahHospital = ({ isOpen }) => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full full text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   {hospitalColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       {column.title}
                     </th>
@@ -771,7 +771,7 @@ const UmrahHospital = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredHospitalData.length === 0 ? (
                   <tr>
-                    <td colSpan={hospitalColumns.length} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={hospitalColumns.length} className="px-4 py-1 text-center text-gray-500">
                       No hospitals found
                     </td>
                   </tr>

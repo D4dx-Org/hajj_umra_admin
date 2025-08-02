@@ -3,9 +3,9 @@ import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 import axios from 'axios';
-import { read, utils, write } from 'xlsx';
+import { utils, write } from 'xlsx';
 
-const UmrahCamp = ({ isOpen }) => {
+const UmrahCamp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [campData, setCampData] = useState([]);
@@ -844,13 +844,13 @@ const UmrahCamp = ({ isOpen }) => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full full text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   {campColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       {column.title}
                     </th>
@@ -860,7 +860,7 @@ const UmrahCamp = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCampData.length === 0 ? (
                   <tr>
-                    <td colSpan={campColumns.length} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={campColumns.length} className="px-4 py-1 text-center text-gray-500">
                       No camps found
                     </td>
                   </tr>

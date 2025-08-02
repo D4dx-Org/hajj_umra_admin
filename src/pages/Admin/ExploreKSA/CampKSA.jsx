@@ -116,8 +116,11 @@ const Camp = ({ isOpen }) => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
+        console.log('Fetching countries from:', `${import.meta.env.VITE_BACKEND_URL_V2}/camp/countries/list`);
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/camp/countries/list`);
-        setCountries(response.data);
+        console.log('Countries response:', response.data);
+        setCountries(response.data.data || response.data);
+        console.log('Countries set to:', response.data.data || response.data);
       } catch (error) {
         console.error('Error fetching countries:', error);
       }
@@ -423,7 +426,7 @@ const Camp = ({ isOpen }) => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/camp`);
-        setCampData(response.data.data);
+        setCampData(response.data.data || response.data);
         console.log(response.data)
         setLoading(false);
       } catch (error) {
@@ -539,7 +542,7 @@ const Camp = ({ isOpen }) => {
 
       // Update the campData with the populated response
       setCampData(campData.map(item =>
-        item._id === row._id ? response.data : item
+        item._id === row._id ? (response.data.data || response.data) : item
       ));
 
       setEditingId(null);
@@ -620,6 +623,15 @@ const Camp = ({ isOpen }) => {
         otherCountry: newCamp.country === 'others' ? newCamp.otherCountry : ''
       };
 
+      // Validate required fields
+      if (!newCamp.ref) {
+        setUploadError("Location Reference is required. Please select a location.");
+        return;
+      }
+
+      console.log("Sending camp data:", campData);
+      console.log("POST URL:", `${import.meta.env.VITE_BACKEND_URL_V2}/camp`);
+
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_V2}/camp`,
         campData,
@@ -632,7 +644,7 @@ const Camp = ({ isOpen }) => {
 
       if (response.status === 201) {
         const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/camp`);
-        setCampData(updatedResponse.data.data);
+        setCampData(updatedResponse.data.data || updatedResponse.data);
         setNewCamp({
           maktab: '',
           zone: '',
@@ -645,9 +657,14 @@ const Camp = ({ isOpen }) => {
           otherCountry: ''
         });
         setShowAddForm(false);
+        setUploadError(null);
+        setUploadSuccess("Camp added successfully!");
       }
     } catch (error) {
-      console.error("Error adding building data:", error);
+      console.error("Error adding camp data:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Error adding camp";
+      setUploadError(errorMessage);
+      setUploadSuccess(null);
     }
   };
   // Modify the edit button click handler
@@ -720,7 +737,7 @@ const Camp = ({ isOpen }) => {
 
       // Refresh the data
       const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/camp`);
-      setCampData(updatedResponse.data.data);
+      setCampData(updatedResponse.data.data || updatedResponse.data);
       // Reset the file input
       event.target.value = '';
     } catch (error) {

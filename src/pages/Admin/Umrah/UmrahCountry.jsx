@@ -717,14 +717,14 @@ const UmrahCountry = () => {
                 Delete Selected ({selectedRows.length})
               </button>
             )}
-            <button
+            {/* <button
               onClick={handleDownloadTemplate}
               className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600"
             >
               <Download size={20} />
               Download Template
-            </button>
-            <input
+            </button> */}
+            {/* <input
               type="file"
               onChange={handleFileUpload}
               accept=".xlsx,.xls"
@@ -736,7 +736,7 @@ const UmrahCountry = () => {
               className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
             >
               Upload Excel
-            </label>
+            </label> */}
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
@@ -917,13 +917,13 @@ const UmrahCountry = () => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full full text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   {countryColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       {column.title}
                     </th>
@@ -935,7 +935,7 @@ const UmrahCountry = () => {
                   <tr>
                     <td
                       colSpan={countryColumns.length}
-                      className="px-6 py-4 text-center text-gray-500"
+                      className="px-4 py-1 text-center text-gray-500"
                     >
                       No countries found
                     </td>

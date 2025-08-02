@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
-import axios from 'axios';
-import { read, utils, write } from 'xlsx';
-import AsyncSelect from 'react-select/async';
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, AlertTriangle, Download, ArrowUpDown } from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+import axios from "axios";
+import { read, utils, write } from "xlsx";
+import AsyncSelect from "react-select/async";
 
 const Camp = ({ isOpen }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [campData, setCampData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,44 +15,98 @@ const Camp = ({ isOpen }) => {
   const [showAddForm, setShowAddForm] = useState(false); // State to control edit mode
   const [locations, setLocations] = useState([]); // New state for locations
   const [selectedRows, setSelectedRows] = useState([]);
-  const [newCamp, setNewCamp] = useState({ 
-    maktab: '', 
-    zone: '', 
-    country: '', 
-    poll: '', 
-    road: '',
-    tent: '',
-    location: { lat: '', lng: '' },
-    ref: '',
-    otherCountry: ''
+  const [newCamp, setNewCamp] = useState({
+    maktab: "",
+    zone: "",
+    country: "",
+    poll: "",
+    road: "",
+    tent: "",
+    location: { lat: "", lng: "" },
+    ref: "",
+    otherCountry: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [countries, setCountries] = useState([]); // Add state for countries
-  const [sortConfig, setSortConfig] = useState({ field: 'maktab', direction: 'asc', type: 'alpha' });
+  const [sortConfig, setSortConfig] = useState({
+    field: "maktab",
+    direction: "asc",
+    type: "alpha",
+  });
 
   // Add sorting options
   const sortOptions = [
-    { value: 'maktab-alpha-asc', label: 'Maktab (A-Z)', field: 'maktab', direction: 'asc', type: 'alpha' },
-    { value: 'maktab-alpha-desc', label: 'Maktab (Z-A)', field: 'maktab', direction: 'desc', type: 'alpha' },
-    { value: 'maktab-numeric-asc', label: 'Maktab (1-9)', field: 'maktab', direction: 'asc', type: 'numeric' },
-    { value: 'maktab-numeric-desc', label: 'Maktab (9-1)', field: 'maktab', direction: 'desc', type: 'numeric' },
-    { value: 'locationRef-alpha-asc', label: 'Location (A-Z)', field: 'locationRef', direction: 'asc', type: 'alpha' },
-    { value: 'locationRef-alpha-desc', label: 'Location (Z-A)', field: 'locationRef', direction: 'desc', type: 'alpha' },
-    { value: 'ref-alpha-asc', label: 'Branch (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
-    { value: 'ref-alpha-desc', label: 'Branch (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' }
+    {
+      value: "maktab-alpha-asc",
+      label: "Maktab (A-Z)",
+      field: "maktab",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "maktab-alpha-desc",
+      label: "Maktab (Z-A)",
+      field: "maktab",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "maktab-numeric-asc",
+      label: "Maktab (1-9)",
+      field: "maktab",
+      direction: "asc",
+      type: "numeric",
+    },
+    {
+      value: "maktab-numeric-desc",
+      label: "Maktab (9-1)",
+      field: "maktab",
+      direction: "desc",
+      type: "numeric",
+    },
+    {
+      value: "locationRef-alpha-asc",
+      label: "Location (A-Z)",
+      field: "locationRef",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "locationRef-alpha-desc",
+      label: "Location (Z-A)",
+      field: "locationRef",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "ref-alpha-asc",
+      label: "Branch (A-Z)",
+      field: "ref",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "ref-alpha-desc",
+      label: "Branch (Z-A)",
+      field: "ref",
+      direction: "desc",
+      type: "alpha",
+    },
   ];
 
   // Add handle sort change
   const handleSortChange = (event) => {
-    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    const selectedOption = sortOptions.find(
+      (option) => option.value === event.target.value
+    );
     if (selectedOption) {
       setSortConfig({
         field: selectedOption.field,
         direction: selectedOption.direction,
-        type: selectedOption.type
+        type: selectedOption.type,
       });
     }
   };
@@ -62,27 +116,27 @@ const Camp = ({ isOpen }) => {
     return [...data].sort((a, b) => {
       let aValue, bValue;
 
-      if (sortConfig.field === 'country') {
-        aValue = a.otherCountry || (a.country?.name || '');
-        bValue = b.otherCountry || (b.country?.name || '');
-      } else if (sortConfig.field === 'ref') {
-        aValue = a[sortConfig.field]?.name || '';
-        bValue = b[sortConfig.field]?.name || '';
+      if (sortConfig.field === "country") {
+        aValue = a.otherCountry || a.country?.name || "";
+        bValue = b.otherCountry || b.country?.name || "";
+      } else if (sortConfig.field === "ref") {
+        aValue = a[sortConfig.field]?.name || "";
+        bValue = b[sortConfig.field]?.name || "";
       } else {
-        aValue = a[sortConfig.field] || '';
-        bValue = b[sortConfig.field] || '';
+        aValue = a[sortConfig.field] || "";
+        bValue = b[sortConfig.field] || "";
       }
 
-      if (sortConfig.type === 'numeric') {
+      if (sortConfig.type === "numeric") {
         // Extract numbers from strings for numeric sorting
         const aNum = parseInt(aValue.match(/\d+/) || [0]);
         const bNum = parseInt(bValue.match(/\d+/) || [0]);
-        return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+        return sortConfig.direction === "asc" ? aNum - bNum : bNum - aNum;
       } else {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
-        
-        if (sortConfig.direction === 'asc') {
+
+        if (sortConfig.direction === "asc") {
           return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
         } else {
           return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -93,12 +147,12 @@ const Camp = ({ isOpen }) => {
 
   // Convert our countries to react-select format
   const countryOptions = useMemo(() => {
-    return countries.map(country => ({
+    return countries.map((country) => ({
       value: country._id,
       label: country.name,
       arabicName: country.arabicName,
       flag: country.flag,
-      category: country.category
+      category: country.category,
     }));
   }, [countries]);
 
@@ -106,10 +160,12 @@ const Camp = ({ isOpen }) => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp/countries/list`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/camp/countries/list`
+        );
         setCountries(response.data);
       } catch (error) {
-        console.error('Error fetching countries:', error);
+        console.error("Error fetching countries:", error);
       }
     };
     fetchCountries();
@@ -120,9 +176,10 @@ const Camp = ({ isOpen }) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(
-          countryOptions.filter((option) =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase()) ||
-            option.arabicName.toLowerCase().includes(inputValue.toLowerCase())
+          countryOptions.filter(
+            (option) =>
+              option.label.toLowerCase().includes(inputValue.toLowerCase()) ||
+              option.arabicName.toLowerCase().includes(inputValue.toLowerCase())
           )
         );
       }, 100);
@@ -133,38 +190,45 @@ const Camp = ({ isOpen }) => {
   const customStyles = {
     option: (provided, state) => ({
       ...provided,
-      display: 'flex',
-      alignItems: 'center',
-      padding: '8px 12px',
+      display: "flex",
+      alignItems: "center",
+      padding: "8px 12px",
     }),
     singleValue: (provided) => ({
       ...provided,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-    })
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    }),
   };
 
   // Custom Option component for react-select
   const CustomOption = ({ data, ...props }) => (
-    <div {...props.innerProps} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div
+      {...props.innerProps}
+      style={{ display: "flex", alignItems: "center", gap: "8px" }}
+    >
       <span>{data.label}</span>
-      {data.arabicName && <span className="text-gray-500">({data.arabicName})</span>}
+      {data.arabicName && (
+        <span className="text-gray-500">({data.arabicName})</span>
+      )}
     </div>
   );
 
   // Custom SingleValue component for react-select
   const CustomSingleValue = ({ data }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
       <span>{data.label}</span>
-      {data.arabicName && <span className="text-gray-500">({data.arabicName})</span>}
+      {data.arabicName && (
+        <span className="text-gray-500">({data.arabicName})</span>
+      )}
     </div>
   );
 
   // Define the table columns
   const campColumns = [
     {
-      key: 'select',
+      key: "select",
       title: (
         <input
           type="checkbox"
@@ -180,67 +244,76 @@ const Camp = ({ isOpen }) => {
           onChange={(e) => handleSelectRow(row._id)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-      )
+      ),
     },
-    { 
-      key: 'maktab', 
-      title: 'Maktab',
+    {
+      key: "maktab",
+      title: "Maktab",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
               value={row.maktab}
-              onChange={(e) => handleEditChange(row._id, 'maktab', e.target.value)}
+              onChange={(e) =>
+                handleEditChange(row._id, "maktab", e.target.value)
+              }
               className="w-full p-1 border rounded"
             />
           );
         }
         return row.maktab;
-      }
+      },
     },
-    { 
-      key: 'zone', 
-      title: 'Zone',
+    {
+      key: "zone",
+      title: "Zone",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
               value={row.zone}
-              onChange={(e) => handleEditChange(row._id, 'zone', e.target.value)}
+              onChange={(e) =>
+                handleEditChange(row._id, "zone", e.target.value)
+              }
               className="w-full p-1 border rounded"
             />
           );
         }
         return row.zone;
-      }
+      },
     },
-    { 
-      key: 'country', 
-      title: 'Country',
+    {
+      key: "country",
+      title: "Country",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <div className="flex flex-col gap-2">
-            <select
-                value={row.country?._id || row.country || ''}
-              onChange={(e) => handleEditChange(row._id, 'country', e.target.value)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Select Country</option>
+              <select
+                value={row.country?._id || row.country || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "country", e.target.value)
+                }
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select Country</option>
                 <option value="others">Others</option>
-              {countries.map(country => (
-                <option key={country._id} value={country._id}>
-                  {country.name} {country.arabicName ? `(${country.arabicName})` : ''}
-                </option>
-              ))}
-            </select>
-              {(row.country === 'others' || row.otherCountry) && (
+                {countries.map((country) => (
+                  <option key={country._id} value={country._id}>
+                    {country.name}{" "}
+                    {country.arabicName ? `(${country.arabicName})` : ""}
+                  </option>
+                ))}
+              </select>
+              {(row.country === "others" || row.otherCountry) && (
                 <input
                   type="text"
-                  value={row.otherCountry || ''}
-                  onChange={(e) => handleEditChange(row._id, 'otherCountry', e.target.value)}
+                  value={row.otherCountry || ""}
+                  onChange={(e) =>
+                    handleEditChange(row._id, "otherCountry", e.target.value)
+                  }
                   placeholder="Enter other country name"
                   className="w-full p-2 border rounded mt-2"
                 />
@@ -254,47 +327,63 @@ const Camp = ({ isOpen }) => {
         return row.country ? (
           <div className="flex items-center gap-2">
             <span>{row.country.name}</span>
-            {row.country.arabicName && <span className="text-gray-500">({row.country.arabicName})</span>}
+            {row.country.arabicName && (
+              <span className="text-gray-500">({row.country.arabicName})</span>
+            )}
           </div>
-        ) : 'N/A';
-      }
+        ) : (
+          "N/A"
+        );
+      },
     },
-    { 
-      key: 'poll', 
-      title: 'Poll',
+    {
+      key: "poll",
+      title: "Poll",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
               value={row.poll}
-              onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
+              onChange={(e) =>
+                handleEditChange(row._id, "poll", e.target.value)
+              }
               className="w-full p-1 border rounded"
             />
           );
         }
         return row.poll;
-      }
+      },
     },
-    
-    { 
-      key: 'location', 
-      title: 'Location',
+
+    {
+      key: "location",
+      title: "Location",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <div className="flex gap-2">
               <input
                 type="number"
-                value={row.location?.lat || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
+                value={row.location?.lat || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "location", {
+                    ...row.location,
+                    lat: e.target.value,
+                  })
+                }
                 placeholder="Latitude"
                 className="w-1/2 p-1 border rounded"
               />
               <input
                 type="number"
-                value={row.location?.lng || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
+                value={row.location?.lng || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "location", {
+                    ...row.location,
+                    lng: e.target.value,
+                  })
+                }
                 placeholder="Longitude"
                 className="w-1/2 p-1 border rounded"
               />
@@ -303,25 +392,35 @@ const Camp = ({ isOpen }) => {
         }
         const lat = row.location?.lat;
         const lng = row.location?.lng;
-        if (lat === undefined && lng === undefined) return 'N/A';
-        if ((lat === undefined || lat === '') && (lng !== undefined && lng !== '')) return `N/A, ${lng}`;
-        if ((lng === undefined || lng === '') && (lat !== undefined && lat !== '')) return `${lat}, N/A`;
-        return `${lat ?? 'N/A'}, ${lng ?? 'N/A'}`;
-      }
+        if (lat === undefined && lng === undefined) return "N/A";
+        if (
+          (lat === undefined || lat === "") &&
+          lng !== undefined &&
+          lng !== ""
+        )
+          return `N/A, ${lng}`;
+        if (
+          (lng === undefined || lng === "") &&
+          lat !== undefined &&
+          lat !== ""
+        )
+          return `${lat}, N/A`;
+        return `${lat ?? "N/A"}, ${lng ?? "N/A"}`;
+      },
     },
     {
-      key: 'ref', 
-      title: 'Location Reference',
+      key: "ref",
+      title: "Location Reference",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <select
-              value={row.ref?._id || row.ref || ''}
-              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+              value={row.ref?._id || row.ref || ""}
+              onChange={(e) => handleEditChange(row._id, "ref", e.target.value)}
               className="w-full p-1 border rounded"
             >
               <option value="">Select Location</option>
-              {locations.map(location => (
+              {locations.map((location) => (
                 <option key={location._id} value={location._id}>
                   {location.name}
                 </option>
@@ -329,47 +428,54 @@ const Camp = ({ isOpen }) => {
             </select>
           );
         }
-        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
+        const locationName =
+          row.ref?.name ||
+          locations.find((loc) => loc._id === row.ref)?.name ||
+          "N/A";
         return locationName;
-      }
+      },
     },
     {
-      key: 'road', 
-      title: 'Road',
+      key: "road",
+      title: "Road",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
               value={row.road}
-              onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
+              onChange={(e) =>
+                handleEditChange(row._id, "road", e.target.value)
+              }
               className="w-full p-1 border rounded"
             />
           );
         }
-        return row.road || 'N/A';
-      }
+        return row.road || "N/A";
+      },
     },
     {
-      key: 'tent', 
-      title: 'Tent',
+      key: "tent",
+      title: "Tent",
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
               value={row.tent}
-              onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
+              onChange={(e) =>
+                handleEditChange(row._id, "tent", e.target.value)
+              }
               className="w-full p-1 border rounded"
             />
           );
         }
-        return row.tent || 'N/A';
-      }
+        return row.tent || "N/A";
+      },
     },
     {
-      key: 'actions',
-      title: 'Actions',
+      key: "actions",
+      title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
           {editingId === row._id ? (
@@ -404,19 +510,21 @@ const Camp = ({ isOpen }) => {
             </>
           )}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // Fetch data from API using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/camp`
+        );
         setCampData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching camp data:', error);
+        console.error("Error fetching camp data:", error);
         setLoading(false);
       }
     };
@@ -428,10 +536,12 @@ const Camp = ({ isOpen }) => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/location`
+        );
         setLocations(response.data);
       } catch (error) {
-        console.error('Error fetching locations:', error);
+        console.error("Error fetching locations:", error);
       }
     };
 
@@ -442,11 +552,11 @@ const Camp = ({ isOpen }) => {
   const filteredCampData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     let filtered = campData;
-    
+
     if (lowerCaseSearch) {
       filtered = campData.filter((item) => {
-        const locationName = item.ref?.name || '';
-        const countryName = item.country?.name || item.otherCountry || '';
+        const locationName = item.ref?.name || "";
+        const countryName = item.country?.name || item.otherCountry || "";
         return (
           item.maktab?.toLowerCase().includes(lowerCaseSearch) ||
           item.zone?.toLowerCase().includes(lowerCaseSearch) ||
@@ -456,37 +566,45 @@ const Camp = ({ isOpen }) => {
         );
       });
     }
-    
+
     return sortData(filtered);
   }, [campData, searchTerm, sortConfig]);
 
   // Handle Edit
   const handleEditChange = (id, field, value) => {
-    setCampData(campData.map(item => {
-      if (item._id === id) {
-        if (field === 'country') {
-          if (value === 'others') {
-            return { ...item, country: 'others', otherCountry: item.otherCountry || '' };
+    setCampData(
+      campData.map((item) => {
+        if (item._id === id) {
+          if (field === "country") {
+            if (value === "others") {
+              return {
+                ...item,
+                country: "others",
+                otherCountry: item.otherCountry || "",
+              };
+            }
+            return { ...item, country: value, otherCountry: "" };
           }
-          return { ...item, country: value, otherCountry: '' };
+          if (field === "location") {
+            return { ...item, location: value };
+          }
+          if (field === "ref") {
+            const selectedLocation = locations.find((loc) => loc._id === value);
+            return {
+              ...item,
+              ref: selectedLocation
+                ? {
+                    _id: selectedLocation._id,
+                    name: selectedLocation.name,
+                  }
+                : value,
+            };
+          }
+          return { ...item, [field]: value };
         }
-        if (field === 'location') {
-          return { ...item, location: value };
-        }
-        if (field === 'ref') {
-          const selectedLocation = locations.find(loc => loc._id === value);
-          return { 
-            ...item, 
-            ref: selectedLocation ? { 
-              _id: selectedLocation._id,
-              name: selectedLocation.name 
-            } : value 
-          };
-        }
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+        return item;
+      })
+    );
   };
 
   // Handle Save Edit
@@ -500,15 +618,18 @@ const Camp = ({ isOpen }) => {
 
       // Prepare the data for saving
       const dataToSave = {
-        maktab: row.maktab || '',
-        zone: row.zone || '',
-        poll: row.poll || '',
-        road: row.road || '',
-        tent: row.tent || '',
+        maktab: row.maktab || "",
+        zone: row.zone || "",
+        poll: row.poll || "",
+        road: row.road || "",
+        tent: row.tent || "",
         location: row.location || {},
         ref: row.ref?._id || row.ref,
-        country: row.country === 'others' ? null : (row.country?._id || row.country || null),
-        otherCountry: row.country === 'others' ? row.otherCountry : ''
+        country:
+          row.country === "others"
+            ? null
+            : row.country?._id || row.country || null,
+        otherCountry: row.country === "others" ? row.otherCountry : "",
       };
 
       const response = await axios.put(
@@ -522,9 +643,9 @@ const Camp = ({ isOpen }) => {
       );
 
       // Update the campData with the populated response
-      setCampData(campData.map(item => 
-        item._id === row._id ? response.data : item
-      ));
+      setCampData(
+        campData.map((item) => (item._id === row._id ? response.data : item))
+      );
 
       setEditingId(null);
       setOriginalData(null);
@@ -540,8 +661,10 @@ const Camp = ({ isOpen }) => {
 
   // Add handleDeleteConfirm
   const handleDeleteConfirm = async () => {
-    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+    const ids = Array.isArray(deleteConfirm.id)
+      ? deleteConfirm.id
+      : [deleteConfirm.id];
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -550,19 +673,21 @@ const Camp = ({ isOpen }) => {
       }
 
       // Delete all selected items
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/camp/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      ));
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(`${import.meta.env.VITE_BACKEND_URL}/camp/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
 
-      setCampData(campData.filter(item => !ids.includes(item._id)));
+      setCampData(campData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting camp data:', error);
+      console.error("Error deleting camp data:", error);
     }
   };
 
@@ -584,8 +709,8 @@ const Camp = ({ isOpen }) => {
       // Prepare the data for submission
       const campData = {
         ...newCamp,
-        country: newCamp.country === 'others' ? null : newCamp.country,
-        otherCountry: newCamp.country === 'others' ? newCamp.otherCountry : ''
+        country: newCamp.country === "others" ? null : newCamp.country,
+        otherCountry: newCamp.country === "others" ? newCamp.otherCountry : "",
       };
 
       const response = await axios.post(
@@ -599,18 +724,20 @@ const Camp = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp`);
+        const updatedResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/camp`
+        );
         setCampData(updatedResponse.data);
-        setNewCamp({ 
-          maktab: '', 
-          zone: '', 
-          country: '', 
-          poll: '', 
-          road: '',
-          tent: '',
-          location: { lat: '', lng: '' },
-          ref: '',
-          otherCountry: ''
+        setNewCamp({
+          maktab: "",
+          zone: "",
+          country: "",
+          poll: "",
+          road: "",
+          tent: "",
+          location: { lat: "", lng: "" },
+          ref: "",
+          otherCountry: "",
         });
         setShowAddForm(false);
       }
@@ -623,22 +750,22 @@ const Camp = ({ isOpen }) => {
     // Make a deep copy of the row data to preserve the country object
     const rowCopy = {
       ...row,
-      country: row.country ? row.country._id : ''  // Store the country ID for editing
+      country: row.country ? row.country._id : "", // Store the country ID for editing
     };
     setOriginalData(row); // Store original data
     setEditingId(row._id);
     // Update the campData with the prepared row data
-    setCampData(campData.map(item => 
-      item._id === row._id ? rowCopy : item
-    ));
+    setCampData(
+      campData.map((item) => (item._id === row._id ? rowCopy : item))
+    );
   };
 
   // Modify the cancel button click handler
   const handleCancelEdit = () => {
     // Restore original data
-    setCampData(campData.map(item => 
-      item._id === editingId ? originalData : item
-    ));
+    setCampData(
+      campData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
   };
@@ -649,17 +776,17 @@ const Camp = ({ isOpen }) => {
       const file = event.target.files[0];
       if (!file) return;
 
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        setUploadError("Please upload an Excel file (.xlsx or .xls)");
         return;
       }
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const token = localStorage.getItem("token");
       if (!token) {
-        setUploadError('Authentication token not found. Please log in again.');
+        setUploadError("Authentication token not found. Please log in again.");
         return;
       }
 
@@ -669,31 +796,45 @@ const Camp = ({ isOpen }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
-          validateStatus: (status) => status >= 200 && status < 300 || status === 207
+          validateStatus: (status) =>
+            (status >= 200 && status < 300) || status === 207,
         }
       );
 
-      if (response.status === 207 && response.data.failedRows && response.data.failedRows.length > 0) {
+      if (
+        response.status === 207 &&
+        response.data.failedRows &&
+        response.data.failedRows.length > 0
+      ) {
         setUploadError(
           `Some rows failed to upload:\n` +
-          response.data.failedRows.map(r => `Row ${r.row}: ${r.error}`).join('\n')
+            response.data.failedRows
+              .map((r) => `Row ${r.row}: ${r.error}`)
+              .join("\n")
         );
-        setUploadSuccess(`Successfully uploaded ${response.data.count} camps (with some errors)`);
+        setUploadSuccess(
+          `Successfully uploaded ${response.data.count} camps (with some errors)`
+        );
       } else {
-      setUploadSuccess(`Successfully uploaded ${response.data.count} camps`);
-      setUploadError(null);
+        setUploadSuccess(`Successfully uploaded ${response.data.count} camps`);
+        setUploadError(null);
       }
 
       // Refresh the data
-      const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/camp`);
+      const updatedResponse = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/camp`
+      );
       setCampData(updatedResponse.data);
       // Reset the file input
-      event.target.value = '';
+      event.target.value = "";
     } catch (error) {
-      console.error('File upload error:', error);
-      setUploadError(error.response?.data?.message || 'Error processing file. Please try again.');
+      console.error("File upload error:", error);
+      setUploadError(
+        error.response?.data?.message ||
+          "Error processing file. Please try again."
+      );
       setUploadSuccess(null);
     }
   };
@@ -704,42 +845,48 @@ const Camp = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          maktab: '', // Optional
-          location_name: 'Azizia',
-          zone: 'Zone A (Optional)',
-          country: 'India',
-          poll: 'Poll 1 (Optional)',
-          road: 'Road 1 (Optional)',
-          tent: 'Tent 1 (Optional)',
-          latitude: '21.4225',
-          longitude: '39.8262'
-        }
+          maktab: "", // Optional
+          location_name: "Azizia",
+          zone: "Zone A (Optional)",
+          country: "India",
+          poll: "Poll 1 (Optional)",
+          road: "Road 1 (Optional)",
+          tent: "Tent 1 (Optional)",
+          latitude: "21.4225",
+          longitude: "39.8262",
+        },
       ];
 
       // Create worksheet
       const ws = utils.json_to_sheet([]);
-      
+
       // Add headers with descriptions
-      utils.sheet_add_aoa(ws, [[
-        'maktab',
-        'location_name',
-        'zone',
-        'country',
-        'poll',
-        'road',
-        'tent',
-        'latitude',
-        'longitude'
-      ]], { origin: 'A1' });
+      utils.sheet_add_aoa(
+        ws,
+        [
+          [
+            "maktab",
+            "location_name",
+            "zone",
+            "country",
+            "poll",
+            "road",
+            "tent",
+            "latitude",
+            "longitude",
+          ],
+        ],
+        { origin: "A1" }
+      );
 
       // Add sample data
-      utils.sheet_add_json(ws, sampleData, { 
-        origin: 'A2',
-        skipHeader: true
+      utils.sheet_add_json(ws, sampleData, {
+        origin: "A2",
+        skipHeader: true,
       });
 
       // Add column widths
-      ws['!cols'] = [
+      ws["!cols"] = [
         { wch: 25 }, // maktab
         { wch: 25 }, // location_name
         { wch: 20 }, // zone
@@ -748,41 +895,40 @@ const Camp = ({ isOpen }) => {
         { wch: 20 }, // road
         { wch: 20 }, // tent
         { wch: 20 }, // latitude
-        { wch: 20 }  // longitude
+        { wch: 20 }, // longitude
       ];
 
       // Create workbook
       const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
+      utils.book_append_sheet(wb, ws, "Template");
 
       // Generate Excel file
-      write(wb, { 
-        bookType: 'xlsx',
-        type: 'array'
+      write(wb, {
+        bookType: "xlsx",
+        type: "array",
       });
 
       // Convert to blob and download
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      
+      const blob = new Blob([write(wb, { bookType: "xlsx", type: "array" })], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'camp_upload_template.xlsx';
+      link.download = "camp_upload_template.xlsx";
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
+      console.error("Error creating template:", error);
+      setUploadError("Failed to download template. Please try again.");
     }
   };
 
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredCampData.map(row => row._id));
+      setSelectedRows(filteredCampData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -790,9 +936,9 @@ const Camp = ({ isOpen }) => {
 
   // Add handleSelectRow function
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -802,10 +948,10 @@ const Camp = ({ isOpen }) => {
   // Add handleBulkDelete function
   const handleBulkDelete = () => {
     if (selectedRows.length === 0) return;
-    setDeleteConfirm({ 
-      show: true, 
+    setDeleteConfirm({
+      show: true,
       id: selectedRows,
-      isBulk: true 
+      isBulk: true,
     });
   };
 
@@ -818,10 +964,10 @@ const Camp = ({ isOpen }) => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Camp Management</h1>
+            <h1 className="text-2xl font-bold">Camp Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               Total: {filteredCampData.length} camps
             </div>
@@ -855,11 +1001,11 @@ const Camp = ({ isOpen }) => {
             >
               Upload Excel
             </label>
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add More'}
+              {showAddForm ? "Cancel" : "Add More"}
             </button>
           </div>
         </div>
@@ -881,11 +1027,15 @@ const Camp = ({ isOpen }) => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Camp</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Maktab (Optional)</label>
+              <label className="block text-sm font-medium">
+                Maktab (Optional)
+              </label>
               <input
                 type="text"
                 value={newCamp.maktab}
-                onChange={(e) => setNewCamp({ ...newCamp, maktab: e.target.value })}
+                onChange={(e) =>
+                  setNewCamp({ ...newCamp, maktab: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -894,37 +1044,43 @@ const Camp = ({ isOpen }) => {
               <input
                 type="text"
                 value={newCamp.zone}
-                onChange={(e) => setNewCamp({ ...newCamp, zone: e.target.value })}
+                onChange={(e) =>
+                  setNewCamp({ ...newCamp, zone: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Country</label>
               <select
-                value={newCamp.country || ''}
+                value={newCamp.country || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setNewCamp({ 
-                    ...newCamp, 
+                  setNewCamp({
+                    ...newCamp,
                     country: value,
-                    otherCountry: value === 'others' ? newCamp.otherCountry : ''
+                    otherCountry:
+                      value === "others" ? newCamp.otherCountry : "",
                   });
                 }}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Country</option>
                 <option value="others">Others</option>
-                {countries.map(country => (
+                {countries.map((country) => (
                   <option key={country._id} value={country._id}>
-                    {country.name} {country.arabicName ? `(${country.arabicName})` : ''}
+                    {country.name}{" "}
+                    {country.arabicName ? `(${country.arabicName})` : ""}
                   </option>
                 ))}
               </select>
-              {(newCamp.country === 'others') && (
+              {newCamp.country === "others" && (
                 <input
                   type="text"
-                  value={newCamp.otherCountry || ''}
-                  onChange={(e) => setNewCamp({ ...newCamp, otherCountry: e.target.value })}
+                  value={newCamp.otherCountry || ""}
+                  onChange={(e) =>
+                    setNewCamp({ ...newCamp, otherCountry: e.target.value })
+                  }
                   placeholder="Enter other country name"
                   className="mt-2 block w-full border border-gray-300 rounded-md p-2"
                 />
@@ -935,7 +1091,9 @@ const Camp = ({ isOpen }) => {
               <input
                 type="text"
                 value={newCamp.poll}
-                onChange={(e) => setNewCamp({ ...newCamp, poll: e.target.value })}
+                onChange={(e) =>
+                  setNewCamp({ ...newCamp, poll: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -944,7 +1102,9 @@ const Camp = ({ isOpen }) => {
               <input
                 type="text"
                 value={newCamp.road}
-                onChange={(e) => setNewCamp({ ...newCamp, road: e.target.value })}
+                onChange={(e) =>
+                  setNewCamp({ ...newCamp, road: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -953,7 +1113,9 @@ const Camp = ({ isOpen }) => {
               <input
                 type="text"
                 value={newCamp.tent}
-                onChange={(e) => setNewCamp({ ...newCamp, tent: e.target.value })}
+                onChange={(e) =>
+                  setNewCamp({ ...newCamp, tent: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -961,27 +1123,35 @@ const Camp = ({ isOpen }) => {
               <label className="block text-sm font-medium">Location</label>
               <div className="flex gap-4">
                 <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Latitude</label>
+                  <label className="block text-xs text-gray-500">
+                    Latitude
+                  </label>
                   <input
                     type="number"
                     value={newCamp.location.lat}
-                    onChange={(e) => setNewCamp({
-                      ...newCamp,
-                      location: { ...newCamp.location, lat: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewCamp({
+                        ...newCamp,
+                        location: { ...newCamp.location, lat: e.target.value },
+                      })
+                    }
                     placeholder="Enter latitude"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
                 </div>
                 <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Longitude</label>
+                  <label className="block text-xs text-gray-500">
+                    Longitude
+                  </label>
                   <input
                     type="number"
                     value={newCamp.location.lng}
-                    onChange={(e) => setNewCamp({
-                      ...newCamp,
-                      location: { ...newCamp.location, lng: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewCamp({
+                        ...newCamp,
+                        location: { ...newCamp.location, lng: e.target.value },
+                      })
+                    }
                     placeholder="Enter longitude"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
@@ -989,14 +1159,18 @@ const Camp = ({ isOpen }) => {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Location Reference</label>
+              <label className="block text-sm font-medium">
+                Location Reference
+              </label>
               <select
                 value={newCamp.ref}
-                onChange={(e) => setNewCamp({ ...newCamp, ref: e.target.value })}
+                onChange={(e) =>
+                  setNewCamp({ ...newCamp, ref: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
-                {locations.map(location => (
+                {locations.map((location) => (
                   <option key={location._id} value={location._id}>
                     {location.name}
                   </option>
@@ -1023,7 +1197,10 @@ const Camp = ({ isOpen }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               />
-              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-3.5 text-gray-400"
+              />
             </div>
             <div className="flex items-center gap-2">
               <ArrowUpDown size={20} className="text-gray-400" />
@@ -1032,7 +1209,7 @@ const Camp = ({ isOpen }) => {
                 value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
                 className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               >
-                {sortOptions.map(option => (
+                {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -1053,7 +1230,10 @@ const Camp = ({ isOpen }) => {
               <thead className="bg-gray-50">
                 <tr>
                   {campColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      key={column.key}
+                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       {column.title}
                     </th>
                   ))}
@@ -1063,7 +1243,10 @@ const Camp = ({ isOpen }) => {
                 {filteredCampData.map((row) => (
                   <tr key={row._id}>
                     {campColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                      <td
+                        key={`${row._id}-${column.key}`}
+                        className="px-4 py-1 whitespace-nowrap"
+                      >
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
                     ))}
@@ -1083,9 +1266,9 @@ const Camp = ({ isOpen }) => {
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
               </div>
               <p className="text-gray-600 mb-6">
-                {Array.isArray(deleteConfirm.id) 
+                {Array.isArray(deleteConfirm.id)
                   ? `Are you sure you want to delete ${deleteConfirm.id.length} selected camps? This action cannot be undone.`
-                  : 'Are you sure you want to delete this camp? This action cannot be undone.'}
+                  : "Are you sure you want to delete this camp? This action cannot be undone."}
               </p>
               <div className="flex justify-end gap-3">
                 <button

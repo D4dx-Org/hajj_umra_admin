@@ -881,13 +881,13 @@ const UmrahClinic = ({ isOpen }) => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm divide-y divide-gray-200">
+            <table className="min-w-full full text-sm text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   {clinicColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-4 py-1  text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       {column.title}
                     </th>
@@ -899,7 +899,7 @@ const UmrahClinic = ({ isOpen }) => {
                   <tr>
                     <td
                       colSpan={clinicColumns.length}
-                      className="px-4 py-1text-center text-gray-500"
+                      className="px-4 py-1 text-center text-gray-500"
                     >
                       No clinics found
                     </td>

@@ -716,7 +716,7 @@ const UmrahBuilding = ({ isOpen }) => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm divide-y divide-gray-200">
+            <table className="min-w-full  text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   {buildingColumns.map((column) => (

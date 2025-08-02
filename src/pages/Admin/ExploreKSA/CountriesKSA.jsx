@@ -103,7 +103,7 @@ const Countries = () => {
       });
 
       const uploadResponse = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL_V2}/countries/upload-flag`,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/staging/countries/upload-flag`,
         formData,
         {
           headers: {
@@ -342,7 +342,7 @@ const Countries = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/countries`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/countries`);
         setCountryData(response.data);
         setLoading(false);
       } catch (error) {
@@ -383,7 +383,7 @@ const Countries = () => {
       console.log('Attempting to update country with data:', JSON.stringify(cleanRowData, null, 2));
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL_V2}/countries/${row._id}`,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/staging/countries/${row._id}`,
         cleanRowData,
         {
           headers: {
@@ -428,7 +428,7 @@ const Countries = () => {
       message.loading('Deleting country...', 0);
 
       await Promise.all(ids.map(id =>
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/countries/${id}`, {
+        axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/countries/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -472,7 +472,7 @@ const Countries = () => {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL_V2}/countries`,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/staging/countries`,
         newCountry,
         {
           headers: {
@@ -482,7 +482,7 @@ const Countries = () => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/countries`);
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/countries`);
         setCountryData(updatedResponse.data);
         setNewCountry({
           name: '',
