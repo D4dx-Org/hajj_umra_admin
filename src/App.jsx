@@ -33,6 +33,7 @@ import CountriesKSA from "./pages/Admin/ExploreKSA/CountriesKSA";
 import EmergencyKSA from "./pages/Admin/ExploreKSA/EmergencyKSA";
 import NewsKSA from "./pages/Admin/ExploreKSA/NewsKSA";
 
+
 import Arrived from "./pages/Admin/Umrah/Arrived";
 import Duas from "./pages/Admin/Umrah/Duaas";
 import Post from "./pages/Admin/Umrah/postUmrah";
@@ -51,6 +52,7 @@ import UmrahNews from "./pages/Admin/Umrah/UmrahNews";
 import UmrahNusuk from "./pages/Admin/Umrah/UmrahNusuk";
 import UmrahThanima from "./pages/Admin/Umrah/UmrahThanima";
 import UmrahNotification from "./pages/Admin/Umrah/UmrahNotification";
+
 
 const App = () => {
   return (
