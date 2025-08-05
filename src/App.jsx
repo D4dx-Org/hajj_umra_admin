@@ -34,8 +34,8 @@ import EmergencyKSA from "./pages/Admin/ExploreKSA/EmergencyKSA";
 import NewsKSA from "./pages/Admin/ExploreKSA/NewsKSA";
 
 
-import Arrived from "./pages/Admin/Umrah/Arrived";
-import Duas from "./pages/Admin/Umrah/Duaas";
+import Arrived from "./pages/Admin/Umrah/arrived";
+import Duas from "./pages/Admin/Umrah/duaas";
 import Post from "./pages/Admin/Umrah/postUmrah";
 import Preparation from "./pages/Admin/Umrah/preparations";
 import Tour from "./pages/Admin/Umrah/tour";
