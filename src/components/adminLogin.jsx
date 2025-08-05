@@ -52,7 +52,7 @@ function AdminLogin({ onBackClick }) {
       <div className="container mx-auto max-w-md">
         <button 
           onClick={() => navigate('/')}
-          className="flex items-center text-emerald-600 mb-8 hover:text-emerald-700 transition-colors"
+          className="flex items-center text-[#3a51a3] mb-8 hover:text-[#a3c6e9] transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back to Home
@@ -119,8 +119,8 @@ function AdminLogin({ onBackClick }) {
               disabled={isLoading}
               className={`w-full text-white py-2 px-4 rounded-lg font-semibold transition-colors ${
                 isLoading 
-                ? 'bg-emerald-400 cursor-not-allowed' 
-                : 'bg-emerald-600 hover:bg-emerald-700'
+                ? 'bg-[#3a51a3] cursor-not-allowed' 
+                : 'bg-[#3a51a3] hover:bg-[#a3c6e9]'
               }`}
             >
               {isLoading ? 'Logging in...' : 'Login'}
@@ -128,7 +128,7 @@ function AdminLogin({ onBackClick }) {
           </form>
 
           <div className="mt-4 text-center">
-            <a href="#" className="text-sm text-emerald-600 hover:text-emerald-700">
+            <a href="#" className="text-sm text-[#3a51a3] hover:text-[#a3c6e9">
               Forgot Password?
             </a>
           </div>
