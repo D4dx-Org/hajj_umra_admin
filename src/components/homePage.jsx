@@ -1,7 +1,7 @@
 import React from 'react';
 import { Users, Calendar, Phone, MapPin, Kanban as Kaaba } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.jpg';
+import logo from '../assets/logo-white-1.png';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ function HomePage() {
           </p>
           <button
           onClick={() => navigate('/admin-login')}
-          className="bg-emerald-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors">
+          className="bg-[#3a51a3] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors">
             Admin Login
           </button>
         </div>
@@ -32,22 +32,22 @@ function HomePage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center">
-              <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="h-8 w-8 text-emerald-600" />
+              <div className="bg-[#a3c6e9] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="h-8 w-8 text-[#3a51a3]" />
               </div>
               <h3 className="text-xl font-semibold mb-4">Expert Guidance</h3>
               <p className="text-gray-600">Experienced guides to assist you throughout your spiritual journey</p>
             </div>
             <div className="text-center">
-              <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Calendar className="h-8 w-8 text-emerald-600" />
+              <div className="bg-[#a3c6e9] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Calendar className="h-8 w-8 text-[#3a51a3]" />
               </div>
               <h3 className="text-xl font-semibold mb-4">Flexible Packages</h3>
               <p className="text-gray-600">Choose from various packages that suit your needs and schedule</p>
             </div>
             <div className="text-center">
-              <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MapPin className="h-8 w-8 text-emerald-600" />
+                <div className="bg-[#a3c6e9] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <MapPin className="h-8 w-8 text-[#3a51a3" />
               </div>
               <h3 className="text-xl font-semibold mb-4">Premium Accommodation</h3>
               <p className="text-gray-600">Comfortable stays near the holy sites for your convenience</p>

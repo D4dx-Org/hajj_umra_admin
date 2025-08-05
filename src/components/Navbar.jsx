@@ -46,11 +46,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen, toggleSidebar }) => {
     <nav className="fixed top-0 left-65 right-0 bg-white shadow-md z-20 h-16 flex items-center px-4">
       {/* Logo Section */}
       <div className="flex items-center">
-        <img 
-          src={logo} 
-          alt="Thanima Logo" 
-          className="h-10 w-auto mr-3"
-        />
+        <img src={logo} alt="Thanima Logo" className="h-10 w-auto mr-3" />
       </div>
 
       {/* Centered Title */}
