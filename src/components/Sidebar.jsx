@@ -34,6 +34,12 @@ const Sidebar = ({ isOpen }) => {
     umrah: false,
     "explore-ksa": false,
   });
+  const [expandedUmrahSections, setExpandedUmrahSections] = useState({
+    essential: false,
+  });
+  const [expandedKsaSections, setExpandedKsaSections] = useState({
+    essential: false,
+  });
   const isUserInteraction = useRef(false); // Track user interactions
 
   // Automatically set the correct tab based on current route
@@ -82,6 +88,47 @@ const Sidebar = ({ isOpen }) => {
       "/umrah-post",
     ];
 
+    const essentialUmrahRoutes = [
+      "/umrah-ambulance",
+      "/umrah-branch",
+      "/umrah-building",
+      "/umrah-bus",
+      "/umrah-camp",
+      "/umrah-clinic",
+      "/umrah-country",
+      "/umrah-emergency",
+      "/umrah-hospital",
+      "/umrah-news",
+      "/umrah-nusuk",
+      "/umrah-thanima",
+      "/umrah-notification",
+    ];
+
+    const essentialKsaRoutes = [
+      "/KSA/ambulance",
+      "/KSA/building",
+      "/KSA/branch",
+      "/KSA/bus-station",
+      "/KSA/camp",
+      "/KSA/clinic",
+      "/KSA/countries",
+      "/KSA/emergency",
+      "/KSA/hospital",
+      "/KSA/news",
+      "/KSA/nusuk",
+      "/KSA/thanima",
+      "/KSA/notification",
+      "/locationKSA",
+    ];
+
+    const alternativeUmrahRoutes = [
+      "/umrah-preparation",
+      "/umrah-arrived",
+      "/umrah-duas",
+      "/umrah-virtual-tour",
+      "/umrah-post",
+    ];
+
     if (ksaRoutes.includes(location.pathname)) {
       setActiveTab("explore-ksa");
       setExpandedSections({
@@ -89,6 +136,13 @@ const Sidebar = ({ isOpen }) => {
         umrah: false,
         "explore-ksa": true,
       });
+      
+      // Auto-expand the essential services if it's an essential route
+      if (essentialKsaRoutes.includes(location.pathname)) {
+        setExpandedKsaSections({
+          essential: true,
+        });
+      }
     } else if (umrahRoutes.includes(location.pathname)) {
       setActiveTab("umrah");
       setExpandedSections({
@@ -96,6 +150,13 @@ const Sidebar = ({ isOpen }) => {
         umrah: true,
         "explore-ksa": false,
       });
+      
+      // Auto-expand the essential services if it's an essential route
+      if (essentialUmrahRoutes.includes(location.pathname)) {
+        setExpandedUmrahSections({
+          essential: true,
+        });
+      }
     } else {
       setActiveTab("hajj");
       setExpandedSections({
@@ -184,8 +245,8 @@ const Sidebar = ({ isOpen }) => {
     },
   ];
 
-  // Umrah related menu items
-  const umrahMenuItems = [
+  // Essential Umrah services
+  const essentialUmrahMenuItems = [
     {
       id: "umrah-ambulance",
       label: "Ambulance",
@@ -264,6 +325,10 @@ const Sidebar = ({ isOpen }) => {
       icon: <Bell size={16} />,
       path: "/umrah-notification",
     },
+  ];
+
+  // Alternative Umrah services
+  const alternativeUmrahMenuItems = [
     {
       id: "umrah-preparation",
       label: "Preparation",
@@ -296,19 +361,13 @@ const Sidebar = ({ isOpen }) => {
     },
   ];
 
-  // Explore KSA related menu items
-  const exploreKsaMenuItems = [
+  // Essential KSA services
+  const essentialKsaMenuItems = [
     {
       id: "ksa-location",
       label: "Location",
       icon: <MapPin size={16} />,
       path: "/locationKSA",
-    },
-    {
-      id: "ksa-places",
-      label: "Places",
-      icon: <Navigation size={16} />,
-      path: "/placeKSA",
     },
     {
       id: "ambulanceKSA",
@@ -333,12 +392,6 @@ const Sidebar = ({ isOpen }) => {
       label: "Bus Station",
       icon: <Bus size={16} />,
       path: "/KSA/bus-station",
-    },
-    {
-      id: "thanimaKSA",
-      label: "Thanima",
-      icon: <HandHelping size={16} />,
-      path: "/KSA/thanima",
     },
     {
       id: "campKSA",
@@ -383,10 +436,26 @@ const Sidebar = ({ isOpen }) => {
       path: "/KSA/nusuk",
     },
     {
+      id: "thanimaKSA",
+      label: "Thanima",
+      icon: <HandHelping size={16} />,
+      path: "/KSA/thanima",
+    },
+    {
       id: "notificationKSA",
       label: "Notifications",
       icon: <Bell size={16} />,
       path: "/KSA/notification",
+    },
+  ];
+
+  // Regular KSA menu items (non-essential)
+  const regularKsaMenuItems = [
+    {
+      id: "ksa-places",
+      label: "Places",
+      icon: <Navigation size={16} />,
+      path: "/placeKSA",
     },
   ];
 
@@ -398,6 +467,98 @@ const Sidebar = ({ isOpen }) => {
       umrah: sectionId === "umrah" ? !prev.umrah : false,
       "explore-ksa": sectionId === "explore-ksa" ? !prev["explore-ksa"] : false,
     }));
+  };
+
+  const toggleUmrahSection = (sectionId) => {
+    isUserInteraction.current = true;
+    setExpandedUmrahSections((prev) => ({
+      essential: sectionId === "essential" ? !prev.essential : false,
+    }));
+  };
+
+  const toggleKsaSection = (sectionId) => {
+    isUserInteraction.current = true;
+    setExpandedKsaSections((prev) => ({
+      essential: sectionId === "essential" ? !prev.essential : false,
+    }));
+  };
+
+  const renderMenuItems = (menuItems) => (
+    <ul className="space-y-0.5">
+      {menuItems.map((item) => (
+        <li key={item.id}>
+          <Link
+            to={item.path}
+            className={`flex items-center gap-2 px-3 py-1.5 ml-1 transition-colors rounded-md text-[14px]
+              ${
+                location.pathname === item.path
+                  ? "bg-[#4A90E2] text-white shadow-md"
+                  : "text-gray-300 hover:bg-blue-900/50 hover:text-white"
+              }`}
+            onClick={() => (isUserInteraction.current = true)}
+          >
+            <span className="opacity-80">{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const renderUmrahSubSection = (sectionId, title, menuItems) => {
+    const isExpanded = expandedUmrahSections[sectionId];
+
+    return (
+      <div className="ml-2 mb-1">
+        <button
+          onClick={() => toggleUmrahSection(sectionId)}
+          className={`w-full flex items-center justify-between p-2 text-left transition-all duration-200 rounded-lg hover:bg-[#1e3a8a]/50
+            ${
+              isExpanded
+                ? "bg-gradient-to-r from-[#357ABD] to-[#2563eb] text-white"
+                : "text-gray-400 hover:text-white"
+            }
+          `}
+        >
+          <span className="font-medium text-[14px]">{title}</span>
+          {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        </button>
+
+        {isExpanded && (
+          <div className="mt-1 ml-1 border-l-2 border-[#357ABD]/30">
+            {renderMenuItems(menuItems)}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderKsaSubSection = (sectionId, title, menuItems) => {
+    const isExpanded = expandedKsaSections[sectionId];
+
+    return (
+      <div className="ml-2 mb-1">
+        <button
+          onClick={() => toggleKsaSection(sectionId)}
+          className={`w-full flex items-center justify-between p-2 text-left transition-all duration-200 rounded-lg hover:bg-[#1e3a8a]/50
+            ${
+              isExpanded
+                ? "bg-gradient-to-r from-[#357ABD] to-[#2563eb] text-white"
+                : "text-gray-400 hover:text-white"
+            }
+          `}
+        >
+          <span className="font-medium text-[14px]">{title}</span>
+          {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        </button>
+
+        {isExpanded && (
+          <div className="mt-1 ml-1 border-l-2 border-[#357ABD]/30">
+            {renderMenuItems(menuItems)}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderDropdownSection = (sectionId, title, menuItems) => {
@@ -415,31 +576,25 @@ const Sidebar = ({ isOpen }) => {
             }
           `}
         >
-          <span className="font-semibold text-xs">{title}</span>
+          <span className="font-semibold text-[16px]">{title}</span>
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
 
         {isExpanded && (
           <div className="mt-1 ml-1 border-l-2 border-[#4A90E2]/30">
-            <ul className="space-y-0.5">
-              {menuItems.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    to={item.path}
-                    className={`flex items-center gap-2 px-3 py-1.5 ml-1 transition-colors rounded-md text-xs
-                      ${
-                        location.pathname === item.path
-                          ? "bg-[#4A90E2] text-white shadow-md"
-                          : "text-gray-300 hover:bg-blue-900/50 hover:text-white"
-                      }`}
-                    onClick={() => (isUserInteraction.current = true)} // Mark link clicks as user interaction
-                  >
-                    <span className="opacity-80">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {sectionId === "umrah" ? (
+              <div className="space-y-1">
+                {renderUmrahSubSection("essential", "Essential Service", essentialUmrahMenuItems)}
+                {renderMenuItems(alternativeUmrahMenuItems)}
+              </div>
+            ) : sectionId === "explore-ksa" ? (
+              <div className="space-y-1">
+                {renderKsaSubSection("essential", "Essential Service", essentialKsaMenuItems)}
+                {renderMenuItems(regularKsaMenuItems)}
+              </div>
+            ) : (
+              renderMenuItems(menuItems)
+            )}
           </div>
         )}
       </div>
@@ -468,12 +623,8 @@ const Sidebar = ({ isOpen }) => {
           {isOpen ? (
             <div className="space-y-1">
               {renderDropdownSection("hajj", "Hajj Services", hajjMenuItems)}
-              {renderDropdownSection("umrah", "Umrah Services", umrahMenuItems)}
-              {renderDropdownSection(
-                "explore-ksa",
-                "Explore KSA",
-                exploreKsaMenuItems
-              )}
+              {renderDropdownSection("umrah", "Umrah Services", [])}
+              {renderDropdownSection("explore-ksa", "Explore KSA", [])}
             </div>
           ) : (
             // Collapsed sidebar - show minimal icons
