@@ -128,7 +128,7 @@ function AdminLogin({ onBackClick }) {
           </form>
 
           <div className="mt-4 text-center">
-            <a href="#" className="text-sm text-[#3a51a3] hover:text-[#a3c6e9">
+            <a href="#" className="text-sm text-[#3a51a3] hover:text-[#a3c6e9]">
               Forgot Password?
             </a>
           </div>
