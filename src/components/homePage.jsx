@@ -21,7 +21,7 @@ function HomePage() {
           </p>
           <button
           onClick={() => navigate('/admin-login')}
-          className="bg-[#3a51a3] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors">
+          className="bg-[#3a51a3] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-[#a3c6e9] transition-colors">
             Admin Login
           </button>
         </div>
