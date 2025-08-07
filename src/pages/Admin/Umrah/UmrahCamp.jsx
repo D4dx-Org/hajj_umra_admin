@@ -16,12 +16,22 @@ const UmrahCamp = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newCamp, setNewCamp] = useState({
     maktab: '',
+    malayalamMaktab: '',
+    urduMaktab: '',
     zone: '',
+    malayalamZone: '',
+    urduZone: '',
     country: '',
     otherCountry: '',
     poll: '',
+    malayalamPoll: '',
+    urduPoll: '',
     road: '',
+    malayalamRoad: '',
+    urduRoad: '',
     tent: '',
+    malayalamTent: '',
+    urduTent: '',
     location: { lat: '', lng: '' }
   });
   const [originalData, setOriginalData] = useState(null);
@@ -65,7 +75,41 @@ const UmrahCamp = () => {
             />
           );
         }
-        return row.maktab || 'N/A';
+        return row.maktab || '-';
+      }
+    },
+    {
+      key: 'malayalamMaktab',
+      title: 'Malayalam Maktab',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamMaktab || ''}
+              onChange={(e) => handleEditChange(row._id, 'malayalamMaktab', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamMaktab || '-';
+      }
+    },
+    {
+      key: 'urduMaktab',
+      title: 'Urdu Maktab',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduMaktab || ''}
+              onChange={(e) => handleEditChange(row._id, 'urduMaktab', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduMaktab || '-';
       }
     },
     {
@@ -82,7 +126,41 @@ const UmrahCamp = () => {
             />
           );
         }
-        return row.zone || 'N/A';
+        return row.zone || '-';
+      }
+    },
+    {
+      key: 'malayalamZone',
+      title: 'Malayalam Zone',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamZone || ''}
+              onChange={(e) => handleEditChange(row._id, 'malayalamZone', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamZone || '-';
+      }
+    },
+    {
+      key: 'urduZone',
+      title: 'Urdu Zone',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduZone || ''}
+              onChange={(e) => handleEditChange(row._id, 'urduZone', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduZone || '-';
       }
     },
     {
@@ -240,8 +318,16 @@ const UmrahCamp = () => {
   const sortOptions = [
     { value: 'maktab-alpha-asc', label: 'Maktab (A-Z)', field: 'maktab', direction: 'asc', type: 'alpha' },
     { value: 'maktab-alpha-desc', label: 'Maktab (Z-A)', field: 'maktab', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamMaktab-alpha-asc', label: 'Malayalam Maktab (A-Z)', field: 'malayalamMaktab', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamMaktab-alpha-desc', label: 'Malayalam Maktab (Z-A)', field: 'malayalamMaktab', direction: 'desc', type: 'alpha' },
+    { value: 'urduMaktab-alpha-asc', label: 'Urdu Maktab (A-Z)', field: 'urduMaktab', direction: 'asc', type: 'alpha' },
+    { value: 'urduMaktab-alpha-desc', label: 'Urdu Maktab (Z-A)', field: 'urduMaktab', direction: 'desc', type: 'alpha' },
     { value: 'zone-alpha-asc', label: 'Zone (A-Z)', field: 'zone', direction: 'asc', type: 'alpha' },
     { value: 'zone-alpha-desc', label: 'Zone (Z-A)', field: 'zone', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamZone-alpha-asc', label: 'Malayalam Zone (A-Z)', field: 'malayalamZone', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamZone-alpha-desc', label: 'Malayalam Zone (Z-A)', field: 'malayalamZone', direction: 'desc', type: 'alpha' },
+    { value: 'urduZone-alpha-asc', label: 'Urdu Zone (A-Z)', field: 'urduZone', direction: 'asc', type: 'alpha' },
+    { value: 'urduZone-alpha-desc', label: 'Urdu Zone (Z-A)', field: 'urduZone', direction: 'desc', type: 'alpha' },
     { value: 'country-alpha-asc', label: 'Country (A-Z)', field: 'country', direction: 'asc', type: 'alpha' },
     { value: 'country-alpha-desc', label: 'Country (Z-A)', field: 'country', direction: 'desc', type: 'alpha' },
     { value: 'poll-alpha-asc', label: 'Poll (A-Z)', field: 'poll', direction: 'asc', type: 'alpha' },
@@ -391,12 +477,22 @@ const UmrahCamp = () => {
         setCampData(updatedResponse.data);
         setNewCamp({
           maktab: '',
+          malayalamMaktab: '',
+          urduMaktab: '',
           zone: '',
+          malayalamZone: '',
+          urduZone: '',
           country: '',
           otherCountry: '',
           poll: '',
+          malayalamPoll: '',
+          urduPoll: '',
           road: '',
+          malayalamRoad: '',
+          urduRoad: '',
           tent: '',
+          malayalamTent: '',
+          urduTent: '',
           location: { lat: '', lng: '' }
         });
         setShowAddForm(false);
@@ -452,10 +548,20 @@ const UmrahCamp = () => {
         const countryName = item.otherCountry || item.country?.name || '';
         return (
           (item.maktab && item.maktab.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamMaktab && item.malayalamMaktab.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduMaktab && item.urduMaktab.toLowerCase().includes(lowerCaseSearch)) ||
           (item.zone && item.zone.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamZone && item.malayalamZone.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduZone && item.urduZone.toLowerCase().includes(lowerCaseSearch)) ||
           (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamPoll && item.malayalamPoll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduPoll && item.urduPoll.toLowerCase().includes(lowerCaseSearch)) ||
           (item.road && item.road.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamRoad && item.malayalamRoad.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduRoad && item.urduRoad.toLowerCase().includes(lowerCaseSearch)) ||
           (item.tent && item.tent.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamTent && item.malayalamTent.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduTent && item.urduTent.toLowerCase().includes(lowerCaseSearch)) ||
           countryName.toLowerCase().includes(lowerCaseSearch)
         );
       });
@@ -485,11 +591,21 @@ const UmrahCamp = () => {
       const sampleData = [
         {
           maktab: 'Sample Maktab',
+          malayalam_maktab: 'മക്തബ് സാമ്പിൾ',
+          urdu_maktab: 'نمونہ مکتب',
           zone: 'Zone A',
+          malayalam_zone: 'മേഖല എ',
+          urdu_zone: 'علاقہ اے',
           country: 'Saudi Arabia',
           poll: 'Poll 1',
+          malayalam_poll: 'പോൾ 1',
+          urdu_poll: 'پول 1',
           road: 'Road 123',
+          malayalam_road: 'റോഡ് 123',
+          urdu_road: 'سڑک 123',
           tent: 'Tent A1',
+          malayalam_tent: 'കൂടാരം എ1',
+          urdu_tent: 'خیمہ اے1',
           latitude: '21.4225',
           longitude: '39.8262'
         }
@@ -499,11 +615,21 @@ const UmrahCamp = () => {
       
       utils.sheet_add_aoa(ws, [[
         'maktab',
+        'malayalam_maktab',
+        'urdu_maktab',
         'zone',
+        'malayalam_zone',
+        'urdu_zone',
         'country',
         'poll',
+        'malayalam_poll',
+        'urdu_poll',
         'road',
+        'malayalam_road',
+        'urdu_road',
         'tent',
+        'malayalam_tent',
+        'urdu_tent',
         'latitude',
         'longitude'
       ]], { origin: 'A1' });
@@ -515,11 +641,21 @@ const UmrahCamp = () => {
 
       ws['!cols'] = [
         { wch: 20 }, // maktab
+        { wch: 20 }, // malayalam_maktab
+        { wch: 20 }, // urdu_maktab
         { wch: 15 }, // zone
+        { wch: 15 }, // malayalam_zone
+        { wch: 15 }, // urdu_zone
         { wch: 20 }, // country
         { wch: 15 }, // poll
+        { wch: 15 }, // malayalam_poll
+        { wch: 15 }, // urdu_poll
         { wch: 15 }, // road
+        { wch: 15 }, // malayalam_road
+        { wch: 15 }, // urdu_road
         { wch: 15 }, // tent
+        { wch: 15 }, // malayalam_tent
+        { wch: 15 }, // urdu_tent
         { wch: 15 }, // latitude
         { wch: 15 }  // longitude
       ];
@@ -716,12 +852,52 @@ const UmrahCamp = () => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Maktab</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamMaktab}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamMaktab: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മക്തബ്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Maktab</label>
+                <input
+                  type="text"
+                  value={newCamp.urduMaktab}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduMaktab: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="مکتب"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Zone</label>
                 <input
                   type="text"
                   value={newCamp.zone}
                   onChange={(e) => setNewCamp({ ...newCamp, zone: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Zone</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamZone}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamZone: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മേഖല"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Zone</label>
+                <input
+                  type="text"
+                  value={newCamp.urduZone}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduZone: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="علاقہ"
                 />
               </div>
               <div className="mb-4">
@@ -759,6 +935,26 @@ const UmrahCamp = () => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Poll</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamPoll}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamPoll: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="പോൾ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Poll</label>
+                <input
+                  type="text"
+                  value={newCamp.urduPoll}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduPoll: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="پول"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Road</label>
                 <input
                   type="text"
@@ -768,12 +964,52 @@ const UmrahCamp = () => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Road</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamRoad}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamRoad: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="റോഡ്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Road</label>
+                <input
+                  type="text"
+                  value={newCamp.urduRoad}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduRoad: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="سڑک"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Tent</label>
                 <input
                   type="text"
                   value={newCamp.tent}
                   onChange={(e) => setNewCamp({ ...newCamp, tent: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Tent</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamTent}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamTent: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="കൂടാരം"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Tent</label>
+                <input
+                  type="text"
+                  value={newCamp.urduTent}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduTent: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="خیمہ"
                 />
               </div>
               <div className="mb-4 md:col-span-2">

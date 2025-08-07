@@ -16,9 +16,15 @@ const UmrahBus = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newBusStation, setNewBusStation] = useState({
     name: "",
+    malayalamName: "",
+    urduName: "",
     stationPoint: "",
+    malayalamStationPoint: "",
+    urduStationPoint: "",
     link: "",
     destinationPoint: "",
+    malayalamDestinationPoint: "",
+    urduDestinationPoint: "",
     location: { lat: "", lng: "" },
     ref: "",
   });
@@ -76,6 +82,44 @@ const UmrahBus = ({ isOpen }) => {
       },
     },
     {
+      key: "malayalamName",
+      title: "Malayalam Name",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamName || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "malayalamName", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamName || "-";
+      },
+    },
+    {
+      key: "urduName",
+      title: "Urdu Name",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduName || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "urduName", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduName || "-";
+      },
+    },
+    {
       key: "stationPoint",
       title: "Station Point",
       render: (row) => {
@@ -91,7 +135,49 @@ const UmrahBus = ({ isOpen }) => {
             />
           );
         }
-        return row.stationPoint || "N/A";
+        return row.stationPoint || "-";
+      },
+    },
+    {
+      key: "malayalamStationPoint",
+      title: "Malayalam Station Point",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamStationPoint || ""}
+              onChange={(e) =>
+                handleEditChange(
+                  row._id,
+                  "malayalamStationPoint",
+                  e.target.value
+                )
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamStationPoint || "-";
+      },
+    },
+    {
+      key: "urduStationPoint",
+      title: "Urdu Station Point",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduStationPoint || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "urduStationPoint", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduStationPoint || "-";
       },
     },
     {
@@ -110,7 +196,53 @@ const UmrahBus = ({ isOpen }) => {
             />
           );
         }
-        return row.destinationPoint || "N/A";
+        return row.destinationPoint || "-";
+      },
+    },
+    {
+      key: "malayalamDestinationPoint",
+      title: "Malayalam Destination Point",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamDestinationPoint || ""}
+              onChange={(e) =>
+                handleEditChange(
+                  row._id,
+                  "malayalamDestinationPoint",
+                  e.target.value
+                )
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamDestinationPoint || "-";
+      },
+    },
+    {
+      key: "urduDestinationPoint",
+      title: "Urdu Destination Point",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduDestinationPoint || ""}
+              onChange={(e) =>
+                handleEditChange(
+                  row._id,
+                  "urduDestinationPoint",
+                  e.target.value
+                )
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduDestinationPoint || "-";
       },
     },
     {
@@ -259,6 +391,34 @@ const UmrahBus = ({ isOpen }) => {
       value: "name-alpha-desc",
       label: "Name (Z-A)",
       field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-asc",
+      label: "Malayalam Name (A-Z)",
+      field: "malayalamName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-desc",
+      label: "Malayalam Name (Z-A)",
+      field: "malayalamName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-asc",
+      label: "Urdu Name (A-Z)",
+      field: "urduName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-desc",
+      label: "Urdu Name (Z-A)",
+      field: "urduName",
       direction: "desc",
       type: "alpha",
     },
@@ -471,9 +631,15 @@ const UmrahBus = ({ isOpen }) => {
         setBusStationData(updatedResponse.data);
         setNewBusStation({
           name: "",
+          malayalamName: "",
+          urduName: "",
           stationPoint: "",
+          malayalamStationPoint: "",
+          urduStationPoint: "",
           link: "",
           destinationPoint: "",
+          malayalamDestinationPoint: "",
+          urduDestinationPoint: "",
           location: { lat: "", lng: "" },
           ref: "",
         });
@@ -538,10 +704,28 @@ const UmrahBus = ({ isOpen }) => {
         const branchName = item.ref?.name || "";
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName &&
+            item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName &&
+            item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.stationPoint &&
             item.stationPoint.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamStationPoint &&
+            item.malayalamStationPoint
+              .toLowerCase()
+              .includes(lowerCaseSearch)) ||
+          (item.urduStationPoint &&
+            item.urduStationPoint.toLowerCase().includes(lowerCaseSearch)) ||
           (item.destinationPoint &&
             item.destinationPoint.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamDestinationPoint &&
+            item.malayalamDestinationPoint
+              .toLowerCase()
+              .includes(lowerCaseSearch)) ||
+          (item.urduDestinationPoint &&
+            item.urduDestinationPoint
+              .toLowerCase()
+              .includes(lowerCaseSearch)) ||
           branchName.toLowerCase().includes(lowerCaseSearch)
         );
       });
@@ -573,9 +757,15 @@ const UmrahBus = ({ isOpen }) => {
       const sampleData = [
         {
           name: "Sample Bus Station",
+          malayalam_name: "സാമ്പിൾ ബസ് സ്റ്റേഷൻ",
+          urdu_name: "نمونہ بس اسٹیشن",
           branch_name: "Sample Branch",
           station_point: "Central Station",
+          malayalam_station_point: "സെൻട്രൽ സ്റ്റേഷൻ",
+          urdu_station_point: "مرکزی اسٹیشن",
           destination_point: "Makkah Terminal",
+          malayalam_destination_point: "മക്കാ ടെർമിനൽ",
+          urdu_destination_point: "مکہ ٹرمینل",
           link: "https://example.com",
           latitude: "21.4225",
           longitude: "39.8262",
@@ -589,9 +779,15 @@ const UmrahBus = ({ isOpen }) => {
         [
           [
             "name",
+            "malayalam_name",
+            "urdu_name",
             "branch_name",
             "station_point",
+            "malayalam_station_point",
+            "urdu_station_point",
             "destination_point",
+            "malayalam_destination_point",
+            "urdu_destination_point",
             "link",
             "latitude",
             "longitude",
@@ -607,9 +803,15 @@ const UmrahBus = ({ isOpen }) => {
 
       ws["!cols"] = [
         { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
         { wch: 20 }, // branch_name
         { wch: 20 }, // station_point
+        { wch: 25 }, // malayalam_station_point
+        { wch: 25 }, // urdu_station_point
         { wch: 20 }, // destination_point
+        { wch: 25 }, // malayalam_destination_point
+        { wch: 25 }, // urdu_destination_point
         { wch: 25 }, // link
         { wch: 15 }, // latitude
         { wch: 15 }, // longitude
@@ -814,6 +1016,38 @@ const UmrahBus = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">
+                  Malayalam Name
+                </label>
+                <input
+                  type="text"
+                  value={newBusStation.malayalamName}
+                  onChange={(e) =>
+                    setNewBusStation({
+                      ...newBusStation,
+                      malayalamName: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മലയാളം പേര്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newBusStation.urduName}
+                  onChange={(e) =>
+                    setNewBusStation({
+                      ...newBusStation,
+                      urduName: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="اردو نام"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Branch *</label>
                 <select
                   value={newBusStation.ref}
@@ -849,6 +1083,40 @@ const UmrahBus = ({ isOpen }) => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium">
+                  Malayalam Station Point
+                </label>
+                <input
+                  type="text"
+                  value={newBusStation.malayalamStationPoint}
+                  onChange={(e) =>
+                    setNewBusStation({
+                      ...newBusStation,
+                      malayalamStationPoint: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മലയാളം സ്റ്റേഷൻ പോയിന്റ്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">
+                  Urdu Station Point
+                </label>
+                <input
+                  type="text"
+                  value={newBusStation.urduStationPoint}
+                  onChange={(e) =>
+                    setNewBusStation({
+                      ...newBusStation,
+                      urduStationPoint: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="اردو اسٹیشن پوائنٹ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">
                   Destination Point
                 </label>
                 <input
@@ -861,6 +1129,40 @@ const UmrahBus = ({ isOpen }) => {
                     })
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">
+                  Malayalam Destination Point
+                </label>
+                <input
+                  type="text"
+                  value={newBusStation.malayalamDestinationPoint}
+                  onChange={(e) =>
+                    setNewBusStation({
+                      ...newBusStation,
+                      malayalamDestinationPoint: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മലയാളം ഡെസ്റ്റിനേഷൻ പോയിന്റ്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">
+                  Urdu Destination Point
+                </label>
+                <input
+                  type="text"
+                  value={newBusStation.urduDestinationPoint}
+                  onChange={(e) =>
+                    setNewBusStation({
+                      ...newBusStation,
+                      urduDestinationPoint: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="اردو منزل پوائنٹ"
                 />
               </div>
               <div className="mb-4">

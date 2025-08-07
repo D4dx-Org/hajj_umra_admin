@@ -17,8 +17,14 @@ const UmrahAmbulance = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newAmbulance, setNewAmbulance] = useState({
     category: "",
+    categoryMalayalam: "",
+    categoryUrdu: "",
     center: "",
+    centerMalayalam: "",
+    centerUrdu: "",
     poll: "",
+    pollMalayalam: "",
+    pollUrdu: "",
     location: { lat: "", lng: "" },
   });
   const [originalData, setOriginalData] = useState(null);
@@ -83,25 +89,55 @@ const UmrahAmbulance = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <Select
-              value={ambulanceCategories.categories.find(
-                (cat) => cat.value === row.category
-              )}
-              onChange={(selected) =>
-                handleEditChange(row._id, "category", selected.value)
-              }
-              options={ambulanceCategories.categories}
-              styles={customStyles}
-              className="w-full"
-              isSearchable
-              placeholder="Select category..."
-            />
+            <div className="space-y-2">
+              <Select
+                value={ambulanceCategories.categories.find(
+                  (cat) => cat.value === row.category
+                )}
+                onChange={(selected) =>
+                  handleEditChange(row._id, "category", selected.value)
+                }
+                options={ambulanceCategories.categories}
+                styles={customStyles}
+                className="w-full"
+                isSearchable
+                placeholder="Select category..."
+              />
+              <input
+                type="text"
+                value={row.categoryMalayalam || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "categoryMalayalam", e.target.value)
+                }
+                placeholder="Malayalam"
+                className="w-full p-1 border rounded text-xs"
+              />
+              <input
+                type="text"
+                value={row.categoryUrdu || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "categoryUrdu", e.target.value)
+                }
+                placeholder="Urdu"
+                className="w-full p-1 border rounded text-xs"
+              />
+            </div>
           );
         }
         const category = ambulanceCategories.categories.find(
           (cat) => cat.value === row.category
         );
-        return category ? category.label : row.category;
+        return (
+          <div className="space-y-1">
+            <div>{category ? category.label : row.category}</div>
+            {row.categoryMalayalam && (
+              <div className="text-xs text-gray-600">ML: {row.categoryMalayalam}</div>
+            )}
+            {row.categoryUrdu && (
+              <div className="text-xs text-gray-600">UR: {row.categoryUrdu}</div>
+            )}
+          </div>
+        );
       },
     },
     {
@@ -110,17 +146,48 @@ const UmrahAmbulance = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.center}
-              onChange={(e) =>
-                handleEditChange(row._id, "center", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={row.center}
+                onChange={(e) =>
+                  handleEditChange(row._id, "center", e.target.value)
+                }
+                placeholder="English"
+                className="w-full p-1 border rounded"
+              />
+              <input
+                type="text"
+                value={row.centerMalayalam || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "centerMalayalam", e.target.value)
+                }
+                placeholder="Malayalam"
+                className="w-full p-1 border rounded text-xs"
+              />
+              <input
+                type="text"
+                value={row.centerUrdu || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "centerUrdu", e.target.value)
+                }
+                placeholder="Urdu"
+                className="w-full p-1 border rounded text-xs"
+              />
+            </div>
           );
         }
-        return row.center;
+        return (
+          <div className="space-y-1">
+            <div>{row.center}</div>
+            {row.centerMalayalam && (
+              <div className="text-xs text-gray-600">ML: {row.centerMalayalam}</div>
+            )}
+            {row.centerUrdu && (
+              <div className="text-xs text-gray-600">UR: {row.centerUrdu}</div>
+            )}
+          </div>
+        );
       },
     },
     {
@@ -129,17 +196,48 @@ const UmrahAmbulance = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.poll}
-              onChange={(e) =>
-                handleEditChange(row._id, "poll", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={row.poll}
+                onChange={(e) =>
+                  handleEditChange(row._id, "poll", e.target.value)
+                }
+                placeholder="English"
+                className="w-full p-1 border rounded"
+              />
+              <input
+                type="text"
+                value={row.pollMalayalam || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "pollMalayalam", e.target.value)
+                }
+                placeholder="Malayalam"
+                className="w-full p-1 border rounded text-xs"
+              />
+              <input
+                type="text"
+                value={row.pollUrdu || ""}
+                onChange={(e) =>
+                  handleEditChange(row._id, "pollUrdu", e.target.value)
+                }
+                placeholder="Urdu"
+                className="w-full p-1 border rounded text-xs"
+              />
+            </div>
           );
         }
-        return row.poll;
+        return (
+          <div className="space-y-1">
+            <div>{row.poll}</div>
+            {row.pollMalayalam && (
+              <div className="text-xs text-gray-600">ML: {row.pollMalayalam}</div>
+            )}
+            {row.pollUrdu && (
+              <div className="text-xs text-gray-600">UR: {row.pollUrdu}</div>
+            )}
+          </div>
+        );
       },
     },
     {
@@ -401,8 +499,14 @@ const UmrahAmbulance = ({ isOpen }) => {
         setAmbulanceData(updatedResponse.data);
         setNewAmbulance({
           category: "",
+          categoryMalayalam: "",
+          categoryUrdu: "",
           center: "",
+          centerMalayalam: "",
+          centerUrdu: "",
           poll: "",
+          pollMalayalam: "",
+          pollUrdu: "",
           location: { lat: "", lng: "" },
         });
         setShowAddForm(false);
@@ -453,9 +557,21 @@ const UmrahAmbulance = ({ isOpen }) => {
         return (
           (item.category &&
             item.category.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.categoryMalayalam &&
+            item.categoryMalayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.categoryUrdu &&
+            item.categoryUrdu.toLowerCase().includes(lowerCaseSearch)) ||
           (item.center &&
             item.center.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch))
+          (item.centerMalayalam &&
+            item.centerMalayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.centerUrdu &&
+            item.centerUrdu.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.pollMalayalam &&
+            item.pollMalayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.pollUrdu &&
+            item.pollUrdu.toLowerCase().includes(lowerCaseSearch))
         );
       });
     }
@@ -486,8 +602,14 @@ const UmrahAmbulance = ({ isOpen }) => {
       const sampleData = [
         {
           category: "Type A",
+          category_malayalam: "ടൈപ്പ് എ",
+          category_urdu: "قسم اے",
           center: "Sample Center",
+          center_malayalam: "സാമ്പിൾ സെന്റർ",
+          center_urdu: "نمونہ مرکز",
           poll: "Sample Poll",
+          poll_malayalam: "സാമ്പിൾ പോൾ",
+          poll_urdu: "نمونہ پول",
           latitude: "21.4225",
           longitude: "39.8262",
         },
@@ -497,7 +619,7 @@ const UmrahAmbulance = ({ isOpen }) => {
 
       utils.sheet_add_aoa(
         ws,
-        [["category", "center", "poll", "latitude", "longitude"]],
+        [["category", "category_malayalam", "category_urdu", "center", "center_malayalam", "center_urdu", "poll", "poll_malayalam", "poll_urdu", "latitude", "longitude"]],
         { origin: "A1" }
       );
 
@@ -508,8 +630,14 @@ const UmrahAmbulance = ({ isOpen }) => {
 
       ws["!cols"] = [
         { wch: 20 }, // category
+        { wch: 20 }, // category_malayalam
+        { wch: 20 }, // category_urdu
         { wch: 20 }, // center
+        { wch: 20 }, // center_malayalam
+        { wch: 20 }, // center_urdu
         { wch: 20 }, // poll
+        { wch: 20 }, // poll_malayalam
+        { wch: 20 }, // poll_urdu
         { wch: 20 }, // latitude
         { wch: 20 }, // longitude
       ];
@@ -703,7 +831,8 @@ const UmrahAmbulance = ({ isOpen }) => {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Umrah Ambulance</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Category Fields */}
               <div className="mb-4">
                 <label className="block text-sm font-medium">Category *</label>
                 <Select
@@ -724,6 +853,32 @@ const UmrahAmbulance = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Category (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newAmbulance.categoryMalayalam}
+                  onChange={(e) =>
+                    setNewAmbulance({ ...newAmbulance, categoryMalayalam: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Malayalam translation"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Category (Urdu)</label>
+                <input
+                  type="text"
+                  value={newAmbulance.categoryUrdu}
+                  onChange={(e) =>
+                    setNewAmbulance({ ...newAmbulance, categoryUrdu: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Urdu translation"
+                />
+              </div>
+
+              {/* Center Fields */}
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Center *</label>
                 <input
                   type="text"
@@ -735,6 +890,32 @@ const UmrahAmbulance = ({ isOpen }) => {
                   required
                 />
               </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Center (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newAmbulance.centerMalayalam}
+                  onChange={(e) =>
+                    setNewAmbulance({ ...newAmbulance, centerMalayalam: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Malayalam translation"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Center (Urdu)</label>
+                <input
+                  type="text"
+                  value={newAmbulance.centerUrdu}
+                  onChange={(e) =>
+                    setNewAmbulance({ ...newAmbulance, centerUrdu: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Urdu translation"
+                />
+              </div>
+
+              {/* Poll Fields */}
               <div className="mb-4">
                 <label className="block text-sm font-medium">Poll *</label>
                 <input
@@ -748,10 +929,36 @@ const UmrahAmbulance = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Poll (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newAmbulance.pollMalayalam}
+                  onChange={(e) =>
+                    setNewAmbulance({ ...newAmbulance, pollMalayalam: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Malayalam translation"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Poll (Urdu)</label>
+                <input
+                  type="text"
+                  value={newAmbulance.pollUrdu}
+                  onChange={(e) =>
+                    setNewAmbulance({ ...newAmbulance, pollUrdu: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Urdu translation"
+                />
+              </div>
+
+              {/* Location Fields */}
+              <div className="mb-4 md:col-span-3">
                 <label className="block text-sm font-medium">
                   Location (Optional)
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-1">
                   <input
                     type="number"
                     value={newAmbulance.location.lat}
@@ -765,7 +972,7 @@ const UmrahAmbulance = ({ isOpen }) => {
                       })
                     }
                     placeholder="Latitude"
-                    className="mt-1 block w-1/2 border border-gray-300 rounded-md p-2"
+                    className="block w-1/2 border border-gray-300 rounded-md p-2"
                   />
                   <input
                     type="number"
@@ -780,7 +987,7 @@ const UmrahAmbulance = ({ isOpen }) => {
                       })
                     }
                     placeholder="Longitude"
-                    className="mt-1 block w-1/2 border border-gray-300 rounded-md p-2"
+                    className="block w-1/2 border border-gray-300 rounded-md p-2"
                   />
                 </div>
               </div>

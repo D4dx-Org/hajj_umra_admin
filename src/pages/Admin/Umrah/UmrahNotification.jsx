@@ -41,9 +41,15 @@ const UmrahNotification = ({ isOpen }) => {
 
   const [formData, setFormData] = useState({
     title: "",
+    malayalamTitle: "",
+    urduTitle: "",
     description: "",
+    malayalamDescription: "",
+    urduDescription: "",
     type: "text",
     content: "",
+    malayalamContent: "",
+    urduContent: "",
   });
 
   const notificationTypes = [
@@ -116,9 +122,15 @@ const UmrahNotification = ({ isOpen }) => {
       const token = localStorage.getItem("token");
       const submitData = {
         title: formData.title.trim(),
+        malayalamTitle: formData.malayalamTitle.trim() || undefined,
+        urduTitle: formData.urduTitle.trim() || undefined,
         description: formData.description.trim(),
+        malayalamDescription: formData.malayalamDescription.trim() || undefined,
+        urduDescription: formData.urduDescription.trim() || undefined,
         type: formData.type,
         content: formData.content.trim(),
+        malayalamContent: formData.malayalamContent.trim() || undefined,
+        urduContent: formData.urduContent.trim() || undefined,
       };
 
       let response;
@@ -240,7 +252,18 @@ const UmrahNotification = ({ isOpen }) => {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", description: "", type: "text", content: "" });
+    setFormData({ 
+      title: "", 
+      malayalamTitle: "",
+      urduTitle: "",
+      description: "", 
+      malayalamDescription: "",
+      urduDescription: "",
+      type: "text", 
+      content: "",
+      malayalamContent: "",
+      urduContent: ""
+    });
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -248,9 +271,15 @@ const UmrahNotification = ({ isOpen }) => {
   const startEdit = (notification) => {
     setFormData({
       title: notification.title,
+      malayalamTitle: notification.malayalamTitle || "",
+      urduTitle: notification.urduTitle || "",
       description: notification.description || "",
+      malayalamDescription: notification.malayalamDescription || "",
+      urduDescription: notification.urduDescription || "",
       type: notification.type,
       content: notification.content,
+      malayalamContent: notification.malayalamContent || "",
+      urduContent: notification.urduContent || "",
     });
     setEditingId(notification._id);
     setShowAddForm(true);
@@ -259,7 +288,14 @@ const UmrahNotification = ({ isOpen }) => {
   const filteredNotifications = notifications.filter(
     (notification) =>
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (notification.malayalamTitle && notification.malayalamTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (notification.urduTitle && notification.urduTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      notification.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (notification.malayalamDescription && notification.malayalamDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (notification.urduDescription && notification.urduDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      notification.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (notification.malayalamContent && notification.malayalamContent.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (notification.urduContent && notification.urduContent.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const toggleSelectAll = () => {
@@ -332,9 +368,21 @@ const UmrahNotification = ({ isOpen }) => {
         );
       default:
         return (
-          <span className="text-sm text-gray-700 truncate max-w-xs block">
-            {content}
-          </span>
+          <div className="space-y-1">
+            <div className="text-sm text-gray-700 truncate max-w-xs">
+              <span className="font-medium">EN:</span> {content}
+            </div>
+            {notification.malayalamContent && (
+              <div className="text-sm text-gray-600 truncate max-w-xs">
+                <span className="font-medium">ML:</span> {notification.malayalamContent}
+              </div>
+            )}
+            {notification.urduContent && (
+              <div className="text-sm text-gray-600 truncate max-w-xs" dir="rtl">
+                <span className="font-medium">UR:</span> {notification.urduContent}
+              </div>
+            )}
+          </div>
         );
     }
   };
@@ -443,7 +491,7 @@ const UmrahNotification = ({ isOpen }) => {
                 {editingId ? "Edit Notification" : "Add New Notification"}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Title *
@@ -461,6 +509,37 @@ const UmrahNotification = ({ isOpen }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Malayalam Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.malayalamTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, malayalamTitle: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="അറിയിപ്പ് ശീർഷകം"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Urdu Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.urduTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, urduTitle: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="اطلاع کا عنوان"
+                      dir="rtl"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Type *
                     </label>
                     <select
@@ -470,6 +549,8 @@ const UmrahNotification = ({ isOpen }) => {
                           ...formData,
                           type: e.target.value,
                           content: "",
+                          malayalamContent: "",
+                          urduContent: "",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -483,18 +564,52 @@ const UmrahNotification = ({ isOpen }) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter description..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Malayalam Description
+                    </label>
+                    <textarea
+                      value={formData.malayalamDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, malayalamDescription: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="വിവരണം നൽകുക..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Urdu Description
+                    </label>
+                    <textarea
+                      value={formData.urduDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, urduDescription: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="تفصیل درج کریں..."
+                      dir="rtl"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -502,16 +617,52 @@ const UmrahNotification = ({ isOpen }) => {
                     Content *
                   </label>
                   {formData.type === "text" && (
-                    <textarea
-                      value={formData.content}
-                      onChange={(e) =>
-                        setFormData({ ...formData, content: e.target.value })
-                      }
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter your text content..."
-                      required
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          English Content *
+                        </label>
+                        <textarea
+                          value={formData.content}
+                          onChange={(e) =>
+                            setFormData({ ...formData, content: e.target.value })
+                          }
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter your text content..."
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Malayalam Content
+                        </label>
+                        <textarea
+                          value={formData.malayalamContent}
+                          onChange={(e) =>
+                            setFormData({ ...formData, malayalamContent: e.target.value })
+                          }
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="മലയാളം ഉള്ളടക്കം നൽകുക..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Urdu Content
+                        </label>
+                        <textarea
+                          value={formData.urduContent}
+                          onChange={(e) =>
+                            setFormData({ ...formData, urduContent: e.target.value })
+                          }
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="اردو مواد درج کریں..."
+                          dir="rtl"
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {formData.type === "link" && (
@@ -594,6 +745,12 @@ const UmrahNotification = ({ isOpen }) => {
                       TITLE
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM TITLE
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU TITLE
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       TYPE
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
@@ -628,6 +785,26 @@ const UmrahNotification = ({ isOpen }) => {
                         {notification.description && (
                           <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
                             {notification.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700">
+                          {notification.malayalamTitle || '-'}
+                        </div>
+                        {notification.malayalamDescription && (
+                          <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                            {notification.malayalamDescription}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700" dir="rtl">
+                          {notification.urduTitle || '-'}
+                        </div>
+                        {notification.urduDescription && (
+                          <div className="text-xs text-gray-500 mt-1 truncate max-w-xs" dir="rtl">
+                            {notification.urduDescription}
                           </div>
                         )}
                       </td>

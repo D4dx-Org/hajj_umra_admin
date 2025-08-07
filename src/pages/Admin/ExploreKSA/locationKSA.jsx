@@ -11,7 +11,7 @@ const LocationKSA = ({ isOpen }) => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newLocation, setNewLocation] = useState({ id: '', title: '' });
+  const [newLocation, setNewLocation] = useState({ id: '', title: '', title_malayalam: '', title_urdu: '' });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
@@ -40,15 +40,46 @@ const LocationKSA = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.title}
-              onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={row.title}
+                onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Title (English)"
+              />
+              <input
+                type="text"
+                value={row.title_malayalam || ''}
+                onChange={(e) => handleEditChange(row._id, 'title_malayalam', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Title (Malayalam)"
+              />
+              <input
+                type="text"
+                value={row.title_urdu || ''}
+                onChange={(e) => handleEditChange(row._id, 'title_urdu', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Title (Urdu)"
+              />
+            </div>
           );
         }
-        return row.title;
+        return (
+          <div className="space-y-1">
+            <div className="font-medium">{row.title}</div>
+            {row.title_malayalam && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.title_malayalam}
+              </div>
+            )}
+            {row.title_urdu && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.title_urdu}
+              </div>
+            )}
+          </div>
+        );
       }
     },
     {
@@ -109,23 +140,7 @@ const LocationKSA = ({ isOpen }) => {
   }, []);
 
 
-  const auth = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-  
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-  
-    const token = authHeader.split(' ')[1];
-  
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: 'Token invalid or expired' });
-    }
-  };
+
   
 
   // Filter data based on search input
@@ -137,6 +152,8 @@ const LocationKSA = ({ isOpen }) => {
     return locationData.filter(
       (item) =>
         item.title.toLowerCase().includes(lowerCaseSearch) ||
+        item.title_malayalam?.toLowerCase().includes(lowerCaseSearch) ||
+        item.title_urdu?.toLowerCase().includes(lowerCaseSearch) ||
         item.id.toString().toLowerCase().includes(lowerCaseSearch)
     );
   }, [locationData, searchTerm]);
@@ -159,7 +176,12 @@ const LocationKSA = ({ isOpen }) => {
 
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL_V2}/locations/${row._id}`,
-        { id: row.id, title: row.title },
+        { 
+          id: row.id, 
+          title: row.title,
+          title_malayalam: row.title_malayalam || '',
+          title_urdu: row.title_urdu || ''
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -236,9 +258,9 @@ const LocationKSA = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/staging/locations`);
+        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
         setLocationData(updatedResponse.data);
-        setNewLocation({ id: '', title: '' });
+        setNewLocation({ id: '', title: '', title_malayalam: '', title_urdu: '' });
         setShowAddForm(false);
       }
     } catch (error) {
@@ -286,23 +308,47 @@ const LocationKSA = ({ isOpen }) => {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Location</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">ID</label>
-              <input
-                type="text"
-                value={newLocation.id}
-                onChange={(e) => setNewLocation({ ...newLocation, id: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Title</label>
-              <input
-                type="text"
-                value={newLocation.title}
-                onChange={(e) => setNewLocation({ ...newLocation, title: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium">ID</label>
+                <input
+                  type="text"
+                  value={newLocation.id}
+                  onChange={(e) => setNewLocation({ ...newLocation, id: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter unique ID"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Title (English)</label>
+                <input
+                  type="text"
+                  value={newLocation.title}
+                  onChange={(e) => setNewLocation({ ...newLocation, title: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter title in English"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Title (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newLocation.title_malayalam}
+                  onChange={(e) => setNewLocation({ ...newLocation, title_malayalam: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter title in Malayalam"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Title (Urdu)</label>
+                <input
+                  type="text"
+                  value={newLocation.title_urdu}
+                  onChange={(e) => setNewLocation({ ...newLocation, title_urdu: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter title in Urdu"
+                />
+              </div>
             </div>
             <button
               onClick={handleAddLocation}

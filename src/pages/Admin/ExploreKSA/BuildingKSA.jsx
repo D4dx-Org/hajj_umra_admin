@@ -17,6 +17,8 @@ const BuildingKSA = ({ isOpen }) => {
   const [branches, setBranches] = useState([]);
   const [newBuilding, setNewBuilding] = useState({
     name: '',
+    name_malayalam: '',
+    name_urdu: '',
     location: { lat: '', lng: '' },
     phone: '',
     ref: '',
@@ -55,15 +57,46 @@ const BuildingKSA = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={row.name}
+                onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Name (English)"
+              />
+              <input
+                type="text"
+                value={row.name_malayalam || ''}
+                onChange={(e) => handleEditChange(row._id, 'name_malayalam', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Name (Malayalam)"
+              />
+              <input
+                type="text"
+                value={row.name_urdu || ''}
+                onChange={(e) => handleEditChange(row._id, 'name_urdu', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Name (Urdu)"
+              />
+            </div>
           );
         }
-        return row.name;
+        return (
+          <div className="space-y-1">
+            <div className="font-medium">{row.name}</div>
+            {row.name_malayalam && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.name_malayalam}
+              </div>
+            )}
+            {row.name_urdu && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.name_urdu}
+              </div>
+            )}
+          </div>
+        );
       }
     },
     { 
@@ -125,12 +158,28 @@ const BuildingKSA = ({ isOpen }) => {
               {locations.map(location => (
                 <option key={location._id} value={location._id}>
                   {location.title}
+                  {location.title_malayalam && ` | ${location.title_malayalam}`}
+                  {location.title_urdu && ` | ${location.title_urdu}`}
                 </option>
               ))}
             </select>
           );
         }
-        return row.ref?.title || 'N/A';
+        return (
+          <div className="space-y-1">
+            <div className="font-medium">{row.ref?.title || 'N/A'}</div>
+            {row.ref?.title_malayalam && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.ref.title_malayalam}
+              </div>
+            )}
+            {row.ref?.title_urdu && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.ref.title_urdu}
+              </div>
+            )}
+          </div>
+        );
       }
     },
     { 
@@ -148,12 +197,28 @@ const BuildingKSA = ({ isOpen }) => {
               {branches.map(branch => (
                 <option key={branch._id} value={branch._id}>
                   {branch.name}
+                  {branch.name_malayalam && ` | ${branch.name_malayalam}`}
+                  {branch.name_urdu && ` | ${branch.name_urdu}`}
                 </option>
               ))}
             </select>
           );
         }
-        return row.branchRef?.name || 'N/A';
+        return (
+          <div className="space-y-1">
+            <div className="font-medium">{row.branchRef?.name || 'N/A'}</div>
+            {row.branchRef?.name_malayalam && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.branchRef.name_malayalam}
+              </div>
+            )}
+            {row.branchRef?.name_urdu && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.branchRef.name_urdu}
+              </div>
+            )}
+          </div>
+        );
       }
     },
     {
@@ -322,12 +387,22 @@ const BuildingKSA = ({ isOpen }) => {
     if (lowerCaseSearch) {
       filtered = buildingData.filter((item) => {
         const locationName = item.ref?.title || '';
+        const locationNameMalayalam = item.ref?.title_malayalam || '';
+        const locationNameUrdu = item.ref?.title_urdu || '';
         const branchName = item.branchRef?.name || '';
+        const branchNameMalayalam = item.branchRef?.name_malayalam || '';
+        const branchNameUrdu = item.branchRef?.name_urdu || '';
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.name_malayalam && item.name_malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.name_urdu && item.name_urdu.toLowerCase().includes(lowerCaseSearch)) ||
           (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
           locationName.toLowerCase().includes(lowerCaseSearch) ||
-          branchName.toLowerCase().includes(lowerCaseSearch)
+          locationNameMalayalam.toLowerCase().includes(lowerCaseSearch) ||
+          locationNameUrdu.toLowerCase().includes(lowerCaseSearch) ||
+          branchName.toLowerCase().includes(lowerCaseSearch) ||
+          branchNameMalayalam.toLowerCase().includes(lowerCaseSearch) ||
+          branchNameUrdu.toLowerCase().includes(lowerCaseSearch)
         );
       });
     }
@@ -425,6 +500,8 @@ const BuildingKSA = ({ isOpen }) => {
         setBuildingData(updatedResponse.data);
         setNewBuilding({ 
           name: '', 
+          name_malayalam: '',
+          name_urdu: '',
           location: { lat: '', lng: '' },
           phone: '',
           ref: '',
@@ -580,6 +657,8 @@ const BuildingKSA = ({ isOpen }) => {
         const sampleData = [
             {
                 name: 'Sample Building',
+                name_malayalam: 'സാമ്പിൾ കെട്ടിടം',
+                name_urdu: 'نمونہ عمارت',
                 location_name: 'Azizia',
                 branch_name: 'Branch 1',
                 phone: '+966 123456789',
@@ -593,6 +672,8 @@ const BuildingKSA = ({ isOpen }) => {
         // Add headers with required/optional indicators
         utils.sheet_add_aoa(ws, [[
             'name',
+            'name_malayalam',
+            'name_urdu',
             'location_name',
             'branch_name',
             'phone',
@@ -609,6 +690,8 @@ const BuildingKSA = ({ isOpen }) => {
         // Set column widths
         ws['!cols'] = [
             { wch: 25 }, // name
+            { wch: 30 }, // name_malayalam
+            { wch: 30 }, // name_urdu
             { wch: 30 }, // location_name
             { wch: 30 }, // branch_name
             { wch: 20 }, // phone
@@ -766,14 +849,37 @@ const BuildingKSA = ({ isOpen }) => {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Building</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
-              <input
-                type="text"
-                value={newBuilding.name}
-                onChange={(e) => setNewBuilding({ ...newBuilding, name: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium">Name (English)</label>
+                <input
+                  type="text"
+                  value={newBuilding.name}
+                  onChange={(e) => setNewBuilding({ ...newBuilding, name: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter name in English"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Name (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newBuilding.name_malayalam}
+                  onChange={(e) => setNewBuilding({ ...newBuilding, name_malayalam: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter name in Malayalam"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Name (Urdu)</label>
+                <input
+                  type="text"
+                  value={newBuilding.name_urdu}
+                  onChange={(e) => setNewBuilding({ ...newBuilding, name_urdu: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter name in Urdu"
+                />
+              </div>
             </div>
             
             <div className="mb-4">
@@ -827,6 +933,8 @@ const BuildingKSA = ({ isOpen }) => {
                 {locations.map(location => (
                   <option key={location._id} value={location._id}>
                     {location.title}
+                    {location.title_malayalam && ` | ${location.title_malayalam}`}
+                    {location.title_urdu && ` | ${location.title_urdu}`}
                   </option>
                 ))}
               </select>
@@ -842,6 +950,8 @@ const BuildingKSA = ({ isOpen }) => {
                 {branches.map(branch => (
                   <option key={branch._id} value={branch._id}>
                     {branch.name}
+                    {branch.name_malayalam && ` | ${branch.name_malayalam}`}
+                    {branch.name_urdu && ` | ${branch.name_urdu}`}
                   </option>
                 ))}
               </select>

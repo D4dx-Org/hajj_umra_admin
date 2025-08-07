@@ -16,6 +16,8 @@ const Thanima = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newThanima, setNewThanima] = useState({ 
     name: '', 
+    nameMalayalam: '',
+    nameUrdu: '',
     phone: '', 
     id: '',
     ref: ''
@@ -110,15 +112,15 @@ const Thanima = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <div className="flex flex-col gap-1">
+              <input type="text" value={row.name} onChange={(e) => handleEditChange(row._id, 'name', e.target.value)} className="w-full p-1 border rounded" placeholder="English" />
+              <input type="text" value={row.nameMalayalam} onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)} className="w-full p-1 border rounded" placeholder="Malayalam" />
+              <input type="text" value={row.nameUrdu} onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)} className="w-full p-1 border rounded" placeholder="Urdu" />
+            </div>
           );
         }
-        return row.name;
+        const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
+        return values || '-';
       }
     },
     { 
@@ -340,6 +342,8 @@ const Thanima = ({ isOpen }) => {
 
       const payload = {
         name: newThanima.name,
+        nameMalayalam: newThanima.nameMalayalam,
+        nameUrdu: newThanima.nameUrdu,
         phone: newThanima.phone,
         id: newThanima.id,
       };
@@ -360,6 +364,8 @@ const Thanima = ({ isOpen }) => {
         setThanimaData(updatedResponse.data);
         setNewThanima({ 
           name: '', 
+          nameMalayalam: '',
+          nameUrdu: '',
           phone: '', 
           id: '',
           ref: ''
@@ -450,6 +456,8 @@ const Thanima = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Sample Thanima',
+          nameMalayalam: 'Sample Malayalam',
+          nameUrdu: 'Sample Urdu',
           phone: '+966500000000',
           id: 'THN001',
           location: 'Sample Location Name'
@@ -462,6 +470,8 @@ const Thanima = ({ isOpen }) => {
       // Add headers
       utils.sheet_add_aoa(ws, [[
         'name',
+        'nameMalayalam',
+        'nameUrdu',
         'phone',
         'id',
         'location'
@@ -476,6 +486,8 @@ const Thanima = ({ isOpen }) => {
       // Add column widths
       ws['!cols'] = [
         { wch: 20 }, // name
+        { wch: 20 }, // nameMalayalam
+        { wch: 20 }, // nameUrdu
         { wch: 15 }, // phone
         { wch: 10 }, // id
         { wch: 30 }  // location
@@ -579,11 +591,29 @@ const Thanima = ({ isOpen }) => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Thanima</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
+              <label className="block text-sm font-medium">Name (English)</label>
               <input
                 type="text"
                 value={newThanima.name}
                 onChange={(e) => setNewThanima({ ...newThanima, name: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Name (Malayalam)</label>
+              <input
+                type="text"
+                value={newThanima.nameMalayalam}
+                onChange={(e) => setNewThanima({ ...newThanima, nameMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Name (Urdu)</label>
+              <input
+                type="text"
+                value={newThanima.nameUrdu}
+                onChange={(e) => setNewThanima({ ...newThanima, nameUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>

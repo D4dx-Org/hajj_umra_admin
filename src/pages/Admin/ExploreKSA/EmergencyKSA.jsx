@@ -15,6 +15,8 @@ const Emergency = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newEmergency, setNewEmergency] = useState({
     name: '',
+    nameMalayalam: '',
+    nameUrdu: '',
     contact: '',
     ref: ''
   });
@@ -78,15 +80,15 @@ const Emergency = () => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <>
+              <input type="text" value={row.name} onChange={(e) => handleEditChange(row._id, 'name', e.target.value)} className="w-full p-1 border rounded mb-1" placeholder="English" />
+              <input type="text" value={row.nameMalayalam} onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)} className="w-full p-1 border rounded mb-1" placeholder="Malayalam" />
+              <input type="text" value={row.nameUrdu} onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)} className="w-full p-1 border rounded" placeholder="Urdu" />
+            </>
           );
         }
-        return row.name;
+        const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
+        return values || '-';
       }
     },
     {
@@ -120,7 +122,7 @@ const Emergency = () => {
               <option value="">Select Location</option>
               {locations.map(location => (
                 <option key={location._id} value={location._id}>
-                  {location.title}
+                  {[location.title, location.titleMalayalam, location.titleUrdu].filter(Boolean).join(' | ')}
                 </option>
               ))}
             </select>
@@ -241,6 +243,8 @@ const Emergency = () => {
         `${import.meta.env.VITE_BACKEND_URL_V2}/emergency/${row._id}`,
         {
           name: row.name,
+          nameMalayalam: row.nameMalayalam,
+          nameUrdu: row.nameUrdu,
           contact: row.contact,
           ref: row.ref?._id || row.ref || null
         },
@@ -317,7 +321,7 @@ const Emergency = () => {
       );
 
       setEmergencyData([...emergencyData, response.data]);
-      setNewEmergency({ name: '', contact: '', ref: '' });
+      setNewEmergency({ name: '', nameMalayalam: '', nameUrdu: '', contact: '', ref: '' });
       setShowAddForm(false);
     } catch (error) {
       console.error("Error adding emergency data:", error);
@@ -378,11 +382,29 @@ const Emergency = () => {
             <h2 className="text-lg font-bold mb-4">Add New Emergency Contact</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
+                <label className="block text-sm font-medium mb-1">Name (English)</label>
                 <input
                   type="text"
                   value={newEmergency.name}
                   onChange={(e) => setNewEmergency({ ...newEmergency, name: e.target.value })}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Name (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newEmergency.nameMalayalam}
+                  onChange={(e) => setNewEmergency({ ...newEmergency, nameMalayalam: e.target.value })}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Name (Urdu)</label>
+                <input
+                  type="text"
+                  value={newEmergency.nameUrdu}
+                  onChange={(e) => setNewEmergency({ ...newEmergency, nameUrdu: e.target.value })}
                   className="w-full p-2 border rounded"
                 />
               </div>
@@ -405,7 +427,7 @@ const Emergency = () => {
                   <option value="">Select Location</option>
                   {locations.map(location => (
                     <option key={location._id} value={location._id}>
-                      {location.title}
+                      {[location.title, location.titleMalayalam, location.titleUrdu].filter(Boolean).join(' | ')}
                     </option>
                   ))}
                 </select>

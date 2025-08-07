@@ -17,11 +17,21 @@ const Camp = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newCamp, setNewCamp] = useState({
     maktab: '',
+    maktabMalayalam: '',
+    maktabUrdu: '',
     zone: '',
+    zoneMalayalam: '',
+    zoneUrdu: '',
     country: '',
     poll: '',
+    pollMalayalam: '',
+    pollUrdu: '',
     road: '',
+    roadMalayalam: '',
+    roadUrdu: '',
     tent: '',
+    tentMalayalam: '',
+    tentUrdu: '',
     location: { lat: '', lng: '' },
     ref: '',
     otherCountry: ''
@@ -213,6 +223,40 @@ const Camp = ({ isOpen }) => {
       }
     },
     {
+      key: 'maktabMalayalam',
+      title: 'Maktab (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.maktabMalayalam}
+              onChange={(e) => handleEditChange(row._id, 'maktabMalayalam', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.maktabMalayalam;
+      }
+    },
+    {
+      key: 'maktabUrdu',
+      title: 'Maktab (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.maktabUrdu}
+              onChange={(e) => handleEditChange(row._id, 'maktabUrdu', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.maktabUrdu;
+      }
+    },
+    {
       key: 'zone',
       title: 'Zone',
       render: (row) => {
@@ -227,6 +271,40 @@ const Camp = ({ isOpen }) => {
           );
         }
         return row.zone;
+      }
+    },
+    {
+      key: 'zoneMalayalam',
+      title: 'Zone (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.zoneMalayalam}
+              onChange={(e) => handleEditChange(row._id, 'zoneMalayalam', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.zoneMalayalam;
+      }
+    },
+    {
+      key: 'zoneUrdu',
+      title: 'Zone (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.zoneUrdu}
+              onChange={(e) => handleEditChange(row._id, 'zoneUrdu', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.zoneUrdu;
       }
     },
     {
@@ -289,7 +367,142 @@ const Camp = ({ isOpen }) => {
         return row.poll;
       }
     },
-
+    {
+      key: 'pollMalayalam',
+      title: 'Poll (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.pollMalayalam}
+              onChange={(e) => handleEditChange(row._id, 'pollMalayalam', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.pollMalayalam;
+      }
+    },
+    {
+      key: 'pollUrdu',
+      title: 'Poll (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.pollUrdu}
+              onChange={(e) => handleEditChange(row._id, 'pollUrdu', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.pollUrdu;
+      }
+    },
+    {
+      key: 'road',
+      title: 'Road',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.road}
+              onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.road || 'N/A';
+      }
+    },
+    {
+      key: 'roadMalayalam',
+      title: 'Road (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.roadMalayalam}
+              onChange={(e) => handleEditChange(row._id, 'roadMalayalam', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.roadMalayalam;
+      }
+    },
+    {
+      key: 'roadUrdu',
+      title: 'Road (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.roadUrdu}
+              onChange={(e) => handleEditChange(row._id, 'roadUrdu', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.roadUrdu;
+      }
+    },
+    {
+      key: 'tent',
+      title: 'Tent',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.tent}
+              onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.tent || 'N/A';
+      }
+    },
+    {
+      key: 'tentMalayalam',
+      title: 'Tent (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.tentMalayalam}
+              onChange={(e) => handleEditChange(row._id, 'tentMalayalam', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.tentMalayalam;
+      }
+    },
+    {
+      key: 'tentUrdu',
+      title: 'Tent (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.tentUrdu}
+              onChange={(e) => handleEditChange(row._id, 'tentUrdu', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.tentUrdu;
+      }
+    },
     {
       key: 'location',
       title: 'Location',
@@ -344,40 +557,6 @@ const Camp = ({ isOpen }) => {
         }
         const locationName = row.ref?.title || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
         return locationName;
-      }
-    },
-    {
-      key: 'road',
-      title: 'Road',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.road}
-              onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.road || 'N/A';
-      }
-    },
-    {
-      key: 'tent',
-      title: 'Tent',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.tent}
-              onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.tent || 'N/A';
       }
     },
     {
@@ -520,10 +699,20 @@ const Camp = ({ isOpen }) => {
       // Prepare the data for saving
       const dataToSave = {
         maktab: row.maktab || '',
+        maktabMalayalam: row.maktabMalayalam || '',
+        maktabUrdu: row.maktabUrdu || '',
         zone: row.zone || '',
+        zoneMalayalam: row.zoneMalayalam || '',
+        zoneUrdu: row.zoneUrdu || '',
         poll: row.poll || '',
+        pollMalayalam: row.pollMalayalam || '',
+        pollUrdu: row.pollUrdu || '',
         road: row.road || '',
+        roadMalayalam: row.roadMalayalam || '',
+        roadUrdu: row.roadUrdu || '',
         tent: row.tent || '',
+        tentMalayalam: row.tentMalayalam || '',
+        tentUrdu: row.tentUrdu || '',
         location: row.location || {},
         ref: row.ref?._id || row.ref,
         country: row.country === 'others' ? null : (row.country?._id || row.country || null),
@@ -647,11 +836,21 @@ const Camp = ({ isOpen }) => {
         setCampData(updatedResponse.data.data || updatedResponse.data);
         setNewCamp({
           maktab: '',
+          maktabMalayalam: '',
+          maktabUrdu: '',
           zone: '',
+          zoneMalayalam: '',
+          zoneUrdu: '',
           country: '',
           poll: '',
+          pollMalayalam: '',
+          pollUrdu: '',
           road: '',
+          roadMalayalam: '',
+          roadUrdu: '',
           tent: '',
+          tentMalayalam: '',
+          tentUrdu: '',
           location: { lat: '', lng: '' },
           ref: '',
           otherCountry: ''
@@ -754,12 +953,22 @@ const Camp = ({ isOpen }) => {
       const sampleData = [
         {
           maktab: '', // Optional
+          maktabMalayalam: '', // Optional
+          maktabUrdu: '', // Optional
           location_name: 'Azizia',
           zone: 'Zone A (Optional)',
+          zoneMalayalam: '', // Optional
+          zoneUrdu: '', // Optional
           country: 'India',
           poll: 'Poll 1 (Optional)',
+          pollMalayalam: '', // Optional
+          pollUrdu: '', // Optional
           road: 'Road 1 (Optional)',
+          roadMalayalam: '', // Optional
+          roadUrdu: '', // Optional
           tent: 'Tent 1 (Optional)',
+          tentMalayalam: '', // Optional
+          tentUrdu: '', // Optional
           latitude: '21.4225',
           longitude: '39.8262'
         }
@@ -771,12 +980,22 @@ const Camp = ({ isOpen }) => {
       // Add headers with descriptions
       utils.sheet_add_aoa(ws, [[
         'maktab',
+        'maktabMalayalam',
+        'maktabUrdu',
         'location_name',
         'zone',
+        'zoneMalayalam',
+        'zoneUrdu',
         'country',
         'poll',
+        'pollMalayalam',
+        'pollUrdu',
         'road',
+        'roadMalayalam',
+        'roadUrdu',
         'tent',
+        'tentMalayalam',
+        'tentUrdu',
         'latitude',
         'longitude'
       ]], { origin: 'A1' });
@@ -790,12 +1009,22 @@ const Camp = ({ isOpen }) => {
       // Add column widths
       ws['!cols'] = [
         { wch: 25 }, // maktab
+        { wch: 25 }, // maktabMalayalam
+        { wch: 25 }, // maktabUrdu
         { wch: 25 }, // location_name
         { wch: 20 }, // zone
+        { wch: 20 }, // zoneMalayalam
+        { wch: 20 }, // zoneUrdu
         { wch: 25 }, // country
         { wch: 20 }, // poll
+        { wch: 20 }, // pollMalayalam
+        { wch: 20 }, // pollUrdu
         { wch: 20 }, // road
+        { wch: 20 }, // roadMalayalam
+        { wch: 20 }, // roadUrdu
         { wch: 20 }, // tent
+        { wch: 20 }, // tentMalayalam
+        { wch: 20 }, // tentUrdu
         { wch: 20 }, // latitude
         { wch: 20 }  // longitude
       ];
@@ -939,11 +1168,47 @@ const Camp = ({ isOpen }) => {
               />
             </div>
             <div className="mb-4">
+              <label className="block text-sm font-medium">Maktab (Malayalam)</label>
+              <input
+                type="text"
+                value={newCamp.maktabMalayalam}
+                onChange={(e) => setNewCamp({ ...newCamp, maktabMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Maktab (Urdu)</label>
+              <input
+                type="text"
+                value={newCamp.maktabUrdu}
+                onChange={(e) => setNewCamp({ ...newCamp, maktabUrdu: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
               <label className="block text-sm font-medium">Zone</label>
               <input
                 type="text"
                 value={newCamp.zone}
                 onChange={(e) => setNewCamp({ ...newCamp, zone: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Zone (Malayalam)</label>
+              <input
+                type="text"
+                value={newCamp.zoneMalayalam}
+                onChange={(e) => setNewCamp({ ...newCamp, zoneMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Zone (Urdu)</label>
+              <input
+                type="text"
+                value={newCamp.zoneUrdu}
+                onChange={(e) => setNewCamp({ ...newCamp, zoneUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -989,6 +1254,24 @@ const Camp = ({ isOpen }) => {
               />
             </div>
             <div className="mb-4">
+              <label className="block text-sm font-medium">Poll (Malayalam)</label>
+              <input
+                type="text"
+                value={newCamp.pollMalayalam}
+                onChange={(e) => setNewCamp({ ...newCamp, pollMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Poll (Urdu)</label>
+              <input
+                type="text"
+                value={newCamp.pollUrdu}
+                onChange={(e) => setNewCamp({ ...newCamp, pollUrdu: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
               <label className="block text-sm font-medium">Road</label>
               <input
                 type="text"
@@ -998,11 +1281,47 @@ const Camp = ({ isOpen }) => {
               />
             </div>
             <div className="mb-4">
+              <label className="block text-sm font-medium">Road (Malayalam)</label>
+              <input
+                type="text"
+                value={newCamp.roadMalayalam}
+                onChange={(e) => setNewCamp({ ...newCamp, roadMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Road (Urdu)</label>
+              <input
+                type="text"
+                value={newCamp.roadUrdu}
+                onChange={(e) => setNewCamp({ ...newCamp, roadUrdu: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
               <label className="block text-sm font-medium">Tent</label>
               <input
                 type="text"
                 value={newCamp.tent}
                 onChange={(e) => setNewCamp({ ...newCamp, tent: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Tent (Malayalam)</label>
+              <input
+                type="text"
+                value={newCamp.tentMalayalam}
+                onChange={(e) => setNewCamp({ ...newCamp, tentMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Tent (Urdu)</label>
+              <input
+                type="text"
+                value={newCamp.tentUrdu}
+                onChange={(e) => setNewCamp({ ...newCamp, tentUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>

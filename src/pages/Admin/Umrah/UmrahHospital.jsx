@@ -16,6 +16,8 @@ const UmrahHospital = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newHospital, setNewHospital] = useState({
     name: '',
+    malayalamName: '',
+    urduName: '',
     arabicName: '',
     phone: '',
     location: { lat: '', lng: '' },
@@ -63,6 +65,41 @@ const UmrahHospital = ({ isOpen }) => {
           );
         }
         return row.name;
+      }
+    },
+    { 
+      key: 'malayalamName', 
+      title: 'Malayalam Name',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamName || ''}
+              onChange={(e) => handleEditChange(row._id, 'malayalamName', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamName || '-';
+      }
+    },
+    { 
+      key: 'urduName', 
+      title: 'Urdu Name',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduName || ''}
+              onChange={(e) => handleEditChange(row._id, 'urduName', e.target.value)}
+              className="w-full p-1 border rounded"
+              dir="rtl"
+            />
+          );
+        }
+        return row.urduName || '-';
       }
     },
     { 
@@ -195,6 +232,10 @@ const UmrahHospital = ({ isOpen }) => {
   const sortOptions = [
     { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
     { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamName-alpha-asc', label: 'Malayalam Name (A-Z)', field: 'malayalamName', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamName-alpha-desc', label: 'Malayalam Name (Z-A)', field: 'malayalamName', direction: 'desc', type: 'alpha' },
+    { value: 'urduName-alpha-asc', label: 'Urdu Name (A-Z)', field: 'urduName', direction: 'asc', type: 'alpha' },
+    { value: 'urduName-alpha-desc', label: 'Urdu Name (Z-A)', field: 'urduName', direction: 'desc', type: 'alpha' },
     { value: 'arabicName-alpha-asc', label: 'Arabic Name (A-Z)', field: 'arabicName', direction: 'asc', type: 'alpha' },
     { value: 'arabicName-alpha-desc', label: 'Arabic Name (Z-A)', field: 'arabicName', direction: 'desc', type: 'alpha' },
     { value: 'phone-alpha-asc', label: 'Phone (A-Z)', field: 'phone', direction: 'asc', type: 'alpha' },
@@ -345,6 +386,8 @@ const UmrahHospital = ({ isOpen }) => {
         setHospitalData(updatedResponse.data);
         setNewHospital({ 
           name: '',
+          malayalamName: '',
+          urduName: '',
           arabicName: '',
           phone: '',
           location: { lat: '', lng: '' },
@@ -399,6 +442,8 @@ const UmrahHospital = ({ isOpen }) => {
         const branchName = item.branchRef?.name || '';
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.arabicName && item.arabicName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
           branchName.toLowerCase().includes(lowerCaseSearch)
@@ -430,6 +475,8 @@ const UmrahHospital = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Sample Hospital',
+          malayalam_name: 'ആശുപത്രി സാമ്പിൾ',
+          urdu_name: 'نمونہ ہسپتال',
           arabicName: 'مستشفى عينة',
           branch_name: 'Sample Branch',
           phone: '+966123456789',
@@ -442,6 +489,8 @@ const UmrahHospital = ({ isOpen }) => {
       
       utils.sheet_add_aoa(ws, [[
         'name',
+        'malayalam_name',
+        'urdu_name',
         'arabicName',
         'branch_name',
         'phone',
@@ -456,6 +505,8 @@ const UmrahHospital = ({ isOpen }) => {
 
       ws['!cols'] = [
         { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
         { wch: 25 }, // arabicName
         { wch: 20 }, // branch_name
         { wch: 20 }, // phone
@@ -652,12 +703,34 @@ const UmrahHospital = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Name</label>
+                <input
+                  type="text"
+                  value={newHospital.malayalamName}
+                  onChange={(e) => setNewHospital({ ...newHospital, malayalamName: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="ആശുപത്രി"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newHospital.urduName}
+                  onChange={(e) => setNewHospital({ ...newHospital, urduName: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="ہسپتال"
+                  dir="rtl"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Arabic Name</label>
                 <input
                   type="text"
                   value={newHospital.arabicName}
                   onChange={(e) => setNewHospital({ ...newHospital, arabicName: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="مستشفى"
                   dir="rtl"
                 />
               </div>

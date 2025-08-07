@@ -17,6 +17,8 @@ const Hospital = ({ isOpen }) => {
   const [branches, setBranches] = useState([]);
   const [newHospital, setNewHospital] = useState({ 
     name: '', 
+    nameMalayalam: '',
+    nameUrdu: '',
     arabicName: '', 
     location: { lat: '', lng: '' }, 
     phone: '',
@@ -210,15 +212,15 @@ const Hospital = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <>
+              <input type="text" value={row.name} onChange={(e) => handleEditChange(row._id, 'name', e.target.value)} className="w-full p-1 border rounded mb-1" placeholder="English" />
+              <input type="text" value={row.nameMalayalam} onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)} className="w-full p-1 border rounded mb-1" placeholder="Malayalam" />
+              <input type="text" value={row.nameUrdu} onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)} className="w-full p-1 border rounded" placeholder="Urdu" />
+            </>
           );
         }
-        return row.name;
+        const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
+        return values || '-';
       }
     },
     { 
@@ -296,7 +298,7 @@ const Hospital = ({ isOpen }) => {
               <option value="">Select Location</option>
               {Array.isArray(locations) && locations.map(location => (
                 <option key={location._id} value={location._id}>
-                  {location.title}
+                  {[location.title, location.titleMalayalam, location.titleUrdu].filter(Boolean).join(' | ')}
                 </option>
               ))}
             </select>
@@ -513,6 +515,8 @@ const Hospital = ({ isOpen }) => {
         setHospitalData(updatedResponse.data);
         setNewHospital({ 
           name: '', 
+          nameMalayalam: '',
+          nameUrdu: '',
           arabicName: '', 
           location: { lat: '', lng: '' }, 
           phone: '',
@@ -779,11 +783,29 @@ const Hospital = ({ isOpen }) => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Hospital</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
+              <label className="block text-sm font-medium">Name (English)</label>
               <input
                 type="text"
                 value={newHospital.name}
                 onChange={(e) => setNewHospital({ ...newHospital, name: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Name (Malayalam)</label>
+              <input
+                type="text"
+                value={newHospital.nameMalayalam}
+                onChange={(e) => setNewHospital({ ...newHospital, nameMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Name (Urdu)</label>
+              <input
+                type="text"
+                value={newHospital.nameUrdu}
+                onChange={(e) => setNewHospital({ ...newHospital, nameUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -847,7 +869,7 @@ const Hospital = ({ isOpen }) => {
                 <option value="">Select Location</option>
                 {Array.isArray(locations) && locations.map(location => (
                   <option key={location._id} value={location._id}>
-                    {location.title}
+                    {[location.title, location.titleMalayalam, location.titleUrdu].filter(Boolean).join(' | ')}
                   </option>
                 ))}
               </select>

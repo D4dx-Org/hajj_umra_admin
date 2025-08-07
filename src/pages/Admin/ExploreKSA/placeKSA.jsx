@@ -386,7 +386,11 @@ const PlaceKSA = () => {
       const placeData = {
         id: values.id.trim(),
         title: values.title.trim(),
-        description: values.description?.trim() || "",
+        titleMalayalam: values.titleMalayalam?.trim() || '',
+        titleUrdu: values.titleUrdu?.trim() || '',
+        description: values.description?.trim() || '',
+        descriptionMalayalam: values.descriptionMalayalam?.trim() || '',
+        descriptionUrdu: values.descriptionUrdu?.trim() || '',
         images: imageUrls,
         video: values.video?.trim() || "", // YouTube URL
         map: values.map?.trim() || "", // Map link
@@ -614,38 +618,34 @@ const PlaceKSA = () => {
       ),
     },
     {
-      title: "Title",
+      title: "Title (Eng | Malayalam | Urdu)",
       dataIndex: "title",
       key: "title",
-      width: 200,
-      ellipsis: {
-        showTitle: false,
+      width: 250,
+      ellipsis: { showTitle: false },
+      render: (_, row) => {
+        const values = [row.title, row.titleMalayalam, row.titleUrdu].filter(Boolean).join(' | ');
+        return <div title={values} className="font-medium text-sm">{values || '-'}</div>;
       },
-      render: (text) => (
-        <div title={text} className="font-medium text-sm">
-          {text}
-        </div>
-      ),
     },
     {
-      title: "Description",
+      title: "Description (Eng | Malayalam | Urdu)",
       dataIndex: "description",
       key: "description",
-      width: 250,
-      ellipsis: {
-        showTitle: false,
+      width: 300,
+      ellipsis: { showTitle: false },
+      render: (_, row) => {
+        const values = [row.description, row.descriptionMalayalam, row.descriptionUrdu].filter(Boolean).join(' | ');
+        return (
+          <div title={values} className="max-w-[300px]">
+            {values ? (
+              <span className="text-sm text-gray-700">{values.length > 80 ? `${values.substring(0, 80)}...` : values}</span>
+            ) : (
+              <span className="text-gray-400 text-sm">No description</span>
+            )}
+          </div>
+        );
       },
-      render: (text) => (
-        <div title={text} className="max-w-[250px]">
-          {text ? (
-            <span className="text-sm text-gray-700">
-              {text.length > 80 ? `${text.substring(0, 80)}...` : text}
-            </span>
-          ) : (
-            <span className="text-gray-400 text-sm">No description</span>
-          )}
-        </div>
-      ),
     },
     {
       title: "Location",
@@ -743,7 +743,11 @@ const PlaceKSA = () => {
               form.setFieldsValue({
                 id: record.id,
                 title: record.title,
+                titleMalayalam: record.titleMalayalam || '',
+                titleUrdu: record.titleUrdu || '',
                 description: record.description || "",
+                descriptionMalayalam: record.descriptionMalayalam || '',
+                descriptionUrdu: record.descriptionUrdu || '',
                 images: recordImages,
                 video: record.video || "",
                 map: record.map || "",
@@ -942,25 +946,37 @@ const PlaceKSA = () => {
               <Col span={12}>
                 <Form.Item
                   name="title"
-                  label="Title"
+                  label="Title (English)"
                   rules={[
                     { required: true, message: "Please enter title" },
                     { min: 1, message: "Title cannot be empty" },
                     { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
-                  <Input placeholder="Enter place title" />
+                  <Input placeholder="Enter place title in English" />
+                </Form.Item>
+                <Form.Item name="titleMalayalam" label="Title (Malayalam)">
+                  <Input placeholder="Enter place title in Malayalam" />
+                </Form.Item>
+                <Form.Item name="titleUrdu" label="Title (Urdu)">
+                  <Input placeholder="Enter place title in Urdu" />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item name="description" label="Description">
+            <Form.Item name="description" label="Description (English)">
               <TextArea
-                rows={4}
-                placeholder="Enter a detailed description of the place..."
+                rows={2}
+                placeholder="Enter a detailed description of the place in English..."
                 maxLength={500}
                 showCount
               />
+            </Form.Item>
+            <Form.Item name="descriptionMalayalam" label="Description (Malayalam)">
+              <TextArea rows={2} placeholder="Enter description in Malayalam..." maxLength={500} />
+            </Form.Item>
+            <Form.Item name="descriptionUrdu" label="Description (Urdu)">
+              <TextArea rows={2} placeholder="Enter description in Urdu..." maxLength={500} />
             </Form.Item>
 
             {/* File Upload Sections */}
@@ -1235,21 +1251,14 @@ const PlaceKSA = () => {
               >
                 {locations.map((location) => (
                   <Option key={location._id} value={location._id}>
-                    <div className="flex items-center justify-between">
-                      <span>
-                        <strong>{location.title || location.name}</strong>
-                        {location.id && (
-                          <span className="text-gray-500 ml-2">
-                            ({location.id})
-                          </span>
-                        )}
-                      </span>
-                      {location.description && (
-                        <span className="text-xs text-gray-400 truncate ml-2 max-w-[100px]">
-                          {location.description}
-                        </span>
-                      )}
-                    </div>
+                    {[
+                      location.title,
+                      location.titleMalayalam,
+                      location.titleUrdu
+                    ].filter(Boolean).join(' | ')}
+                    {location.id && (
+                      <span className="text-gray-500 ml-2">({location.id})</span>
+                    )}
                   </Option>
                 ))}
               </Select>

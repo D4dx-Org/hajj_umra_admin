@@ -13,9 +13,17 @@ const News = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [newNews, setNewNews] = useState({
-    title: '',
+    title: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    },
     link: '',
-    description: ''
+    description: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    }
   });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
@@ -73,19 +81,53 @@ const News = () => {
     },
     {
       key: 'title',
-      title: 'Title',
+      title: 'Title (English)',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <input
               type="text"
-              value={row.title}
-              onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
+              value={row.title?.english || ''}
+              onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, english: e.target.value })}
               className="w-full p-1 border rounded"
             />
           );
         }
-        return row.title;
+        return row.title?.english || 'N/A';
+      }
+    },
+    {
+      key: 'titleMalayalam',
+      title: 'Title (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.title?.malayalam || ''}
+              onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, malayalam: e.target.value })}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.title?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'titleUrdu',
+      title: 'Title (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.title?.urdu || ''}
+              onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, urdu: e.target.value })}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.title?.urdu || 'N/A';
       }
     },
     {
@@ -111,19 +153,53 @@ const News = () => {
     },
     {
       key: 'description',
-      title: 'Description',
+      title: 'Description (English)',
       render: (row) => {
         if (editingId === row._id) {
           return (
             <textarea
-              value={row.description}
-              onChange={(e) => handleEditChange(row._id, 'description', e.target.value)}
+              value={row.description?.english || ''}
+              onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, english: e.target.value })}
               className="w-full p-1 border rounded"
               rows="3"
             />
           );
         }
-        return row.description || 'N/A';
+        return row.description?.english || 'N/A';
+      }
+    },
+    {
+      key: 'descriptionMalayalam',
+      title: 'Description (Malayalam)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <textarea
+              value={row.description?.malayalam || ''}
+              onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, malayalam: e.target.value })}
+              className="w-full p-1 border rounded"
+              rows="3"
+            />
+          );
+        }
+        return row.description?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'descriptionUrdu',
+      title: 'Description (Urdu)',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <textarea
+              value={row.description?.urdu || ''}
+              onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, urdu: e.target.value })}
+              className="w-full p-1 border rounded"
+              rows="3"
+            />
+          );
+        }
+        return row.description?.urdu || 'N/A';
       }
     },
     {
@@ -186,8 +262,12 @@ const News = () => {
   // Filter data based on search
   const filteredNewsData = useMemo(() => {
     return newsData.filter(item =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.title?.english || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.title?.malayalam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.title?.urdu || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description?.english || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description?.malayalam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description?.urdu || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.link || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [newsData, searchTerm]);
@@ -291,7 +371,11 @@ const News = () => {
       );
 
       setNewsData([...newsData, response.data]);
-      setNewNews({ title: '', link: '', description: '' });
+      setNewNews({ 
+        title: { english: '', malayalam: '', urdu: '' }, 
+        link: '', 
+        description: { english: '', malayalam: '', urdu: '' } 
+      });
       setShowAddForm(false);
     } catch (error) {
       console.error("Error adding news data:", error);
@@ -351,14 +435,46 @@ const News = () => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New News Item</h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
-                <input
-                  type="text"
-                  value={newNews.title}
-                  onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
-                  className="w-full p-2 border rounded"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title (English)</label>
+                  <input
+                    type="text"
+                    value={newNews.title.english}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      title: { ...newNews.title, english: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title (Malayalam)</label>
+                  <input
+                    type="text"
+                    value={newNews.title.malayalam}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      title: { ...newNews.title, malayalam: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title (Urdu)</label>
+                  <input
+                    type="text"
+                    value={newNews.title.urdu}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      title: { ...newNews.title, urdu: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Link</label>
@@ -369,14 +485,43 @@ const News = () => {
                   className="w-full p-2 border rounded"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  value={newNews.description}
-                  onChange={(e) => setNewNews({ ...newNews, description: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  rows="3"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (English)</label>
+                  <textarea
+                    value={newNews.description.english}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      description: { ...newNews.description, english: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (Malayalam)</label>
+                  <textarea
+                    value={newNews.description.malayalam}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      description: { ...newNews.description, malayalam: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (Urdu)</label>
+                  <textarea
+                    value={newNews.description.urdu}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      description: { ...newNews.description, urdu: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                  />
+                </div>
               </div>
             </div>
             <button

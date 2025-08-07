@@ -16,8 +16,14 @@ const Clinic = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newClinic, setNewClinic] = useState({ 
     name: '', 
+    nameMalayalam: '',
+    nameUrdu: '',
     center: '',
+    centerMalayalam: '',
+    centerUrdu: '',
     poll: '',
+    pollMalayalam: '',
+    pollUrdu: '',
     location: { lat: '', lng: '' }, 
     ref: '',
     branchRef: ''
@@ -160,51 +166,24 @@ const Clinic = ({ isOpen }) => {
       key: 'name', 
       title: 'Name',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.name;
+        const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
+        return values || '-';
       }
     },
     { 
       key: 'center', 
       title: 'Center',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.center}
-              onChange={(e) => handleEditChange(row._id, 'center', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.center;
+        const values = [row.center, row.centerMalayalam, row.centerUrdu].filter(Boolean).join(' | ');
+        return values || '-';
       }
     },
     { 
       key: 'poll', 
       title: 'Poll',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll}
-              onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.poll;
+        const values = [row.poll, row.pollMalayalam, row.pollUrdu].filter(Boolean).join(' | ');
+        return values || '-';
       }
     },
     { 
@@ -488,8 +467,14 @@ const Clinic = ({ isOpen }) => {
         setClinicData(updatedResponse.data);
         setNewClinic({ 
           name: '', 
+          nameMalayalam: '',
+          nameUrdu: '',
           center: '',
+          centerMalayalam: '',
+          centerUrdu: '',
           poll: '',
+          pollMalayalam: '',
+          pollUrdu: '',
           location: { lat: '', lng: '' }, 
           ref: '',
           branchRef: ''
@@ -625,10 +610,16 @@ const Clinic = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Medical Dispensary - 01 (Required)',
+          nameMalayalam: 'Medical Dispensary - 01 (Required)',
+          nameUrdu: 'Medical Dispensary - 01 (Required)',
           location_name: 'Azizia',
           branch_name: 'Branch 1',
           center: 'Center A (Optional)',
+          centerMalayalam: 'Center A (Optional)',
+          centerUrdu: 'Center A (Optional)',
           poll: 'Poll 1 (Optional)',
+          pollMalayalam: 'Poll 1 (Optional)',
+          pollUrdu: 'Poll 1 (Optional)',
           latitude: '21.4225',
           longitude: '39.8262'
         }
@@ -640,10 +631,16 @@ const Clinic = ({ isOpen }) => {
       // Add headers with required/optional indicators
       utils.sheet_add_aoa(ws, [[
         'name',
+        'nameMalayalam',
+        'nameUrdu',
         'location_name',
         'branch_name',
         'center',
+        'centerMalayalam',
+        'centerUrdu',
         'poll',
+        'pollMalayalam',
+        'pollUrdu',
         'latitude',
         'longitude'
       ]], { origin: 'A1' });
@@ -657,10 +654,16 @@ const Clinic = ({ isOpen }) => {
       // Add column widths
       ws['!cols'] = [
         { wch: 30 }, // name
+        { wch: 30 }, // nameMalayalam
+        { wch: 30 }, // nameUrdu
         { wch: 30 }, // location_name
         { wch: 30 }, // branch_name
         { wch: 20 }, // center
+        { wch: 20 }, // centerMalayalam
+        { wch: 20 }, // centerUrdu
         { wch: 20 }, // poll
+        { wch: 20 }, // pollMalayalam
+        { wch: 20 }, // pollUrdu
         { wch: 20 }, // latitude
         { wch: 20 }  // longitude
       ];
@@ -755,7 +758,7 @@ const Clinic = ({ isOpen }) => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Clinic</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
+              <label className="block text-sm font-medium">Name (English)</label>
               <input
                 type="text"
                 value={newClinic.name}
@@ -764,7 +767,25 @@ const Clinic = ({ isOpen }) => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Center</label>
+              <label className="block text-sm font-medium">Name (Malayalam)</label>
+              <input
+                type="text"
+                value={newClinic.nameMalayalam}
+                onChange={(e) => setNewClinic({ ...newClinic, nameMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Name (Urdu)</label>
+              <input
+                type="text"
+                value={newClinic.nameUrdu}
+                onChange={(e) => setNewClinic({ ...newClinic, nameUrdu: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Center (English)</label>
               <input
                 type="text"
                 value={newClinic.center}
@@ -773,11 +794,47 @@ const Clinic = ({ isOpen }) => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Poll</label>
+              <label className="block text-sm font-medium">Center (Malayalam)</label>
+              <input
+                type="text"
+                value={newClinic.centerMalayalam}
+                onChange={(e) => setNewClinic({ ...newClinic, centerMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Center (Urdu)</label>
+              <input
+                type="text"
+                value={newClinic.centerUrdu}
+                onChange={(e) => setNewClinic({ ...newClinic, centerUrdu: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Poll (English)</label>
               <input
                 type="text"
                 value={newClinic.poll}
                 onChange={(e) => setNewClinic({ ...newClinic, poll: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Poll (Malayalam)</label>
+              <input
+                type="text"
+                value={newClinic.pollMalayalam}
+                onChange={(e) => setNewClinic({ ...newClinic, pollMalayalam: e.target.value })}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Poll (Urdu)</label>
+              <input
+                type="text"
+                value={newClinic.pollUrdu}
+                onChange={(e) => setNewClinic({ ...newClinic, pollUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>

@@ -31,7 +31,11 @@ const UmrahNusuk = ({ isOpen }) => {
 
   const [formData, setFormData] = useState({
     name: '',
+    malayalamName: '',
+    urduName: '',
     building: '',
+    malayalamBuilding: '',
+    urduBuilding: '',
     location: { lat: '', lng: '' }
   });
 
@@ -64,7 +68,11 @@ const UmrahNusuk = ({ isOpen }) => {
       const token = localStorage.getItem('token');
       const submitData = {
         name: formData.name.trim(),
+        malayalamName: formData.malayalamName.trim() || undefined,
+        urduName: formData.urduName.trim() || undefined,
         building: formData.building.trim(),
+        malayalamBuilding: formData.malayalamBuilding.trim() || undefined,
+        urduBuilding: formData.urduBuilding.trim() || undefined,
         location: {}
       };
 
@@ -185,9 +193,36 @@ const UmrahNusuk = ({ isOpen }) => {
 
   const downloadTemplate = () => {
     const template = [
-      { name: 'Nusuk Care Center', building: 'Alyad', latitude: 21.4201507503122235, longitude: 39.8269900531054 },
-      { name: 'B200', building: '1/110', latitude: 21.412691, longitude: 39.883142 },
-      { name: 'B201', building: 'Jamrat', latitude: '', longitude: '' }
+      { 
+        name: 'Nusuk Care Center', 
+        malayalam_name: 'നുസുക് കെയർ സെന്റർ',
+        urdu_name: 'نسک کیئر سینٹر',
+        building: 'Alyad', 
+        malayalam_building: 'അലിയാദ്',
+        urdu_building: 'الیاد',
+        latitude: 21.4201507503122235, 
+        longitude: 39.8269900531054 
+      },
+      { 
+        name: 'B200', 
+        malayalam_name: 'ബി200',
+        urdu_name: 'بی200',
+        building: '1/110', 
+        malayalam_building: '1/110',
+        urdu_building: '1/110',
+        latitude: 21.412691, 
+        longitude: 39.883142 
+      },
+      { 
+        name: 'B201', 
+        malayalam_name: 'ബി201',
+        urdu_name: 'بی201',
+        building: 'Jamrat', 
+        malayalam_building: 'ജമ്രത്',
+        urdu_building: 'جمرات',
+        latitude: '', 
+        longitude: '' 
+      }
     ];
 
     const ws = XLSX.utils.json_to_sheet(template);
@@ -197,7 +232,15 @@ const UmrahNusuk = ({ isOpen }) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', building: '', location: { lat: '', lng: '' } });
+    setFormData({ 
+      name: '', 
+      malayalamName: '',
+      urduName: '',
+      building: '', 
+      malayalamBuilding: '',
+      urduBuilding: '',
+      location: { lat: '', lng: '' } 
+    });
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -205,7 +248,11 @@ const UmrahNusuk = ({ isOpen }) => {
   const startEdit = (nusuk) => {
     setFormData({
       name: nusuk.name,
+      malayalamName: nusuk.malayalamName || '',
+      urduName: nusuk.urduName || '',
       building: nusuk.building,
+      malayalamBuilding: nusuk.malayalamBuilding || '',
+      urduBuilding: nusuk.urduBuilding || '',
       location: {
         lat: nusuk.location?.lat || '',
         lng: nusuk.location?.lng || ''
@@ -245,7 +292,11 @@ const UmrahNusuk = ({ isOpen }) => {
 
   const filteredNusuks = sortedNusuks.filter(nusuk =>
     nusuk.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    nusuk.building.toLowerCase().includes(searchTerm.toLowerCase())
+    (nusuk.malayalamName && nusuk.malayalamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (nusuk.urduName && nusuk.urduName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    nusuk.building.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (nusuk.malayalamBuilding && nusuk.malayalamBuilding.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (nusuk.urduBuilding && nusuk.urduBuilding.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const toggleSelectAll = () => {
@@ -379,7 +430,7 @@ const UmrahNusuk = ({ isOpen }) => {
               <h2 className="text-xl font-semibold mb-4 text-gray-800">
                 {editingId ? 'Edit Nusuk' : 'Add New Nusuk'}
               </h2>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Name *
@@ -395,6 +446,33 @@ const UmrahNusuk = ({ isOpen }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Malayalam Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.malayalamName}
+                    onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="നുസുക്"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urdu Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.urduName}
+                    onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="نسک"
+                    dir="rtl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Building *
                   </label>
                   <input
@@ -403,6 +481,33 @@ const UmrahNusuk = ({ isOpen }) => {
                     onChange={(e) => setFormData({ ...formData, building: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Malayalam Building
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.malayalamBuilding}
+                    onChange={(e) => setFormData({ ...formData, malayalamBuilding: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="കെട്ടിടം"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urdu Building
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.urduBuilding}
+                    onChange={(e) => setFormData({ ...formData, urduBuilding: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="عمارت"
+                    dir="rtl"
                   />
                 </div>
 
@@ -440,7 +545,7 @@ const UmrahNusuk = ({ isOpen }) => {
                   />
                 </div>
 
-                <div className="md:col-span-2 flex gap-2">
+                <div className="md:col-span-2 lg:col-span-3 flex gap-2">
                   <button
                     type="submit"
                     className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
@@ -479,7 +584,19 @@ const UmrahNusuk = ({ isOpen }) => {
                       NAME
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM NAME
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU NAME
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       BUILDING
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM BUILDING
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU BUILDING
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       LOCATION
@@ -504,7 +621,19 @@ const UmrahNusuk = ({ isOpen }) => {
                         <div className="text-sm font-medium text-gray-900">{nusuk.name}</div>
                       </td>
                       <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700">{nusuk.malayalamName || '-'}</div>
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700" dir="rtl">{nusuk.urduName || '-'}</div>
+                      </td>
+                      <td className="px-4 py-1">
                         <div className="text-sm text-gray-700">{nusuk.building}</div>
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700">{nusuk.malayalamBuilding || '-'}</div>
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700" dir="rtl">{nusuk.urduBuilding || '-'}</div>
                       </td>
                       <td className="px-4 py-1">
                         <div className="text-sm text-gray-700">

@@ -18,6 +18,8 @@ const BranchKSA = ({ isOpen }) => {
   const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
   const [newBranch, setNewBranch] = useState({
     name: '',
+    name_malayalam: '',
+    name_urdu: '',
     ref: '',
     phoneNumber: ''
   });
@@ -71,15 +73,46 @@ const BranchKSA = ({ isOpen }) => {
       render: (row) => {
         if (editingId === row._id) {
           return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={row.name}
+                onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Name (English)"
+              />
+              <input
+                type="text"
+                value={row.name_malayalam || ''}
+                onChange={(e) => handleEditChange(row._id, 'name_malayalam', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Name (Malayalam)"
+              />
+              <input
+                type="text"
+                value={row.name_urdu || ''}
+                onChange={(e) => handleEditChange(row._id, 'name_urdu', e.target.value)}
+                className="w-full p-1 border rounded"
+                placeholder="Name (Urdu)"
+              />
+            </div>
           );
         }
-        return row.name;
+        return (
+          <div className="space-y-1">
+            <div className="font-medium">{row.name}</div>
+            {row.name_malayalam && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.name_malayalam}
+              </div>
+            )}
+            {row.name_urdu && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.name_urdu}
+              </div>
+            )}
+          </div>
+        );
       }
     },
     {
@@ -114,12 +147,28 @@ const BranchKSA = ({ isOpen }) => {
               {locations.map(location => (
                 <option key={location._id} value={location._id}>
                   {location.title}
+                  {location.title_malayalam && ` | ${location.title_malayalam}`}
+                  {location.title_urdu && ` | ${location.title_urdu}`}
                 </option>
               ))}
             </select>
           );
         }
-        return row.ref?.title || 'N/A';
+        return (
+          <div className="space-y-1">
+            <div className="font-medium">{row.ref?.title || 'N/A'}</div>
+            {row.ref?.title_malayalam && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.ref.title_malayalam}
+              </div>
+            )}
+            {row.ref?.title_urdu && (
+              <div className="text-sm text-gray-600">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.ref.title_urdu}
+              </div>
+            )}
+          </div>
+        );
       }
     },
     {
@@ -316,6 +365,8 @@ const BranchKSA = ({ isOpen }) => {
         setBranchData(updatedResponse.data);
         setNewBranch({
           name: '',
+          name_malayalam: '',
+          name_urdu: '',
           ref: '',
           phoneNumber: ''
         });
@@ -378,9 +429,16 @@ const BranchKSA = ({ isOpen }) => {
     if (lowerCaseSearch) {
       filtered = branchData.filter((item) => {
         const locationName = item.ref?.title || '';
+        const locationNameMalayalam = item.ref?.title_malayalam || '';
+        const locationNameUrdu = item.ref?.title_urdu || '';
         return (
           item.name.toLowerCase().includes(lowerCaseSearch) ||
-          locationName.toLowerCase().includes(lowerCaseSearch)
+          (item.name_malayalam && item.name_malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.name_urdu && item.name_urdu.toLowerCase().includes(lowerCaseSearch)) ||
+          locationName.toLowerCase().includes(lowerCaseSearch) ||
+          locationNameMalayalam.toLowerCase().includes(lowerCaseSearch) ||
+          locationNameUrdu.toLowerCase().includes(lowerCaseSearch) ||
+          (item.phoneNumber && item.phoneNumber.toLowerCase().includes(lowerCaseSearch))
         );
       });
     }
@@ -546,6 +604,8 @@ const BranchKSA = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Sample Branch Name',
+          name_malayalam: 'സാമ്പിൾ ബ്രാഞ്ച് പേര്',
+          name_urdu: 'نمونہ برانچ نام',
           location_name: 'Sample Location Name',
           phone_number: '+1234567890'
         }
@@ -557,6 +617,8 @@ const BranchKSA = ({ isOpen }) => {
       // Add headers with comments
       utils.sheet_add_aoa(ws, [[
         'name',
+        'name_malayalam',
+        'name_urdu',
         'location_name',
         'phone_number'
       ]], { origin: 'A1' });
@@ -570,6 +632,8 @@ const BranchKSA = ({ isOpen }) => {
       // Add column widths
       ws['!cols'] = [
         { wch: 30 }, // name
+        { wch: 30 }, // name_malayalam
+        { wch: 30 }, // name_urdu
         { wch: 30 }, // location_name
         { wch: 20 }  // phone_number
       ];
@@ -679,14 +743,37 @@ const BranchKSA = ({ isOpen }) => {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Branch</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
-              <input
-                type="text"
-                value={newBranch.name}
-                onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium">Name (English)</label>
+                <input
+                  type="text"
+                  value={newBranch.name}
+                  onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter name in English"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Name (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newBranch.name_malayalam}
+                  onChange={(e) => setNewBranch({ ...newBranch, name_malayalam: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter name in Malayalam"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Name (Urdu)</label>
+                <input
+                  type="text"
+                  value={newBranch.name_urdu}
+                  onChange={(e) => setNewBranch({ ...newBranch, name_urdu: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter name in Urdu"
+                />
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Phone Number (Optional)</label>
@@ -708,6 +795,8 @@ const BranchKSA = ({ isOpen }) => {
                 {locations.map(location => (
                   <option key={location._id} value={location._id}>
                     {location.title}
+                    {location.title_malayalam && ` | ${location.title_malayalam}`}
+                    {location.title_urdu && ` | ${location.title_urdu}`}
                   </option>
                 ))}
               </select>

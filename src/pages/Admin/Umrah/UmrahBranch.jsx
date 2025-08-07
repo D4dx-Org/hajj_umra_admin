@@ -15,6 +15,8 @@ const UmrahBranch = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newBranch, setNewBranch] = useState({
     name: '',
+    malayalamName: '',
+    urduName: '',
     phoneNumber: ''
   });
   const [originalData, setOriginalData] = useState(null);
@@ -59,6 +61,40 @@ const UmrahBranch = ({ isOpen }) => {
           );
         }
         return row.name;
+      }
+    },
+    {
+      key: 'malayalamName',
+      title: 'Malayalam Name',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamName || ''}
+              onChange={(e) => handleEditChange(row._id, 'malayalamName', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamName || '-';
+      }
+    },
+    {
+      key: 'urduName',
+      title: 'Urdu Name',
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduName || ''}
+              onChange={(e) => handleEditChange(row._id, 'urduName', e.target.value)}
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduName || '-';
       }
     },
     {
@@ -123,6 +159,10 @@ const UmrahBranch = ({ isOpen }) => {
   const sortOptions = [
     { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
     { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamName-alpha-asc', label: 'Malayalam Name (A-Z)', field: 'malayalamName', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamName-alpha-desc', label: 'Malayalam Name (Z-A)', field: 'malayalamName', direction: 'desc', type: 'alpha' },
+    { value: 'urduName-alpha-asc', label: 'Urdu Name (A-Z)', field: 'urduName', direction: 'asc', type: 'alpha' },
+    { value: 'urduName-alpha-desc', label: 'Urdu Name (Z-A)', field: 'urduName', direction: 'desc', type: 'alpha' },
     { value: 'phoneNumber-alpha-asc', label: 'Phone (A-Z)', field: 'phoneNumber', direction: 'asc', type: 'alpha' },
     { value: 'phoneNumber-alpha-desc', label: 'Phone (Z-A)', field: 'phoneNumber', direction: 'desc', type: 'alpha' }
   ];
@@ -242,6 +282,8 @@ const UmrahBranch = ({ isOpen }) => {
         setBranchData(updatedResponse.data);
         setNewBranch({ 
           name: '',
+          malayalamName: '',
+          urduName: '',
           phoneNumber: ''
         });
         setShowAddForm(false);
@@ -292,6 +334,8 @@ const UmrahBranch = ({ isOpen }) => {
       filtered = branchData.filter((item) => {
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.phoneNumber && item.phoneNumber.toLowerCase().includes(lowerCaseSearch))
         );
       });
@@ -321,6 +365,8 @@ const UmrahBranch = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Sample Branch',
+          malayalam_name: 'സാമ്പിൾ ബ്രാഞ്ച്',
+          urdu_name: 'نمونہ برانچ',
           phone_number: '+966123456789'
         }
       ];
@@ -329,6 +375,8 @@ const UmrahBranch = ({ isOpen }) => {
       
       utils.sheet_add_aoa(ws, [[
         'name',
+        'malayalam_name',
+        'urdu_name',
         'phone_number'
       ]], { origin: 'A1' });
 
@@ -339,6 +387,8 @@ const UmrahBranch = ({ isOpen }) => {
 
       ws['!cols'] = [
         { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
         { wch: 20 }  // phone_number
       ];
 
@@ -528,6 +578,26 @@ const UmrahBranch = ({ isOpen }) => {
                   onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Name</label>
+                <input
+                  type="text"
+                  value={newBranch.malayalamName}
+                  onChange={(e) => setNewBranch({ ...newBranch, malayalamName: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മലയാളം പേര്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newBranch.urduName}
+                  onChange={(e) => setNewBranch({ ...newBranch, urduName: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="اردو نام"
                 />
               </div>
               <div className="mb-4">

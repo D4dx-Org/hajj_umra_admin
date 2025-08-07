@@ -16,8 +16,14 @@ const UmrahClinic = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newClinic, setNewClinic] = useState({
     name: "",
+    malayalamName: "",
+    urduName: "",
     center: "",
+    malayalamCenter: "",
+    urduCenter: "",
     poll: "",
+    malayalamPoll: "",
+    urduPoll: "",
     location: { lat: "", lng: "" },
     branchRef: "",
   });
@@ -74,6 +80,44 @@ const UmrahClinic = ({ isOpen }) => {
       },
     },
     {
+      key: "malayalamName",
+      title: "Malayalam Name",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamName || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "malayalamName", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamName || "-";
+      },
+    },
+    {
+      key: "urduName",
+      title: "Urdu Name",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduName || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "urduName", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduName || "-";
+      },
+    },
+    {
       key: "center",
       title: "Center",
       render: (row) => {
@@ -93,6 +137,44 @@ const UmrahClinic = ({ isOpen }) => {
       },
     },
     {
+      key: "malayalamCenter",
+      title: "Malayalam Center",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamCenter || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "malayalamCenter", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamCenter || "-";
+      },
+    },
+    {
+      key: "urduCenter",
+      title: "Urdu Center",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduCenter || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "urduCenter", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduCenter || "-";
+      },
+    },
+    {
       key: "poll",
       title: "Poll",
       render: (row) => {
@@ -109,6 +191,44 @@ const UmrahClinic = ({ isOpen }) => {
           );
         }
         return row.poll || "N/A";
+      },
+    },
+    {
+      key: "malayalamPoll",
+      title: "Malayalam Poll",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.malayalamPoll || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "malayalamPoll", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.malayalamPoll || "-";
+      },
+    },
+    {
+      key: "urduPoll",
+      title: "Urdu Poll",
+      render: (row) => {
+        if (editingId === row._id) {
+          return (
+            <input
+              type="text"
+              value={row.urduPoll || ""}
+              onChange={(e) =>
+                handleEditChange(row._id, "urduPoll", e.target.value)
+              }
+              className="w-full p-1 border rounded"
+            />
+          );
+        }
+        return row.urduPoll || "-";
       },
     },
     {
@@ -229,6 +349,34 @@ const UmrahClinic = ({ isOpen }) => {
       value: "name-alpha-desc",
       label: "Name (Z-A)",
       field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-asc",
+      label: "Malayalam Name (A-Z)",
+      field: "malayalamName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-desc",
+      label: "Malayalam Name (Z-A)",
+      field: "malayalamName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-asc",
+      label: "Urdu Name (A-Z)",
+      field: "urduName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-desc",
+      label: "Urdu Name (Z-A)",
+      field: "urduName",
       direction: "desc",
       type: "alpha",
     },
@@ -439,8 +587,14 @@ const UmrahClinic = ({ isOpen }) => {
         setClinicData(updatedResponse.data);
         setNewClinic({
           name: "",
+          malayalamName: "",
+          urduName: "",
           center: "",
+          malayalamCenter: "",
+          urduCenter: "",
           poll: "",
+          malayalamPoll: "",
+          urduPoll: "",
           location: { lat: "", lng: "" },
           branchRef: "",
         });
@@ -501,9 +655,14 @@ const UmrahClinic = ({ isOpen }) => {
         const branchName = item.branchRef?.name || "";
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.center &&
-            item.center.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.center && item.center.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamCenter && item.malayalamCenter.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduCenter && item.urduCenter.toLowerCase().includes(lowerCaseSearch)) ||
           (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamPoll && item.malayalamPoll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduPoll && item.urduPoll.toLowerCase().includes(lowerCaseSearch)) ||
           branchName.toLowerCase().includes(lowerCaseSearch)
         );
       });
@@ -533,9 +692,15 @@ const UmrahClinic = ({ isOpen }) => {
       const sampleData = [
         {
           name: "Sample Clinic",
+          malayalam_name: "ക്ലിനിക് സാമ്പിൾ",
+          urdu_name: "نمونہ کلینک",
           branch_name: "Sample Branch",
           center: "Sample Center",
+          malayalam_center: "സെന്റർ സാമ്പിൾ",
+          urdu_center: "نمونہ سینٹر",
           poll: "Sample Poll",
+          malayalam_poll: "പോൾ സാമ്പിൾ",
+          urdu_poll: "نمونہ پول",
           latitude: "21.4225",
           longitude: "39.8262",
         },
@@ -545,7 +710,7 @@ const UmrahClinic = ({ isOpen }) => {
 
       utils.sheet_add_aoa(
         ws,
-        [["name", "branch_name", "center", "poll", "latitude", "longitude"]],
+        [["name", "malayalam_name", "urdu_name", "branch_name", "center", "malayalam_center", "urdu_center", "poll", "malayalam_poll", "urdu_poll", "latitude", "longitude"]],
         { origin: "A1" }
       );
 
@@ -556,9 +721,15 @@ const UmrahClinic = ({ isOpen }) => {
 
       ws["!cols"] = [
         { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
         { wch: 20 }, // branch_name
         { wch: 20 }, // center
+        { wch: 20 }, // malayalam_center
+        { wch: 20 }, // urdu_center
         { wch: 15 }, // poll
+        { wch: 15 }, // malayalam_poll
+        { wch: 15 }, // urdu_poll
         { wch: 15 }, // latitude
         { wch: 15 }, // longitude
       ];
@@ -758,6 +929,30 @@ const UmrahClinic = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Name</label>
+                <input
+                  type="text"
+                  value={newClinic.malayalamName}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, malayalamName: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="ക്ലിനിക്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newClinic.urduName}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, urduName: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="کلینک"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Branch *</label>
                 <select
                   value={newClinic.branchRef}
@@ -787,6 +982,30 @@ const UmrahClinic = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Center</label>
+                <input
+                  type="text"
+                  value={newClinic.malayalamCenter}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, malayalamCenter: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="സെന്റർ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Center</label>
+                <input
+                  type="text"
+                  value={newClinic.urduCenter}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, urduCenter: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="سینٹر"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Poll</label>
                 <input
                   type="text"
@@ -795,6 +1014,30 @@ const UmrahClinic = ({ isOpen }) => {
                     setNewClinic({ ...newClinic, poll: e.target.value })
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Poll</label>
+                <input
+                  type="text"
+                  value={newClinic.malayalamPoll}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, malayalamPoll: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="പോൾ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Poll</label>
+                <input
+                  type="text"
+                  value={newClinic.urduPoll}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, urduPoll: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="پول"
                 />
               </div>
               <div className="mb-4 md:col-span-2">

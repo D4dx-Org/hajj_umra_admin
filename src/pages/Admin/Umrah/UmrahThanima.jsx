@@ -32,6 +32,8 @@ const UmrahThanima = ({ isOpen }) => {
 
   const [formData, setFormData] = useState({
     name: '',
+    malayalamName: '',
+    urduName: '',
     phone: '',
     id: ''
   });
@@ -65,6 +67,8 @@ const UmrahThanima = ({ isOpen }) => {
       const token = localStorage.getItem('token');
       const submitData = {
         name: formData.name.trim(),
+        malayalamName: formData.malayalamName.trim() || undefined,
+        urduName: formData.urduName.trim() || undefined,
         phone: formData.phone.trim(),
         id: formData.id.trim()
       };
@@ -178,14 +182,31 @@ const UmrahThanima = ({ isOpen }) => {
   };
 
   const downloadTemplate = () => {
-    // Create empty template with just headers
-    const headers = [['name', 'phone', 'id']];
+    // Create template with sample data
+    const template = [
+      { 
+        name: 'Sample Thanima', 
+        malayalam_name: 'സാമ്പിൾ തനിമ',
+        urdu_name: 'نمونہ تھانیما',
+        phone: '+966501234567', 
+        id: 'TH001' 
+      },
+      { 
+        name: 'Helper Service', 
+        malayalam_name: 'സഹായ സേവനം',
+        urdu_name: 'مددگار خدمات',
+        phone: '+966509876543', 
+        id: 'TH002' 
+      }
+    ];
     
-    const ws = XLSX.utils.aoa_to_sheet(headers);
+    const ws = XLSX.utils.json_to_sheet(template);
     
     // Set column widths for better readability
     ws['!cols'] = [
       { wch: 20 }, // name
+      { wch: 20 }, // malayalam_name
+      { wch: 20 }, // urdu_name
       { wch: 15 }, // phone
       { wch: 10 }  // id
     ];
@@ -196,7 +217,7 @@ const UmrahThanima = ({ isOpen }) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', phone: '', id: '' });
+    setFormData({ name: '', malayalamName: '', urduName: '', phone: '', id: '' });
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -204,6 +225,8 @@ const UmrahThanima = ({ isOpen }) => {
   const startEdit = (thanima) => {
     setFormData({
       name: thanima.name,
+      malayalamName: thanima.malayalamName || '',
+      urduName: thanima.urduName || '',
       phone: thanima.phone,
       id: thanima.id
     });
@@ -241,6 +264,8 @@ const UmrahThanima = ({ isOpen }) => {
 
   const filteredThanimas = sortedThanimas.filter(thanima =>
     thanima.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (thanima.malayalamName && thanima.malayalamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (thanima.urduName && thanima.urduName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     thanima.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
     thanima.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -376,7 +401,7 @@ const UmrahThanima = ({ isOpen }) => {
               <h2 className="text-xl font-semibold mb-4 text-gray-800">
                 {editingId ? 'Edit Thanima' : 'Add New Thanima'}
               </h2>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Name *
@@ -387,6 +412,33 @@ const UmrahThanima = ({ isOpen }) => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Malayalam Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.malayalamName}
+                    onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="തനിമ"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urdu Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.urduName}
+                    onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="تھانیما"
+                    dir="rtl"
                   />
                 </div>
 
@@ -418,7 +470,7 @@ const UmrahThanima = ({ isOpen }) => {
                   />
                 </div>
 
-                <div className="md:col-span-3 flex gap-2">
+                <div className="md:col-span-2 lg:col-span-3 flex gap-2">
                   <button
                     type="submit"
                     className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
@@ -457,6 +509,12 @@ const UmrahThanima = ({ isOpen }) => {
                       NAME
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM NAME
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU NAME
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       PHONE
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
@@ -483,6 +541,12 @@ const UmrahThanima = ({ isOpen }) => {
                       </td>
                       <td className="px-4 py-1">
                         <div className="text-sm font-medium text-gray-900">{thanima.name}</div>
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700">{thanima.malayalamName || '-'}</div>
+                      </td>
+                      <td className="px-4 py-1">
+                        <div className="text-sm text-gray-700" dir="rtl">{thanima.urduName || '-'}</div>
                       </td>
                       <td className="px-4 py-1">
                         <div className="text-sm text-gray-700">{thanima.phone}</div>
