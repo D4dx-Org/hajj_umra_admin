@@ -286,7 +286,11 @@ const PostUmrahManagement = () => {
       const postUmrahData = {
         id: values.id.trim(),
         title: values.title.trim(),
+        title_malayalam: values.title_malayalam?.trim() || '',
+        title_urdu: values.title_urdu?.trim() || '',
         description: values.description?.trim() || '',
+        description_malayalam: values.description_malayalam?.trim() || '',
+        description_urdu: values.description_urdu?.trim() || '',
         images: imageUrls,
         video: values.video?.trim() || ''
       };
@@ -409,7 +413,11 @@ const PostUmrahManagement = () => {
       const searchStr = searchTerm.toLowerCase();
       return (
         item.title?.toLowerCase().includes(searchStr) ||
+        item.title_malayalam?.toLowerCase().includes(searchStr) ||
+        item.title_urdu?.toLowerCase().includes(searchStr) ||
         item.description?.toLowerCase().includes(searchStr) ||
+        item.description_malayalam?.toLowerCase().includes(searchStr) ||
+        item.description_urdu?.toLowerCase().includes(searchStr) ||
         item.id?.toLowerCase().includes(searchStr)
       );
     });
@@ -442,7 +450,11 @@ const PostUmrahManagement = () => {
         {
           id: 'sample_post_umrah_001',
           title: 'Sample Post-Umrah Entry (Required)',
+          title_malayalam: 'സാമ്പിൾ പോസ്റ്റ്-ഉംറ എൻട്രി',
+          title_urdu: 'نمونہ پوسٹ عمرہ انٹری',
           description: 'Sample description for post-umrah content',
+          description_malayalam: 'പോസ്റ്റ്-ഉംറ ഉള്ളടക്കത്തിനുള്ള സാമ്പിൾ വിവരണം',
+          description_urdu: 'پوسٹ عمرہ مواد کے لیے نمونہ تفصیل',
           video: 'https://www.youtube.com/watch?v=sample_video_id'
         }
       ];
@@ -453,7 +465,11 @@ const PostUmrahManagement = () => {
       utils.sheet_add_aoa(ws, [[
         'id',
         'title',
+        'title_malayalam',
+        'title_urdu',
         'description',
+        'description_malayalam',
+        'description_urdu',
         'video'
       ]], { origin: 'A1' });
 
@@ -467,7 +483,11 @@ const PostUmrahManagement = () => {
       ws['!cols'] = [
         { wch: 20 }, // id
         { wch: 30 }, // title
+        { wch: 30 }, // title_malayalam
+        { wch: 30 }, // title_urdu
         { wch: 40 }, // description
+        { wch: 40 }, // description_malayalam
+        { wch: 40 }, // description_urdu
         { wch: 50 }  // video
       ];
 
@@ -602,14 +622,41 @@ const PostUmrahManagement = () => {
     },
     {
       title: 'Title',
-      dataIndex: 'title',
-      key: 'title'
+      key: 'title',
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div className="font-medium">{record.title}</div>
+          {record.title_malayalam && (
+            <div className="text-sm text-gray-600">
+              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {record.title_malayalam}
+            </div>
+          )}
+          {record.title_urdu && (
+            <div className="text-sm text-gray-600">
+              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {record.title_urdu}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: 'Description',
-      dataIndex: 'description',
       key: 'description',
-      render: (text) => text || '-'
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div className="text-sm">{record.description || '-'}</div>
+          {record.description_malayalam && (
+            <div className="text-xs text-gray-600">
+              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {record.description_malayalam}
+            </div>
+          )}
+          {record.description_urdu && (
+            <div className="text-xs text-gray-600">
+              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {record.description_urdu}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: 'Media',
@@ -667,7 +714,11 @@ const PostUmrahManagement = () => {
               form.setFieldsValue({
                 id: record.id,
                 title: record.title,
+                title_malayalam: record.title_malayalam || '',
+                title_urdu: record.title_urdu || '',
                 description: record.description || '',
+                description_malayalam: record.description_malayalam || '',
+                description_urdu: record.description_urdu || '',
                 images: recordImages,
                 video: record.video || ''
               });
@@ -811,8 +862,8 @@ const PostUmrahManagement = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -911,6 +962,55 @@ const PostUmrahManagement = () => {
                 showCount
               />
             </Form.Item>
+
+            {/* Multilingual Fields */}
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="title_malayalam"
+                  label="Title (Malayalam)"
+                >
+                  <Input placeholder="Enter title in Malayalam" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="title_urdu"
+                  label="Title (Urdu)"
+                >
+                  <Input placeholder="Enter title in Urdu" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="description_malayalam"
+                  label="Description (Malayalam)"
+                >
+                  <TextArea
+                    rows={3}
+                    placeholder="Enter description in Malayalam..."
+                    maxLength={500}
+                    showCount
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="description_urdu"
+                  label="Description (Urdu)"
+                >
+                  <TextArea
+                    rows={3}
+                    placeholder="Enter description in Urdu..."
+                    maxLength={500}
+                    showCount
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
             {/* File Upload Sections */}
             <Row gutter={16}>

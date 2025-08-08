@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Search, AlertTriangle, ArrowUpDown, Download } from "lucide-react";
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
 import axios from "axios";
+import { utils, write } from "xlsx";
 
 const UmrahEmergency = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,9 +15,13 @@ const UmrahEmergency = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newEmergency, setNewEmergency] = useState({
     name: "",
+    malayalamName: "",
+    urduName: "",
     contact: "",
   });
   const [originalData, setOriginalData] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [sortConfig, setSortConfig] = useState({
     field: "name",
@@ -52,37 +57,27 @@ const UmrahEmergency = ({ isOpen }) => {
       key: "name",
       title: "Name",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) =>
-                handleEditChange(row._id, "name", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.name;
+      },
+    },
+    {
+      key: "malayalamName",
+      title: "Malayalam Name",
+      render: (row) => {
+        return row.malayalamName || "-";
+      },
+    },
+    {
+      key: "urduName",
+      title: "Urdu Name",
+      render: (row) => {
+        return row.urduName || "-";
       },
     },
     {
       key: "contact",
       title: "Contact",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.contact}
-              onChange={(e) =>
-                handleEditChange(row._id, "contact", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.contact;
       },
     },
@@ -91,37 +86,18 @@ const UmrahEmergency = ({ isOpen }) => {
       title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       ),
     },
@@ -140,6 +116,34 @@ const UmrahEmergency = ({ isOpen }) => {
       value: "name-alpha-desc",
       label: "Name (Z-A)",
       field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-asc",
+      label: "Malayalam Name (A-Z)",
+      field: "malayalamName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-desc",
+      label: "Malayalam Name (Z-A)",
+      field: "malayalamName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-asc",
+      label: "Urdu Name (A-Z)",
+      field: "urduName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-desc",
+      label: "Urdu Name (Z-A)",
+      field: "urduName",
       direction: "desc",
       type: "alpha",
     },
@@ -289,6 +293,8 @@ const UmrahEmergency = ({ isOpen }) => {
         setEmergencyData(updatedResponse.data);
         setNewEmergency({
           name: "",
+          malayalamName: "",
+          urduName: "",
           contact: "",
         });
         setShowAddForm(false);
@@ -338,6 +344,8 @@ const UmrahEmergency = ({ isOpen }) => {
       filtered = emergencyData.filter((item) => {
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.contact && item.contact.toLowerCase().includes(lowerCaseSearch))
         );
       });
@@ -394,6 +402,109 @@ const UmrahEmergency = ({ isOpen }) => {
     });
   };
 
+  // Download template function
+  const handleDownloadTemplate = () => {
+    try {
+      const sampleData = [
+        {
+          name: "Emergency Service",
+          malayalam_name: "അടിയന്തര സേവനം",
+          urdu_name: "ہنگامی خدمات",
+          contact: "+966-12-345-6789",
+        },
+      ];
+
+      const ws = utils.json_to_sheet([]);
+
+      utils.sheet_add_aoa(
+        ws,
+        [["name", "malayalam_name", "urdu_name", "contact"]],
+        { origin: "A1" }
+      );
+
+      utils.sheet_add_json(ws, sampleData, {
+        origin: "A2",
+        skipHeader: true,
+      });
+
+      ws["!cols"] = [
+        { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
+        { wch: 20 }, // contact
+      ];
+
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "Template");
+
+      const blob = new Blob([write(wb, { bookType: "xlsx", type: "array" })], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "umrah_emergency_upload_template.xlsx";
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error creating template:", error);
+      setUploadError("Failed to download template. Please try again.");
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        setUploadError("Please upload an Excel file (.xlsx or .xls)");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUploadError("Authentication token not found. Please log in again.");
+        return;
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL_V2}/emergency-umrah/bulk-upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setUploadSuccess(`Successfully uploaded ${response.data.count} emergency contacts`);
+      setUploadError(null);
+
+      // Refresh the data
+      const updatedResponse = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL_V2}/emergency-umrah`
+      );
+      setEmergencyData(updatedResponse.data);
+
+      // Reset the file input
+      event.target.value = "";
+    } catch (error) {
+      console.error("File upload error:", error);
+      setUploadError(
+        error.response?.data?.message ||
+          "Error processing file. Please try again."
+      );
+      setUploadSuccess(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -429,6 +540,26 @@ const UmrahEmergency = ({ isOpen }) => {
               </button>
             )}
             <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600"
+            >
+              <Download size={20} />
+              Download Template
+            </button>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls"
+              className="hidden"
+              id="excel-upload"
+            />
+            <label
+              htmlFor="excel-upload"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
+            >
+              Upload Excel
+            </label>
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
@@ -436,6 +567,18 @@ const UmrahEmergency = ({ isOpen }) => {
             </button>
           </div>
         </div>
+
+        {/* Error and success messages */}
+        {uploadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {uploadError}
+          </div>
+        )}
+        {uploadSuccess && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {uploadSuccess}
+          </div>
+        )}
 
         {/* New Emergency Form */}
         {showAddForm && (
@@ -454,6 +597,30 @@ const UmrahEmergency = ({ isOpen }) => {
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Name</label>
+                <input
+                  type="text"
+                  value={newEmergency.malayalamName}
+                  onChange={(e) =>
+                    setNewEmergency({ ...newEmergency, malayalamName: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="അടിയന്തര സമ്പർക്കം"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newEmergency.urduName}
+                  onChange={(e) =>
+                    setNewEmergency({ ...newEmergency, urduName: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="ہنگامی رابطہ"
                 />
               </div>
               <div className="mb-4">
@@ -544,16 +711,113 @@ const UmrahEmergency = ({ isOpen }) => {
                   </tr>
                 ) : (
                   filteredEmergencyData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
-                      {emergencyColumns.map((column) => (
-                        <td
-                          key={column.key}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                        >
-                          {column.render(row)}
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {emergencyColumns.map((column) => (
+                          <td
+                            key={column.key}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                          >
+                            {column.render(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={emergencyColumns.length} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Emergency Contact</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Basic Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "name", e.target.value)
+                                      }
+                                      placeholder="Emergency contact name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamName", e.target.value)
+                                      }
+                                      placeholder="മലയാളം പേര്"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Contact Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Contact Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduName", e.target.value)
+                                      }
+                                      placeholder="اردو نام"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Contact *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.contact || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "contact", e.target.value)
+                                      }
+                                      placeholder="Phone number or contact info"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -563,8 +827,8 @@ const UmrahEmergency = ({ isOpen }) => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="text-red-500 mr-3" size={24} />
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>

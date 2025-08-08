@@ -81,7 +81,7 @@ function AdminLogin({ onBackClick }) {
                   value={formData.username}
                   onChange={handleChange}
                   className={`w-full pl-3 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
-                    error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                    error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   }`}
                   placeholder="Enter your username"
                   required
@@ -105,7 +105,7 @@ function AdminLogin({ onBackClick }) {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
-                    error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                    error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   }`}
                   placeholder="••••••••"
                   required

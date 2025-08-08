@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Table,
   Button,
@@ -16,15 +16,26 @@ import {
   Col,
   Typography,
   Upload,
-  Image
-} from 'antd';
-import { MapPin, Search, AlertTriangle, Trash2, Edit, Plus, UploadCloud, X, RotateCcw, Download } from 'lucide-react';
-import { UploadOutlined, InboxOutlined } from '@ant-design/icons';
-import axios from 'axios';
-import moment from 'moment';
-import { read, utils, write } from 'xlsx';
-import Sidebar from '../../../components/Sidebar';
-import Navbar from '../../../components/Navbar';
+  Image,
+} from "antd";
+import {
+  MapPin,
+  Search,
+  AlertTriangle,
+  Trash2,
+  Edit,
+  Plus,
+  UploadCloud,
+  X,
+  RotateCcw,
+  Download,
+} from "lucide-react";
+import { UploadOutlined, InboxOutlined } from "@ant-design/icons";
+import axios from "axios";
+import moment from "moment";
+import { read, utils, write } from "xlsx";
+import Sidebar from "../../../components/Sidebar";
+import Navbar from "../../../components/Navbar";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -38,22 +49,22 @@ const ArrivedManagement = () => {
   const [form] = Form.useForm();
   const [selectedRows, setSelectedRows] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
-    total: 0
+    total: 0,
   });
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState({
     images: [],
-    video: null
+    video: null,
   });
   const [fileList, setFileList] = useState({
     images: [],
-    video: []
+    video: [],
   });
   const [existingImages, setExistingImages] = useState([]);
   const [uploadError, setUploadError] = useState(null);
@@ -69,23 +80,28 @@ const ArrivedManagement = () => {
         return;
       }
 
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/arrived`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL_V2}/arrived`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       setArrivedData(response.data.arrived || []);
       setPagination({
         ...pagination,
-        total: response.data.count || 0
+        total: response.data.count || 0,
       });
-
     } catch (error) {
-      console.error('Error fetching arrived data:', error.response?.data || error.message);
+      console.error(
+        "Error fetching arrived data:",
+        error.response?.data || error.message
+      );
       if (error.response?.status === 401) {
-        message.error('Authentication failed. Please log in again.');
-        localStorage.removeItem('token');
+        message.error("Authentication failed. Please log in again.");
+        localStorage.removeItem("token");
       } else {
-        message.error('Failed to fetch data. Please try again.');
+        message.error("Failed to fetch data. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -99,16 +115,17 @@ const ArrivedManagement = () => {
   // File upload configuration
   const uploadProps = {
     beforeUpload: (file, fileType) => {
-      const isValidType = fileType === 'image'
-        ? file.type.startsWith('image/')
-        : file.type.startsWith('video/');
+      const isValidType =
+        fileType === "image"
+          ? file.type.startsWith("image/")
+          : file.type.startsWith("video/");
 
       if (!isValidType) {
         message.error(`Please upload a valid ${fileType} file!`);
         return false;
       }
 
-      const maxSize = fileType === 'image' ? 5 : 50; // 5MB for images, 50MB for videos
+      const maxSize = fileType === "image" ? 5 : 50; // 5MB for images, 50MB for videos
       const isValidSize = file.size / 1024 / 1024 < maxSize;
       if (!isValidSize) {
         message.error(`${fileType} must be smaller than ${maxSize}MB!`);
@@ -118,42 +135,46 @@ const ArrivedManagement = () => {
       return false; // Prevent automatic upload
     },
     showUploadList: false,
-    multiple: false
+    multiple: false,
   };
 
   // Handle file change
   const handleFileChange = (info, fileType) => {
-    if (fileType === 'images') {
+    if (fileType === "images") {
       // Handle multiple images with limit
       const { fileList } = info;
       const maxImages = 20;
 
       if (fileList.length > maxImages) {
-        message.warning(`Maximum ${maxImages} images allowed. Only the first ${maxImages} images will be kept.`);
+        message.warning(
+          `Maximum ${maxImages} images allowed. Only the first ${maxImages} images will be kept.`
+        );
       }
 
       const limitedFileList = fileList.slice(0, maxImages);
-      const files = limitedFileList.map(item => item.originFileObj || item).filter(Boolean);
+      const files = limitedFileList
+        .map((item) => item.originFileObj || item)
+        .filter(Boolean);
 
-      setUploadedFiles(prev => ({
+      setUploadedFiles((prev) => ({
         ...prev,
-        images: files
+        images: files,
       }));
-      setFileList(prev => ({
+      setFileList((prev) => ({
         ...prev,
-        images: limitedFileList
+        images: limitedFileList,
       }));
     } else {
       // Handle single file (video)
       const { file } = info;
       if (file) {
-        setUploadedFiles(prev => ({
+        setUploadedFiles((prev) => ({
           ...prev,
-          [fileType]: file
+          [fileType]: file,
         }));
-        setFileList(prev => ({
+        setFileList((prev) => ({
           ...prev,
-          [fileType]: [file]
+          [fileType]: [file],
         }));
       }
     }
@@ -161,33 +182,33 @@ const ArrivedManagement = () => {
 
   // Remove uploaded file
   const removeFile = (fileType) => {
-    setUploadedFiles(prev => ({
+    setUploadedFiles((prev) => ({
       ...prev,
-      [fileType]: fileType === 'images' ? [] : null
+      [fileType]: fileType === "images" ? [] : null,
     }));
-    setFileList(prev => ({
+    setFileList((prev) => ({
       ...prev,
-      [fileType]: []
+      [fileType]: [],
     }));
   };
 
   // Remove specific image from multiple images
   const removeImageFile = (index) => {
-    setUploadedFiles(prev => {
+    setUploadedFiles((prev) => {
       const newImages = prev.images.filter((_, i) => i !== index);
       return {
         ...prev,
-        images: newImages
+        images: newImages,
       };
     });
-    setFileList(prev => {
+    setFileList((prev) => {
       const newFileList = prev.images.filter((_, i) => i !== index);
       return {
         ...prev,
-        images: newFileList
+        images: newFileList,
       };
     });
-    message.success('Image removed successfully');
+    message.success("Image removed successfully");
   };
 
   // Remove existing image from form
@@ -195,29 +216,29 @@ const ArrivedManagement = () => {
     const updatedImages = existingImages.filter((_, i) => i !== index);
     setExistingImages(updatedImages);
     form.setFieldsValue({ images: updatedImages });
-    form.validateFields(['images']);
-    message.success('Existing image removed successfully');
+    form.validateFields(["images"]);
+    message.success("Existing image removed successfully");
   };
 
   // Clear all new uploaded images
   const clearAllNewImages = () => {
-    setUploadedFiles(prev => ({
+    setUploadedFiles((prev) => ({
       ...prev,
-      images: []
+      images: [],
     }));
-    setFileList(prev => ({
+    setFileList((prev) => ({
       ...prev,
-      images: []
+      images: [],
     }));
-    message.success('All new images cleared');
+    message.success("All new images cleared");
   };
 
   // Clear all existing images
   const clearAllExistingImages = () => {
     setExistingImages([]);
     form.setFieldsValue({ images: [] });
-    form.validateFields(['images']);
-    message.success('All existing images cleared');
+    form.validateFields(["images"]);
+    message.success("All existing images cleared");
   };
 
   // Upload file to server
@@ -231,15 +252,15 @@ const ArrivedManagement = () => {
       }
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_V2}/arrived/upload`,
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -248,9 +269,13 @@ const ArrivedManagement = () => {
       console.error(`Error uploading ${fileType}:`, error);
       if (error.response?.status === 401) {
         alert("Your session has expired. Please log in again.");
-        window.location.href = '/admin-login';
+        window.location.href = "/admin-login";
       }
-      throw new Error(`Failed to upload ${fileType}: ${error.response?.data?.message || error.message}`);
+      throw new Error(
+        `Failed to upload ${fileType}: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     }
   };
 
@@ -269,16 +294,16 @@ const ArrivedManagement = () => {
       // Upload multiple images if they exist
       if (uploadedFiles.images && uploadedFiles.images.length > 0) {
         try {
-          message.loading('Uploading images...', 0);
-          const uploadPromises = uploadedFiles.images.map(file =>
-            uploadFileToServer(file, 'image')
+          message.loading("Uploading images...", 0);
+          const uploadPromises = uploadedFiles.images.map((file) =>
+            uploadFileToServer(file, "image")
           );
           const uploadedUrls = await Promise.all(uploadPromises);
-          imageUrls = [...imageUrls, ...uploadedUrls.filter(url => url)];
+          imageUrls = [...imageUrls, ...uploadedUrls.filter((url) => url)];
           message.destroy();
         } catch (error) {
           message.destroy();
-          message.error('Failed to upload images');
+          message.error("Failed to upload images");
           return;
         }
       }
@@ -286,12 +311,16 @@ const ArrivedManagement = () => {
       const arrivedData = {
         id: values.id.trim(),
         title: values.title.trim(),
-        description: values.description?.trim() || '',
+        malayalamTitle: values.malayalamTitle?.trim() || "",
+        urduTitle: values.urduTitle?.trim() || "",
+        description: values.description?.trim() || "",
+        malayalamDescription: values.malayalamDescription?.trim() || "",
+        urduDescription: values.urduDescription?.trim() || "",
         images: imageUrls,
-        video: values.video?.trim() || '',
-        map: values.map?.trim() || '',
+        video: values.video?.trim() || "",
+        map: values.map?.trim() || "",
         transportationOptions: values.transportationOptions || [],
-        emergencyContacts: values.emergencyContacts || []
+        emergencyContacts: values.emergencyContacts || [],
       };
 
       if (editingId) {
@@ -300,30 +329,40 @@ const ArrivedManagement = () => {
           `${import.meta.env.VITE_BACKEND_URL_V2}/arrived/${editingId}`,
           arrivedData,
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
-        message.success('Arrived data updated successfully');
+        message.success("Arrived data updated successfully");
       } else {
         // Create new arrived data
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL_V2}/arrived`,
           arrivedData,
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
-        message.success('Arrived data created successfully');
+        message.success("Arrived data created successfully");
       }
 
       resetModalState();
       fetchData();
     } catch (error) {
-      console.error('Error saving arrived data:', error.response?.data || error.message);
-      if (error.response?.status === 400 && error.response?.data?.message?.includes('already exists')) {
-        message.error('An entry with this ID already exists. Please use a different ID.');
+      console.error(
+        "Error saving arrived data:",
+        error.response?.data || error.message
+      );
+      if (
+        error.response?.status === 400 &&
+        error.response?.data?.message?.includes("already exists")
+      ) {
+        message.error(
+          "An entry with this ID already exists. Please use a different ID."
+        );
       } else {
-        message.error(error.response?.data?.message || 'Failed to save arrived data');
+        message.error(
+          error.response?.data?.message || "Failed to save arrived data"
+        );
       }
     } finally {
       setSubmitting(false);
@@ -348,7 +387,9 @@ const ArrivedManagement = () => {
 
   // Handle Delete Confirmation
   const handleDeleteConfirm = async () => {
-    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
+    const ids = Array.isArray(deleteConfirm.id)
+      ? deleteConfirm.id
+      : [deleteConfirm.id];
 
     try {
       const token = localStorage.getItem("token");
@@ -358,30 +399,37 @@ const ArrivedManagement = () => {
       }
 
       if (ids.length > 1) {
-        await axios.post(`${import.meta.env.VITE_BACKEND_URL_V2}/arrived/bulk-delete`,
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/arrived/bulk-delete`,
           { ids },
           {
             headers: {
-              Authorization: `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
       } else {
-        await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/arrived/${ids[0]}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
+        await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/arrived/${ids[0]}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
+        );
       }
 
-      setArrivedData(arrivedData.filter(item => !ids.includes(item._id)));
+      setArrivedData(arrivedData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
-      message.success('Entry(s) deleted successfully');
+      message.success("Entry(s) deleted successfully");
       fetchData();
     } catch (error) {
-      console.error('Error deleting entries:', error.response?.data || error.message);
-      message.error('Failed to delete entry(s)');
+      console.error(
+        "Error deleting entries:",
+        error.response?.data || error.message
+      );
+      message.error("Failed to delete entry(s)");
     }
   };
 
@@ -394,34 +442,64 @@ const ArrivedManagement = () => {
   const handleBulkAction = async (action) => {
     if (selectedRows.length === 0) return;
 
-    if (action === 'delete') {
+    if (action === "delete") {
       setDeleteConfirm({
         show: true,
         id: selectedRows,
-        isBulk: true
+        isBulk: true,
       });
       return;
     }
 
-    message.info('Bulk actions other than delete are not implemented');
+    message.info("Bulk actions other than delete are not implemented");
   };
 
   // Filter data based on search
   const filteredArrivedData = useMemo(() => {
-    return arrivedData.filter(item => {
+    return arrivedData.filter((item) => {
       const searchStr = searchTerm.toLowerCase();
-      return (
+
+      // Search in basic fields
+      const basicFieldsMatch =
         item.title?.toLowerCase().includes(searchStr) ||
+        item.malayalamTitle?.toLowerCase().includes(searchStr) ||
+        item.urduTitle?.toLowerCase().includes(searchStr) ||
         item.description?.toLowerCase().includes(searchStr) ||
-        item.id?.toLowerCase().includes(searchStr)
+        item.malayalamDescription?.toLowerCase().includes(searchStr) ||
+        item.urduDescription?.toLowerCase().includes(searchStr) ||
+        item.id?.toLowerCase().includes(searchStr);
+
+      // Search in transportation options
+      const transportationMatch = item.transportationOptions?.some(
+        (option) =>
+          option.type?.toLowerCase().includes(searchStr) ||
+          option.malayalamType?.toLowerCase().includes(searchStr) ||
+          option.urduType?.toLowerCase().includes(searchStr) ||
+          option.details?.toLowerCase().includes(searchStr) ||
+          option.malayalamDetails?.toLowerCase().includes(searchStr) ||
+          option.urduDetails?.toLowerCase().includes(searchStr)
       );
+
+      // Search in emergency contacts
+      const contactsMatch = item.emergencyContacts?.some(
+        (contact) =>
+          contact.name?.toLowerCase().includes(searchStr) ||
+          contact.malayalamName?.toLowerCase().includes(searchStr) ||
+          contact.urduName?.toLowerCase().includes(searchStr) ||
+          contact.type?.toLowerCase().includes(searchStr) ||
+          contact.malayalamType?.toLowerCase().includes(searchStr) ||
+          contact.urduType?.toLowerCase().includes(searchStr) ||
+          contact.phone?.toLowerCase().includes(searchStr)
+      );
+
+      return basicFieldsMatch || transportationMatch || contactsMatch;
     });
   }, [arrivedData, searchTerm]);
 
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredArrivedData.map(row => row._id));
+      setSelectedRows(filteredArrivedData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -429,9 +507,9 @@ const ArrivedManagement = () => {
 
   // Handle select row
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -443,61 +521,79 @@ const ArrivedManagement = () => {
     try {
       const sampleData = [
         {
-          id: 'sample_arrived_001',
-          title: 'Sample Arrival Guide (Required)',
-          description: 'Sample description for arrival procedures',
-          video: 'https://www.youtube.com/watch?v=sample_video_id',
-          map: 'https://maps.google.com/sample_map_link',
-          category: 'arrival_procedures'
-        }
+          id: "sample_arrived_001",
+          title: "Sample Arrival Guide (Required)",
+          malayalam_title: "സാമ്പിൾ എത്തിച്ചേരൽ ഗൈഡ്",
+          urdu_title: "نمونہ آمد گائیڈ",
+          description: "Sample description for arrival procedures",
+          malayalam_description:
+            "എത്തിച്ചേരൽ നടപടിക്രമങ്ങൾക്കുള്ള സാമ്പിൾ വിവരണം",
+          urdu_description: "آمد کے طریقہ کار کے لیے نمونہ تفصیل",
+          video: "https://www.youtube.com/watch?v=sample_video_id",
+          map: "https://maps.google.com/sample_map_link",
+          category: "arrival_procedures",
+        },
       ];
 
       const ws = utils.json_to_sheet([]);
 
       // Add headers
-      utils.sheet_add_aoa(ws, [[
-        'id',
-        'title',
-        'description',
-        'video',
-        'map',
-        'category'
-      ]], { origin: 'A1' });
+      utils.sheet_add_aoa(
+        ws,
+        [
+          [
+            "id",
+            "title",
+            "malayalam_title",
+            "urdu_title",
+            "description",
+            "malayalam_description",
+            "urdu_description",
+            "video",
+            "map",
+            "category",
+          ],
+        ],
+        { origin: "A1" }
+      );
 
       // Add sample data
       utils.sheet_add_json(ws, sampleData, {
-        origin: 'A2',
-        skipHeader: true
+        origin: "A2",
+        skipHeader: true,
       });
 
       // Set column widths
-      ws['!cols'] = [
+      ws["!cols"] = [
         { wch: 20 }, // id
         { wch: 30 }, // title
+        { wch: 25 }, // malayalam_title
+        { wch: 25 }, // urdu_title
         { wch: 40 }, // description
+        { wch: 35 }, // malayalam_description
+        { wch: 35 }, // urdu_description
         { wch: 50 }, // video
         { wch: 50 }, // map
-        { wch: 20 }  // category
+        { wch: 20 }, // category
       ];
 
       const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
+      utils.book_append_sheet(wb, ws, "Template");
 
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })],
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
+      const blob = new Blob([write(wb, { bookType: "xlsx", type: "array" })], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
 
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'arrived_upload_template.xlsx';
+      link.download = "arrived_upload_template.xlsx";
       link.click();
       window.URL.revokeObjectURL(url);
-      message.success('Template downloaded successfully');
+      message.success("Template downloaded successfully");
     } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
+      console.error("Error creating template:", error);
+      setUploadError("Failed to download template. Please try again.");
     }
   };
 
@@ -507,29 +603,31 @@ const ArrivedManagement = () => {
       const file = event.target.files[0];
       if (!file) return;
 
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        setUploadError("Please upload an Excel file (.xlsx or .xls)");
         return;
       }
 
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          const workbook = read(e.target.result, { type: 'array' });
+          const workbook = read(e.target.result, { type: "array" });
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
           if (data.length === 0) {
-            setUploadError('The Excel file is empty. Please add some data.');
+            setUploadError("The Excel file is empty. Please add some data.");
             return;
           }
 
           // Check required columns
           const firstRow = data[0];
-          const hasRequiredColumns = 'id' in firstRow && 'title' in firstRow;
+          const hasRequiredColumns = "id" in firstRow && "title" in firstRow;
 
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have required columns: id and title');
+            setUploadError(
+              "Excel file must have required columns: id and title"
+            );
             return;
           }
 
@@ -539,23 +637,31 @@ const ArrivedManagement = () => {
             const rowNumber = i + 2;
 
             if (!row.id || !row.title) {
-              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have id and title.`);
+              setUploadError(
+                `Row ${rowNumber}: Missing required data. Each row must have id and title.`
+              );
               return;
             }
 
             // Validate YouTube URL if present
-            if (row.video && !row.video.includes('youtube.com') && !row.video.includes('youtu.be')) {
+            if (
+              row.video &&
+              !row.video.includes("youtube.com") &&
+              !row.video.includes("youtu.be")
+            ) {
               setUploadError(`Row ${rowNumber}: Invalid YouTube URL format`);
               return;
             }
           }
 
           const formData = new FormData();
-          formData.append('file', file);
+          formData.append("file", file);
 
           const token = localStorage.getItem("token");
           if (!token) {
-            setUploadError('Authentication token not found. Please log in again.');
+            setUploadError(
+              "Authentication token not found. Please log in again."
+            );
             return;
           }
 
@@ -565,26 +671,30 @@ const ArrivedManagement = () => {
             {
               headers: {
                 Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
+                "Content-Type": "multipart/form-data",
               },
             }
           );
 
-          setUploadSuccess(`Successfully uploaded ${response.data.count} arrived entries`);
+          setUploadSuccess(
+            `Successfully uploaded ${response.data.count} arrived entries`
+          );
           setUploadError(null);
           fetchData();
-          event.target.value = '';
+          event.target.value = "";
         } catch (error) {
-          console.error('Excel processing error:', error);
-          setUploadError(error.response?.data?.message || 'Error processing the Excel file');
+          console.error("Excel processing error:", error);
+          setUploadError(
+            error.response?.data?.message || "Error processing the Excel file"
+          );
           setUploadSuccess(null);
         }
       };
 
       reader.readAsArrayBuffer(file);
     } catch (error) {
-      console.error('File upload error:', error);
-      setUploadError('Error processing file. Please try again.');
+      console.error("File upload error:", error);
+      setUploadError("Error processing file. Please try again.");
       setUploadSuccess(null);
     }
   };
@@ -592,7 +702,7 @@ const ArrivedManagement = () => {
   // Table columns configuration
   const columns = [
     {
-      key: 'select',
+      key: "select",
       title: (
         <input
           type="checkbox"
@@ -608,58 +718,184 @@ const ArrivedManagement = () => {
           onChange={() => handleSelectRow(row._id)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-      )
+      ),
     },
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id'
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
     },
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title'
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      render: (text, record) => (
+        <div className="space-y-1">
+          <div className="font-medium text-gray-900">{text}</div>
+          {record.malayalamTitle && (
+            <div
+              className="text-sm text-blue-600"
+              style={{ fontFamily: "Arial, sans-serif" }}
+            >
+              {record.malayalamTitle}
+            </div>
+          )}
+          {record.urduTitle && (
+            <div
+              className="text-sm text-green-600"
+              dir="rtl"
+              style={{ fontFamily: "Arial, sans-serif" }}
+            >
+              {record.urduTitle}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      render: (text) => text || '-'
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      render: (text, record) => (
+        <div className="space-y-1">
+          <div className="text-gray-900">{text || "-"}</div>
+          {record.malayalamDescription && (
+            <div
+              className="text-sm text-blue-600"
+              style={{ fontFamily: "Arial, sans-serif" }}
+            >
+              {record.malayalamDescription}
+            </div>
+          )}
+          {record.urduDescription && (
+            <div
+              className="text-sm text-green-600"
+              dir="rtl"
+              style={{ fontFamily: "Arial, sans-serif" }}
+            >
+              {record.urduDescription}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
-      title: 'Transport Options',
-      key: 'transportationOptions',
+      title: "Transport Options",
+      key: "transportationOptions",
       render: (_, record) => (
-        <div>
+        <div className="space-y-2">
           {record.transportationOptions?.map((option, index) => (
-            <Tag key={index} color="blue" className="mb-1">
-              {typeof option === 'string' ? option : `${option.type}: ${option.details}`}
-            </Tag>
+            <div key={index} className="border rounded p-2 bg-blue-50">
+              <div className="font-medium text-gray-900">
+                {typeof option === "string" ? option : option.type}
+              </div>
+              {option.malayalamType && (
+                <div
+                  className="text-sm text-blue-600"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  {option.malayalamType}
+                </div>
+              )}
+              {option.urduType && (
+                <div
+                  className="text-sm text-green-600"
+                  dir="rtl"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  {option.urduType}
+                </div>
+              )}
+              {option.details && (
+                <div className="text-sm text-gray-600 mt-1">
+                  <strong>Details:</strong> {option.details}
+                </div>
+              )}
+              {option.malayalamDetails && (
+                <div
+                  className="text-sm text-blue-600"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  <strong>വിശദാംശങ്ങൾ:</strong> {option.malayalamDetails}
+                </div>
+              )}
+              {option.urduDetails && (
+                <div
+                  className="text-sm text-green-600"
+                  dir="rtl"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  <strong>تفصیلات:</strong> {option.urduDetails}
+                </div>
+              )}
+            </div>
           ))}
         </div>
-      )
+      ),
     },
     {
-      title: 'Emergency Contacts',
-      key: 'emergencyContacts',
+      title: "Emergency Contacts",
+      key: "emergencyContacts",
       render: (_, record) => (
-        <div>
+        <div className="space-y-2">
           {record.emergencyContacts?.map((contact, index) => (
-            <Tag key={index} color="red" className="mb-1">
-              {contact.name}: {contact.phone} ({contact.type})
-            </Tag>
+            <div key={index} className="border rounded p-2 bg-red-50">
+              <div className="font-medium text-gray-900">{contact.name}</div>
+              {contact.malayalamName && (
+                <div
+                  className="text-sm text-blue-600"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  {contact.malayalamName}
+                </div>
+              )}
+              {contact.urduName && (
+                <div
+                  className="text-sm text-green-600"
+                  dir="rtl"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  {contact.urduName}
+                </div>
+              )}
+              <div className="text-sm text-gray-600 mt-1">
+                <strong>Phone:</strong> {contact.phone}
+              </div>
+              <div className="text-sm text-gray-600">
+                <strong>Type:</strong> {contact.type}
+              </div>
+              {contact.malayalamType && (
+                <div
+                  className="text-sm text-blue-600"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  <strong>തരം:</strong> {contact.malayalamType}
+                </div>
+              )}
+              {contact.urduType && (
+                <div
+                  className="text-sm text-green-600"
+                  dir="rtl"
+                  style={{ fontFamily: "Arial, sans-serif" }}
+                >
+                  <strong>قسم:</strong> {contact.urduType}
+                </div>
+              )}
+            </div>
           ))}
         </div>
-      )
+      ),
     },
     {
-      title: 'Media',
-      key: 'media',
+      title: "Media",
+      key: "media",
       render: (_, record) => (
         <Space direction="vertical" size="small">
           {record.images && record.images.length > 0 && (
             <div className="flex items-center gap-2">
-              <Tag color="green" size="small">Images ({record.images.length})</Tag>
+              <Tag color="green" size="small">
+                Images ({record.images.length})
+              </Tag>
               <div className="flex gap-1">
                 {record.images.slice(0, 3).map((img, index) => (
                   <Image
@@ -669,9 +905,12 @@ const ArrivedManagement = () => {
                     src={img}
                     preview={{
                       src: img,
-                      mask: index === 2 && record.images.length > 3 ? `+${record.images.length - 3}` : false
+                      mask:
+                        index === 2 && record.images.length > 3
+                          ? `+${record.images.length - 3}`
+                          : false,
                     }}
-                    style={{ objectFit: 'cover', borderRadius: '4px' }}
+                    style={{ objectFit: "cover", borderRadius: "4px" }}
                   />
                 ))}
               </div>
@@ -679,11 +918,13 @@ const ArrivedManagement = () => {
           )}
           {record.video && (
             <div className="flex items-center gap-2">
-              <Tag color="purple" size="small">Video</Tag>
+              <Tag color="purple" size="small">
+                Video
+              </Tag>
               <Button
                 size="small"
                 type="link"
-                onClick={() => window.open(record.video, '_blank')}
+                onClick={() => window.open(record.video, "_blank")}
                 className="p-0 h-auto text-red-600"
                 title="Open video"
               >
@@ -693,11 +934,13 @@ const ArrivedManagement = () => {
           )}
           {record.map && (
             <div className="flex items-center gap-2">
-              <Tag color="orange" size="small">Map</Tag>
+              <Tag color="orange" size="small">
+                Map
+              </Tag>
               <Button
                 size="small"
                 type="link"
-                onClick={() => window.open(record.map, '_blank')}
+                onClick={() => window.open(record.map, "_blank")}
                 className="p-0 h-auto"
               >
                 View Map
@@ -705,11 +948,11 @@ const ArrivedManagement = () => {
             </div>
           )}
         </Space>
-      )
+      ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space>
           <button
@@ -721,12 +964,16 @@ const ArrivedManagement = () => {
               form.setFieldsValue({
                 id: record.id,
                 title: record.title,
-                description: record.description || '',
+                malayalamTitle: record.malayalamTitle || "",
+                urduTitle: record.urduTitle || "",
+                description: record.description || "",
+                malayalamDescription: record.malayalamDescription || "",
+                urduDescription: record.urduDescription || "",
                 images: recordImages,
-                video: record.video || '',
-                map: record.map || '',
+                video: record.video || "",
+                map: record.map || "",
                 transportationOptions: record.transportationOptions || [],
-                emergencyContacts: record.emergencyContacts || []
+                emergencyContacts: record.emergencyContacts || [],
               });
 
               setUploadedFiles({ images: [], video: null });
@@ -744,8 +991,8 @@ const ArrivedManagement = () => {
             <Trash2 size={18} className="text-red-500" />
           </button>
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -757,7 +1004,7 @@ const ArrivedManagement = () => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -772,13 +1019,13 @@ const ArrivedManagement = () => {
           <div className="flex gap-4">
             {selectedRows.length > 0 && (
               <button
-                onClick={() => handleBulkAction('delete')}
+                onClick={() => handleBulkAction("delete")}
                 className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-red-600 border-0 font-normal"
                 style={{
-                  backgroundColor: '#ef4444 !important',
-                  color: 'white !important',
-                  border: 'none !important',
-                  borderRadius: '6px !important'
+                  backgroundColor: "#ef4444 !important",
+                  color: "white !important",
+                  border: "none !important",
+                  borderRadius: "6px !important",
                 }}
               >
                 Delete Selected ({selectedRows.length})
@@ -788,10 +1035,10 @@ const ArrivedManagement = () => {
               onClick={handleDownloadTemplate}
               className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600 border-0 font-normal"
               style={{
-                backgroundColor: '#6b7280 !important',
-                color: 'white !important',
-                border: 'none !important',
-                borderRadius: '6px !important'
+                backgroundColor: "#6b7280 !important",
+                color: "white !important",
+                border: "none !important",
+                borderRadius: "6px !important",
               }}
             >
               <Download size={20} />
@@ -808,11 +1055,11 @@ const ArrivedManagement = () => {
               htmlFor="excel-upload"
               className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 border-0 font-normal"
               style={{
-                backgroundColor: '#3b82f6 !important',
-                color: 'white !important',
-                border: 'none !important',
-                borderRadius: '6px !important',
-                display: 'flex !important'
+                backgroundColor: "#3b82f6 !important",
+                color: "white !important",
+                border: "none !important",
+                borderRadius: "6px !important",
+                display: "flex !important",
               }}
             >
               Upload Excel
@@ -824,10 +1071,10 @@ const ArrivedManagement = () => {
               }}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600 border-0 font-normal"
               style={{
-                backgroundColor: '#22c55e !important',
-                color: 'white !important',
-                border: 'none !important',
-                borderRadius: '6px !important'
+                backgroundColor: "#22c55e !important",
+                color: "white !important",
+                border: "none !important",
+                borderRadius: "6px !important",
               }}
             >
               Add Entry
@@ -846,9 +1093,7 @@ const ArrivedManagement = () => {
         )}
         {uploadSuccess && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            <div className="flex items-center gap-2">
-              ✓ {uploadSuccess}
-            </div>
+            <div className="flex items-center gap-2">✓ {uploadSuccess}</div>
           </div>
         )}
 
@@ -862,14 +1107,17 @@ const ArrivedManagement = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
             />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            <Search
+              size={20}
+              className="absolute left-3 top-3.5 text-gray-400"
+            />
           </div>
         </div>
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -877,7 +1125,7 @@ const ArrivedManagement = () => {
               <p className="text-gray-600 mb-6">
                 {Array.isArray(deleteConfirm.id)
                   ? `Are you sure you want to delete ${deleteConfirm.id.length} selected entries? This action cannot be undone.`
-                  : 'Are you sure you want to delete this entry? This action cannot be undone.'}
+                  : "Are you sure you want to delete this entry? This action cannot be undone."}
               </p>
               <div className="flex justify-end gap-3">
                 <button
@@ -914,7 +1162,9 @@ const ArrivedManagement = () => {
           title={
             <div className="flex items-center gap-2">
               <MapPin size={20} />
-              <span>{editingId ? 'Edit Arrived Entry' : 'Add New Arrived Entry'}</span>
+              <span>
+                {editingId ? "Edit Arrived Entry" : "Add New Arrived Entry"}
+              </span>
             </div>
           }
           open={modalVisible}
@@ -922,21 +1172,24 @@ const ArrivedManagement = () => {
           footer={null}
           width={900}
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   name="id"
                   label="Entry ID"
                   rules={[
-                    { required: true, message: 'Please enter entry ID' },
-                    { min: 1, message: 'Entry ID cannot be empty' },
-                    { max: 50, message: 'Entry ID cannot exceed 50 characters' },
-                    { pattern: /^[a-zA-Z0-9_-]+$/, message: 'Entry ID can only contain letters, numbers, hyphens, and underscores' }
+                    { required: true, message: "Please enter entry ID" },
+                    { min: 1, message: "Entry ID cannot be empty" },
+                    {
+                      max: 50,
+                      message: "Entry ID cannot exceed 50 characters",
+                    },
+                    {
+                      pattern: /^[a-zA-Z0-9_-]+$/,
+                      message:
+                        "Entry ID can only contain letters, numbers, hyphens, and underscores",
+                    },
                   ]}
                 >
                   <Input placeholder="Enter unique entry ID" />
@@ -945,64 +1198,149 @@ const ArrivedManagement = () => {
               <Col span={12}>
                 <Form.Item
                   name="title"
-                  label="Title"
+                  label="Title (English)"
                   rules={[
-                    { required: true, message: 'Please enter title' },
-                    { min: 1, message: 'Title cannot be empty' },
-                    { max: 200, message: 'Title cannot exceed 200 characters' }
+                    { required: true, message: "Please enter title" },
+                    { min: 1, message: "Title cannot be empty" },
+                    { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
-                  <Input placeholder="Enter entry title" />
+                  <Input placeholder="Enter entry title in English" />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item
-              name="description"
-              label="Description"
-            >
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="malayalamTitle"
+                  label="Title (Malayalam)"
+                  rules={[
+                    {
+                      max: 200,
+                      message: "Malayalam title cannot exceed 200 characters",
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="മലയാളത്തിൽ ശീർഷകം നൽകുക"
+                    style={{ fontFamily: "Arial, sans-serif" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="urduTitle"
+                  label="Title (Urdu)"
+                  rules={[
+                    {
+                      max: 200,
+                      message: "Urdu title cannot exceed 200 characters",
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="اردو میں عنوان درج کریں"
+                    dir="rtl"
+                    style={{ fontFamily: "Arial, sans-serif" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item name="description" label="Description (English)">
               <TextArea
                 rows={4}
-                placeholder="Enter a detailed description..."
+                placeholder="Enter a detailed description in English..."
                 maxLength={500}
                 showCount
               />
             </Form.Item>
 
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="malayalamDescription"
+                  label="Description (Malayalam)"
+                >
+                  <TextArea
+                    rows={4}
+                    placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
+                    maxLength={500}
+                    showCount
+                    style={{ fontFamily: "Arial, sans-serif" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="urduDescription" label="Description (Urdu)">
+                  <TextArea
+                    rows={4}
+                    placeholder="اردو میں تفصیلی تفصیل درج کریں..."
+                    maxLength={500}
+                    showCount
+                    dir="rtl"
+                    style={{ fontFamily: "Arial, sans-serif" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
             {/* File Upload Sections */}
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label={`Multiple Images Upload (${uploadedFiles.images?.length || 0}/20)`}>
+                <Form.Item
+                  label={`Multiple Images Upload (${
+                    uploadedFiles.images?.length || 0
+                  }/20)`}
+                >
                   <Dragger
                     {...uploadProps}
                     accept="image/*"
                     multiple={true}
                     maxCount={20}
-                    onChange={(info) => handleFileChange(info, 'images')}
-                    beforeUpload={(file) => uploadProps.beforeUpload(file, 'images')}
+                    onChange={(info) => handleFileChange(info, "images")}
+                    beforeUpload={(file) =>
+                      uploadProps.beforeUpload(file, "images")
+                    }
                   >
                     <p className="ant-upload-drag-icon">
-                      <UploadCloud size={40} className="mx-auto text-blue-500" />
+                      <UploadCloud
+                        size={40}
+                        className="mx-auto text-blue-500"
+                      />
                     </p>
-                    <p className="ant-upload-text">Click or drag images to upload</p>
+                    <p className="ant-upload-text">
+                      Click or drag images to upload
+                    </p>
                     <p className="ant-upload-hint">
-                      Support for jpg, png, gif. Max size 5MB each. Maximum 20 images allowed.
+                      Support for jpg, png, gif. Max size 5MB each. Maximum 20
+                      images allowed.
                     </p>
                   </Dragger>
 
                   {/* Display all images in a compact grid */}
-                  {((editingId && existingImages && existingImages.length > 0) ||
-                    (uploadedFiles.images && uploadedFiles.images.length > 0)) && (
-                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="text-sm font-medium text-gray-700">
-                            Images ({(existingImages?.length || 0) + (uploadedFiles.images?.length || 0)}/20)
-                            <span className="ml-2 text-xs text-gray-500">
-                              (Existing: {existingImages?.length || 0}, New: {uploadedFiles.images?.length || 0})
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
-                            {editingId && existingImages && existingImages.length > 0 && (
+                  {((editingId &&
+                    existingImages &&
+                    existingImages.length > 0) ||
+                    (uploadedFiles.images &&
+                      uploadedFiles.images.length > 0)) && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="text-sm font-medium text-gray-700">
+                          Images (
+                          {(existingImages?.length || 0) +
+                            (uploadedFiles.images?.length || 0)}
+                          /20)
+                          <span className="ml-2 text-xs text-gray-500">
+                            (Existing: {existingImages?.length || 0}, New:{" "}
+                            {uploadedFiles.images?.length || 0})
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          {editingId &&
+                            existingImages &&
+                            existingImages.length > 0 && (
                               <button
                                 type="button"
                                 onClick={clearAllExistingImages}
@@ -1012,7 +1350,8 @@ const ArrivedManagement = () => {
                                 Clear Existing
                               </button>
                             )}
-                            {uploadedFiles.images && uploadedFiles.images.length > 0 && (
+                          {uploadedFiles.images &&
+                            uploadedFiles.images.length > 0 && (
                               <button
                                 type="button"
                                 onClick={clearAllNewImages}
@@ -1022,20 +1361,25 @@ const ArrivedManagement = () => {
                                 Clear New
                               </button>
                             )}
-                          </div>
                         </div>
-                        <div className="grid grid-cols-6 gap-2">
-                          {/* Existing images */}
-                          {editingId && existingImages && existingImages.map((imageUrl, index) => (
-                            <div key={`existing-${index}`} className="relative group">
+                      </div>
+                      <div className="grid grid-cols-6 gap-2">
+                        {/* Existing images */}
+                        {editingId &&
+                          existingImages &&
+                          existingImages.map((imageUrl, index) => (
+                            <div
+                              key={`existing-${index}`}
+                              className="relative group"
+                            >
                               <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
                                 <img
                                   src={imageUrl}
                                   alt={`Existing ${index + 1}`}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
+                                    e.target.style.display = "none";
+                                    e.target.nextSibling.style.display = "flex";
                                   }}
                                 />
                                 <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
@@ -1060,18 +1404,23 @@ const ArrivedManagement = () => {
                             </div>
                           ))}
 
-                          {/* New images */}
-                          {uploadedFiles.images && uploadedFiles.images.map((file, index) => (
-                            <div key={`new-${index}`} className="relative group">
+                        {/* New images */}
+                        {uploadedFiles.images &&
+                          uploadedFiles.images.map((file, index) => (
+                            <div
+                              key={`new-${index}`}
+                              className="relative group"
+                            >
                               <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
-                                {file && file.type?.startsWith('image/') ? (
+                                {file && file.type?.startsWith("image/") ? (
                                   <img
                                     src={URL.createObjectURL(file)}
                                     alt={`New ${index + 1}`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      e.target.style.display = 'none';
-                                      e.target.nextSibling.style.display = 'flex';
+                                      e.target.style.display = "none";
+                                      e.target.nextSibling.style.display =
+                                        "flex";
                                     }}
                                   />
                                 ) : null}
@@ -1096,24 +1445,22 @@ const ArrivedManagement = () => {
                               </button>
                             </div>
                           ))}
-                        </div>
-
-                        {/* Legend */}
-                        <div className="mt-2 flex gap-4 text-xs text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                            <span>Existing Images</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-green-500 rounded"></div>
-                            <span>New Images</span>
-                          </div>
-                          <div className="text-gray-500">
-                            Hover to delete
-                          </div>
-                        </div>
                       </div>
-                    )}
+
+                      {/* Legend */}
+                      <div className="mt-2 flex gap-4 text-xs text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                          <span>Existing Images</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-green-500 rounded"></div>
+                          <span>New Images</span>
+                        </div>
+                        <div className="text-gray-500">Hover to delete</div>
+                      </div>
+                    </div>
+                  )}
                 </Form.Item>
               </Col>
 
@@ -1123,9 +1470,9 @@ const ArrivedManagement = () => {
                   label="Video URL"
                   rules={[
                     {
-                      type: 'url',
-                      message: 'Please enter a valid URL'
-                    }
+                      type: "url",
+                      message: "Please enter a valid URL",
+                    },
                   ]}
                 >
                   <Input
@@ -1141,9 +1488,9 @@ const ArrivedManagement = () => {
               label="Map Link URL"
               rules={[
                 {
-                  type: 'url',
-                  message: 'Please enter a valid URL'
-                }
+                  type: "url",
+                  message: "Please enter a valid URL",
+                },
               ]}
             >
               <Input
@@ -1156,28 +1503,112 @@ const ArrivedManagement = () => {
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...restField }) => (
-                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'type']}
-                        rules={[{ required: true, message: 'Missing transportation type' }]}
+                    <div
+                      key={key}
+                      style={{
+                        marginBottom: 16,
+                        padding: 16,
+                        border: "1px solid #d9d9d9",
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "type"]}
+                            label="Type (English)"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing transportation type",
+                              },
+                            ]}
+                          >
+                            <Input placeholder="Transportation type in English" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "malayalamType"]}
+                            label="Type (Malayalam)"
+                          >
+                            <Input
+                              placeholder="മലയാളത്തിൽ ഗതാഗത തരം"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "urduType"]}
+                            label="Type (Urdu)"
+                          >
+                            <Input
+                              placeholder="اردو میں نقل و حمل کی قسم"
+                              dir="rtl"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "details"]}
+                            label="Details (English)"
+                            rules={[
+                              { required: true, message: "Missing details" },
+                            ]}
+                          >
+                            <Input placeholder="Details in English" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "malayalamDetails"]}
+                            label="Details (Malayalam)"
+                          >
+                            <Input
+                              placeholder="മലയാളത്തിൽ വിശദാംശങ്ങൾ"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "urduDetails"]}
+                            label="Details (Urdu)"
+                          >
+                            <Input
+                              placeholder="اردو میں تفصیلات"
+                              dir="rtl"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Button
+                        onClick={() => remove(name)}
+                        danger
+                        style={{ marginTop: 8 }}
                       >
-                        <Input placeholder="Transportation type" />
-                      </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'details']}
-                        rules={[{ required: true, message: 'Missing details' }]}
-                      >
-                        <Input placeholder="Details" />
-                      </Form.Item>
-                      <Button onClick={() => remove(name)} danger>
-                        Remove
+                        Remove Transportation Option
                       </Button>
-                    </Space>
+                    </div>
                   ))}
                   <Form.Item>
-                    <Button type="dashed" onClick={() => add()} block icon={<Plus />}>
+                    <Button
+                      type="dashed"
+                      onClick={() => add()}
+                      block
+                      icon={<Plus />}
+                    >
                       Add Transportation Option
                     </Button>
                   </Form.Item>
@@ -1189,35 +1620,132 @@ const ArrivedManagement = () => {
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...restField }) => (
-                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'name']}
-                        rules={[{ required: true, message: 'Missing contact name' }]}
+                    <div
+                      key={key}
+                      style={{
+                        marginBottom: 16,
+                        padding: 16,
+                        border: "1px solid #d9d9d9",
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "name"]}
+                            label="Name (English)"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing contact name",
+                              },
+                            ]}
+                          >
+                            <Input placeholder="Contact name in English" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "malayalamName"]}
+                            label="Name (Malayalam)"
+                          >
+                            <Input
+                              placeholder="മലയാളത്തിൽ കോൺടാക്റ്റ് പേര്"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "urduName"]}
+                            label="Name (Urdu)"
+                          >
+                            <Input
+                              placeholder="اردو میں رابطہ کا نام"
+                              dir="rtl"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "phone"]}
+                            label="Phone Number"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing phone number",
+                              },
+                            ]}
+                          >
+                            <Input placeholder="Phone number" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "type"]}
+                            label="Type (English)"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing contact type",
+                              },
+                            ]}
+                          >
+                            <Input placeholder="Type (e.g., Police, Hospital)" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "malayalamType"]}
+                            label="Type (Malayalam)"
+                          >
+                            <Input
+                              placeholder="മലയാളത്തിൽ തരം (പോലീസ്, ആശുപത്രി)"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "urduType"]}
+                            label="Type (Urdu)"
+                          >
+                            <Input
+                              placeholder="اردو میں قسم (پولیس، ہسپتال)"
+                              dir="rtl"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Button
+                        onClick={() => remove(name)}
+                        danger
+                        style={{ marginTop: 8 }}
                       >
-                        <Input placeholder="Contact name" />
-                      </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'phone']}
-                        rules={[{ required: true, message: 'Missing phone number' }]}
-                      >
-                        <Input placeholder="Phone number" />
-                      </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'type']}
-                        rules={[{ required: true, message: 'Missing contact type' }]}
-                      >
-                        <Input placeholder="Type (e.g., Police, Hospital)" />
-                      </Form.Item>
-                      <Button onClick={() => remove(name)} danger>
-                        Remove
+                        Remove Emergency Contact
                       </Button>
-                    </Space>
+                    </div>
                   ))}
                   <Form.Item>
-                    <Button type="dashed" onClick={() => add()} block icon={<Plus />}>
+                    <Button
+                      type="dashed"
+                      onClick={() => add()}
+                      block
+                      icon={<Plus />}
+                    >
                       Add Emergency Contact
                     </Button>
                   </Form.Item>
@@ -1234,7 +1762,8 @@ const ArrivedManagement = () => {
                   loading={submitting}
                   disabled={submitting}
                 >
-                  {submitting ? 'Saving...' : (editingId ? 'Update' : 'Create')} Entry
+                  {submitting ? "Saving..." : editingId ? "Update" : "Create"}{" "}
+                  Entry
                 </Button>
                 <Button onClick={resetModalState} disabled={submitting}>
                   Cancel

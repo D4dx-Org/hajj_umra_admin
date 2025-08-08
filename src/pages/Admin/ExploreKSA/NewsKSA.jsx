@@ -13,9 +13,17 @@ const News = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [newNews, setNewNews] = useState({
-    title: '',
+    title: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    },
     link: '',
-    description: ''
+    description: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    }
   });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
@@ -73,35 +81,29 @@ const News = () => {
     },
     {
       key: 'title',
-      title: 'Title',
+      title: 'Title (English)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.title}
-              onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.title;
+        return row.title?.english || 'N/A';
+      }
+    },
+    {
+      key: 'titleMalayalam',
+      title: 'Title (Malayalam)',
+      render: (row) => {
+        return row.title?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'titleUrdu',
+      title: 'Title (Urdu)',
+      render: (row) => {
+        return row.title?.urdu || 'N/A';
       }
     },
     {
       key: 'link',
       title: 'Link',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.link}
-              onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.link ? (
           <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
             {row.link}
@@ -111,19 +113,23 @@ const News = () => {
     },
     {
       key: 'description',
-      title: 'Description',
+      title: 'Description (English)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <textarea
-              value={row.description}
-              onChange={(e) => handleEditChange(row._id, 'description', e.target.value)}
-              className="w-full p-1 border rounded"
-              rows="3"
-            />
-          );
-        }
-        return row.description || 'N/A';
+        return row.description?.english || 'N/A';
+      }
+    },
+    {
+      key: 'descriptionMalayalam',
+      title: 'Description (Malayalam)',
+      render: (row) => {
+        return row.description?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'descriptionUrdu',
+      title: 'Description (Urdu)',
+      render: (row) => {
+        return row.description?.urdu || 'N/A';
       }
     },
     {
@@ -131,41 +137,22 @@ const News = () => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       )
     }
-  ], [editingId, selectedRows, newsData.length]);
+  ], [selectedRows, newsData.length]);
 
   // Fetch news data
   useEffect(() => {
@@ -186,8 +173,12 @@ const News = () => {
   // Filter data based on search
   const filteredNewsData = useMemo(() => {
     return newsData.filter(item =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.title?.english || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.title?.malayalam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.title?.urdu || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description?.english || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description?.malayalam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description?.urdu || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.link || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [newsData, searchTerm]);
@@ -291,7 +282,11 @@ const News = () => {
       );
 
       setNewsData([...newsData, response.data]);
-      setNewNews({ title: '', link: '', description: '' });
+      setNewNews({ 
+        title: { english: '', malayalam: '', urdu: '' }, 
+        link: '', 
+        description: { english: '', malayalam: '', urdu: '' } 
+      });
       setShowAddForm(false);
     } catch (error) {
       console.error("Error adding news data:", error);
@@ -351,14 +346,46 @@ const News = () => {
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New News Item</h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
-                <input
-                  type="text"
-                  value={newNews.title}
-                  onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
-                  className="w-full p-2 border rounded"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title (English)</label>
+                  <input
+                    type="text"
+                    value={newNews.title.english}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      title: { ...newNews.title, english: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title (Malayalam)</label>
+                  <input
+                    type="text"
+                    value={newNews.title.malayalam}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      title: { ...newNews.title, malayalam: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title (Urdu)</label>
+                  <input
+                    type="text"
+                    value={newNews.title.urdu}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      title: { ...newNews.title, urdu: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Link</label>
@@ -369,14 +396,43 @@ const News = () => {
                   className="w-full p-2 border rounded"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  value={newNews.description}
-                  onChange={(e) => setNewNews({ ...newNews, description: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  rows="3"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (English)</label>
+                  <textarea
+                    value={newNews.description.english}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      description: { ...newNews.description, english: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (Malayalam)</label>
+                  <textarea
+                    value={newNews.description.malayalam}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      description: { ...newNews.description, malayalam: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (Urdu)</label>
+                  <textarea
+                    value={newNews.description.urdu}
+                    onChange={(e) => setNewNews({ 
+                      ...newNews, 
+                      description: { ...newNews.description, urdu: e.target.value } 
+                    })}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                  />
+                </div>
               </div>
             </div>
             <button
@@ -419,13 +475,146 @@ const News = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredNewsData.map((row) => (
-                  <tr key={row._id}>
-                    {newsColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
-                    ))}
-                  </tr>
+                  <React.Fragment key={row._id}>
+                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      {newsColumns.map((column) => (
+                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                          {column.render ? column.render(row) : row[column.key]}
+                        </td>
+                      ))}
+                    </tr>
+                    {editingId === row._id && (
+                      <tr>
+                        <td colSpan={newsColumns.length} className="p-0">
+                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                            <div className="flex justify-between items-center mb-6">
+                              <h3 className="text-lg font-semibold text-gray-900">Edit News Item</h3>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Title Information */}
+                              <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">Title Information</h4>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Title (English) *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.title?.english || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, english: e.target.value })}
+                                    placeholder="News title in English"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Title (Malayalam)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.title?.malayalam || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, malayalam: e.target.value })}
+                                    placeholder="വാർത്താ ശീർഷകം"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Title (Urdu)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.title?.urdu || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, urdu: e.target.value })}
+                                    placeholder="خبر کا عنوان"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Link & Description */}
+                              <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">Link & Description</h4>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Link
+                                  </label>
+                                  <input
+                                    type="url"
+                                    value={row.link || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
+                                    placeholder="https://example.com"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Description (English)
+                                  </label>
+                                  <textarea
+                                    value={row.description?.english || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, english: e.target.value })}
+                                    placeholder="News description in English"
+                                    rows="3"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Description Translations */}
+                            <div className="mt-6">
+                              <h4 className="font-medium text-gray-700 mb-4">Description Translations</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Description (Malayalam)
+                                  </label>
+                                  <textarea
+                                    value={row.description?.malayalam || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, malayalam: e.target.value })}
+                                    placeholder="വാർത്താ വിവരണം"
+                                    rows="3"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Description (Urdu)
+                                  </label>
+                                  <textarea
+                                    value={row.description?.urdu || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, urdu: e.target.value })}
+                                    placeholder="خبر کی تفصیل"
+                                    rows="3"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -435,8 +624,8 @@ const News = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
             <div className="flex items-center gap-3 text-amber-500 mb-4">
               <AlertTriangle className="h-6 w-6" />
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>

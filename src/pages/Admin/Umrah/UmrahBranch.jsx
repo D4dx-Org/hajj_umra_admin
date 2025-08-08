@@ -15,6 +15,8 @@ const UmrahBranch = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newBranch, setNewBranch] = useState({
     name: '',
+    malayalamName: '',
+    urduName: '',
     phoneNumber: ''
   });
   const [originalData, setOriginalData] = useState(null);
@@ -48,33 +50,27 @@ const UmrahBranch = ({ isOpen }) => {
       key: 'name',
       title: 'Name',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.name;
+      }
+    },
+    {
+      key: 'malayalamName',
+      title: 'Malayalam Name',
+      render: (row) => {
+        return row.malayalamName || '-';
+      }
+    },
+    {
+      key: 'urduName',
+      title: 'Urdu Name',
+      render: (row) => {
+        return row.urduName || '-';
       }
     },
     {
       key: 'phoneNumber',
       title: 'Phone Number',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.phoneNumber || ''}
-              onChange={(e) => handleEditChange(row._id, 'phoneNumber', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.phoneNumber || 'N/A';
       }
     },
@@ -83,37 +79,18 @@ const UmrahBranch = ({ isOpen }) => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       )
     }
@@ -123,6 +100,10 @@ const UmrahBranch = ({ isOpen }) => {
   const sortOptions = [
     { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
     { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamName-alpha-asc', label: 'Malayalam Name (A-Z)', field: 'malayalamName', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamName-alpha-desc', label: 'Malayalam Name (Z-A)', field: 'malayalamName', direction: 'desc', type: 'alpha' },
+    { value: 'urduName-alpha-asc', label: 'Urdu Name (A-Z)', field: 'urduName', direction: 'asc', type: 'alpha' },
+    { value: 'urduName-alpha-desc', label: 'Urdu Name (Z-A)', field: 'urduName', direction: 'desc', type: 'alpha' },
     { value: 'phoneNumber-alpha-asc', label: 'Phone (A-Z)', field: 'phoneNumber', direction: 'asc', type: 'alpha' },
     { value: 'phoneNumber-alpha-desc', label: 'Phone (Z-A)', field: 'phoneNumber', direction: 'desc', type: 'alpha' }
   ];
@@ -242,6 +223,8 @@ const UmrahBranch = ({ isOpen }) => {
         setBranchData(updatedResponse.data);
         setNewBranch({ 
           name: '',
+          malayalamName: '',
+          urduName: '',
           phoneNumber: ''
         });
         setShowAddForm(false);
@@ -292,6 +275,8 @@ const UmrahBranch = ({ isOpen }) => {
       filtered = branchData.filter((item) => {
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.phoneNumber && item.phoneNumber.toLowerCase().includes(lowerCaseSearch))
         );
       });
@@ -321,6 +306,8 @@ const UmrahBranch = ({ isOpen }) => {
       const sampleData = [
         {
           name: 'Sample Branch',
+          malayalam_name: 'സാമ്പിൾ ബ്രാഞ്ച്',
+          urdu_name: 'نمونہ برانچ',
           phone_number: '+966123456789'
         }
       ];
@@ -329,6 +316,8 @@ const UmrahBranch = ({ isOpen }) => {
       
       utils.sheet_add_aoa(ws, [[
         'name',
+        'malayalam_name',
+        'urdu_name',
         'phone_number'
       ]], { origin: 'A1' });
 
@@ -339,6 +328,8 @@ const UmrahBranch = ({ isOpen }) => {
 
       ws['!cols'] = [
         { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
         { wch: 20 }  // phone_number
       ];
 
@@ -531,6 +522,26 @@ const UmrahBranch = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Name</label>
+                <input
+                  type="text"
+                  value={newBranch.malayalamName}
+                  onChange={(e) => setNewBranch({ ...newBranch, malayalamName: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മലയാളം പേര്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newBranch.urduName}
+                  onChange={(e) => setNewBranch({ ...newBranch, urduName: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="اردو نام"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Phone Number</label>
                 <input
                   type="text"
@@ -606,13 +617,109 @@ const UmrahBranch = ({ isOpen }) => {
                   </tr>
                 ) : (
                   filteredBranchData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
-                      {branchColumns.map((column) => (
-                        <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {column.render(row)}
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {branchColumns.map((column) => (
+                          <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {column.render(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={branchColumns.length} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Branch</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Basic Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "name", e.target.value)
+                                      }
+                                      placeholder="Branch name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamName", e.target.value)
+                                      }
+                                      placeholder="മലയാളം പേര്"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Contact Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Contact Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduName", e.target.value)
+                                      }
+                                      placeholder="اردو نام"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Phone Number
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.phoneNumber || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "phoneNumber", e.target.value)
+                                      }
+                                      placeholder="Phone number"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -622,8 +729,8 @@ const UmrahBranch = ({ isOpen }) => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="text-red-500 mr-3" size={24} />
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>

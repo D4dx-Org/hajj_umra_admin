@@ -286,7 +286,11 @@ const DuasManagement = () => {
       const duasData = {
         id: values.id.trim(),
         title: values.title.trim(),
+        malayalamTitle: values.malayalamTitle?.trim() || '',
+        urduTitle: values.urduTitle?.trim() || '',
         description: values.description?.trim() || '',
+        malayalamDescription: values.malayalamDescription?.trim() || '',
+        urduDescription: values.urduDescription?.trim() || '',
         images: imageUrls,
         video: values.video?.trim() || '',
         map: values.map?.trim() || ''
@@ -410,7 +414,11 @@ const DuasManagement = () => {
       const searchStr = searchTerm.toLowerCase();
       return (
         item.title?.toLowerCase().includes(searchStr) ||
+        item.malayalamTitle?.toLowerCase().includes(searchStr) ||
+        item.urduTitle?.toLowerCase().includes(searchStr) ||
         item.description?.toLowerCase().includes(searchStr) ||
+        item.malayalamDescription?.toLowerCase().includes(searchStr) ||
+        item.urduDescription?.toLowerCase().includes(searchStr) ||
         item.id?.toLowerCase().includes(searchStr)
       );
     });
@@ -443,7 +451,11 @@ const DuasManagement = () => {
         {
           id: 'sample_duas_001',
           title: 'Sample Duas Entry (Required)',
+          malayalam_title: 'സാമ്പിൾ ദുആ എൻട്രി',
+          urdu_title: 'نمونہ دعا انٹری',
           description: 'Sample description for duas content',
+          malayalam_description: 'ദുആ ഉള്ളടക്കത്തിനുള്ള സാമ്പിൾ വിവരണം',
+          urdu_description: 'دعا کے مواد کے لیے نمونہ تفصیل',
           video: 'https://www.youtube.com/watch?v=sample_video_id',
           map: 'https://maps.google.com/sample_map_link'
         }
@@ -455,7 +467,11 @@ const DuasManagement = () => {
       utils.sheet_add_aoa(ws, [[
         'id',
         'title',
+        'malayalam_title',
+        'urdu_title',
         'description',
+        'malayalam_description',
+        'urdu_description',
         'video',
         'map'
       ]], { origin: 'A1' });
@@ -470,7 +486,11 @@ const DuasManagement = () => {
       ws['!cols'] = [
         { wch: 20 }, // id
         { wch: 30 }, // title
+        { wch: 25 }, // malayalam_title
+        { wch: 25 }, // urdu_title
         { wch: 40 }, // description
+        { wch: 35 }, // malayalam_description
+        { wch: 35 }, // urdu_description
         { wch: 50 }, // video
         { wch: 50 }  // map
       ];
@@ -607,13 +627,42 @@ const DuasManagement = () => {
     {
       title: 'Title',
       dataIndex: 'title',
-      key: 'title'
+      key: 'title',
+      render: (text, record) => (
+        <div className="space-y-1">
+          <div className="font-medium text-gray-900">{text}</div>
+          {record.malayalamTitle && (
+            <div className="text-sm text-blue-600" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {record.malayalamTitle}
+            </div>
+          )}
+          {record.urduTitle && (
+            <div className="text-sm text-green-600" dir="rtl" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {record.urduTitle}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      render: (text) => text || '-'
+      render: (text, record) => (
+        <div className="space-y-1">
+          <div className="text-gray-900">{text || '-'}</div>
+          {record.malayalamDescription && (
+            <div className="text-sm text-blue-600" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {record.malayalamDescription}
+            </div>
+          )}
+          {record.urduDescription && (
+            <div className="text-sm text-green-600" dir="rtl" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {record.urduDescription}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: 'Media',
@@ -684,7 +733,11 @@ const DuasManagement = () => {
               form.setFieldsValue({
                 id: record.id,
                 title: record.title,
+                malayalamTitle: record.malayalamTitle || '',
+                urduTitle: record.urduTitle || '',
                 description: record.description || '',
+                malayalamDescription: record.malayalamDescription || '',
+                urduDescription: record.urduDescription || '',
                 images: recordImages,
                 video: record.video || '',
                 map: record.map || ''
@@ -829,8 +882,8 @@ const DuasManagement = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -906,29 +959,87 @@ const DuasManagement = () => {
               <Col span={12}>
                 <Form.Item
                   name="title"
-                  label="Title"
+                  label="Title (English)"
                   rules={[
                     { required: true, message: 'Please enter title' },
                     { min: 1, message: 'Title cannot be empty' },
                     { max: 200, message: 'Title cannot exceed 200 characters' }
                   ]}
                 >
-                  <Input placeholder="Enter entry title" />
+                  <Input placeholder="Enter entry title in English" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="malayalamTitle"
+                  label="Title (Malayalam)"
+                  rules={[
+                    { max: 200, message: 'Malayalam title cannot exceed 200 characters' }
+                  ]}
+                >
+                  <Input 
+                    placeholder="മലയാളത്തിൽ ശീർഷകം നൽകുക" 
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="urduTitle"
+                  label="Title (Urdu)"
+                  rules={[
+                    { max: 200, message: 'Urdu title cannot exceed 200 characters' }
+                  ]}
+                >
+                  <Input 
+                    placeholder="اردو میں عنوان درج کریں" 
+                    dir="rtl"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  />
                 </Form.Item>
               </Col>
             </Row>
 
             <Form.Item
               name="description"
-              label="Description"
+              label="Description (English)"
             >
               <TextArea
                 rows={4}
-                placeholder="Enter a detailed description..."
+                placeholder="Enter a detailed description in English..."
                 maxLength={500}
                 showCount
               />
             </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="malayalamDescription" label="Description (Malayalam)">
+                  <TextArea
+                    rows={4}
+                    placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
+                    maxLength={500}
+                    showCount
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="urduDescription" label="Description (Urdu)">
+                  <TextArea
+                    rows={4}
+                    placeholder="اردو میں تفصیلی تفصیل درج کریں..."
+                    maxLength={500}
+                    showCount
+                    dir="rtl"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
             {/* File Upload Sections */}
             <Row gutter={16}>

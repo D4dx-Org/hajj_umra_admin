@@ -421,7 +421,7 @@ const News = () => {
                 {filteredNewsData.map((row) => (
                   <tr key={row._id}>
                     {newsColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                      <td key={`${row._id}-${column.key}`} className="px-3 py-1 whitespace-nowrap">
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
                     ))}
@@ -435,8 +435,8 @@ const News = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
             <div className="flex items-center gap-3 text-amber-500 mb-4">
               <AlertTriangle className="h-6 w-6" />
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>

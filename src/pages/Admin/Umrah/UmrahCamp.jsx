@@ -16,12 +16,22 @@ const UmrahCamp = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newCamp, setNewCamp] = useState({
     maktab: '',
+    malayalamMaktab: '',
+    urduMaktab: '',
     zone: '',
+    malayalamZone: '',
+    urduZone: '',
     country: '',
     otherCountry: '',
     poll: '',
+    malayalamPoll: '',
+    urduPoll: '',
     road: '',
+    malayalamRoad: '',
+    urduRoad: '',
     tent: '',
+    malayalamTent: '',
+    urduTent: '',
     location: { lat: '', lng: '' }
   });
   const [originalData, setOriginalData] = useState(null);
@@ -55,65 +65,48 @@ const UmrahCamp = () => {
       key: 'maktab',
       title: 'Maktab',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.maktab || ''}
-              onChange={(e) => handleEditChange(row._id, 'maktab', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.maktab || 'N/A';
+        return row.maktab || '-';
+      }
+    },
+    {
+      key: 'malayalamMaktab',
+      title: 'Malayalam Maktab',
+      render: (row) => {
+        return row.malayalamMaktab || '-';
+      }
+    },
+    {
+      key: 'urduMaktab',
+      title: 'Urdu Maktab',
+      render: (row) => {
+        return row.urduMaktab || '-';
       }
     },
     {
       key: 'zone',
       title: 'Zone',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.zone || ''}
-              onChange={(e) => handleEditChange(row._id, 'zone', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.zone || 'N/A';
+        return row.zone || '-';
+      }
+    },
+    {
+      key: 'malayalamZone',
+      title: 'Malayalam Zone',
+      render: (row) => {
+        return row.malayalamZone || '-';
+      }
+    },
+    {
+      key: 'urduZone',
+      title: 'Urdu Zone',
+      render: (row) => {
+        return row.urduZone || '-';
       }
     },
     {
       key: 'country',
       title: 'Country',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="space-y-2">
-              <select
-                value={row.country?._id || row.country || ''}
-                onChange={(e) => handleEditChange(row._id, 'country', e.target.value)}
-                className="w-full p-1 border rounded"
-              >
-                <option value="">Select Country</option>
-                {countries.map(country => (
-                  <option key={country._id} value={country._id}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={row.otherCountry || ''}
-                onChange={(e) => handleEditChange(row._id, 'otherCountry', e.target.value)}
-                placeholder="Or enter other country"
-                className="w-full p-1 border rounded text-sm"
-              />
-            </div>
-          );
-        }
         return row.otherCountry || row.country?.name || 'N/A';
       }
     },
@@ -121,16 +114,6 @@ const UmrahCamp = () => {
       key: 'poll',
       title: 'Poll',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll || ''}
-              onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.poll || 'N/A';
       }
     },
@@ -138,16 +121,6 @@ const UmrahCamp = () => {
       key: 'road',
       title: 'Road',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.road || ''}
-              onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.road || 'N/A';
       }
     },
@@ -155,16 +128,6 @@ const UmrahCamp = () => {
       key: 'tent',
       title: 'Tent',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.tent || ''}
-              onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.tent || 'N/A';
       }
     },
@@ -172,26 +135,6 @@ const UmrahCamp = () => {
       key: 'location', 
       title: 'Location',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
         return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
       }
     },
@@ -200,37 +143,18 @@ const UmrahCamp = () => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       )
     }
@@ -240,8 +164,16 @@ const UmrahCamp = () => {
   const sortOptions = [
     { value: 'maktab-alpha-asc', label: 'Maktab (A-Z)', field: 'maktab', direction: 'asc', type: 'alpha' },
     { value: 'maktab-alpha-desc', label: 'Maktab (Z-A)', field: 'maktab', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamMaktab-alpha-asc', label: 'Malayalam Maktab (A-Z)', field: 'malayalamMaktab', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamMaktab-alpha-desc', label: 'Malayalam Maktab (Z-A)', field: 'malayalamMaktab', direction: 'desc', type: 'alpha' },
+    { value: 'urduMaktab-alpha-asc', label: 'Urdu Maktab (A-Z)', field: 'urduMaktab', direction: 'asc', type: 'alpha' },
+    { value: 'urduMaktab-alpha-desc', label: 'Urdu Maktab (Z-A)', field: 'urduMaktab', direction: 'desc', type: 'alpha' },
     { value: 'zone-alpha-asc', label: 'Zone (A-Z)', field: 'zone', direction: 'asc', type: 'alpha' },
     { value: 'zone-alpha-desc', label: 'Zone (Z-A)', field: 'zone', direction: 'desc', type: 'alpha' },
+    { value: 'malayalamZone-alpha-asc', label: 'Malayalam Zone (A-Z)', field: 'malayalamZone', direction: 'asc', type: 'alpha' },
+    { value: 'malayalamZone-alpha-desc', label: 'Malayalam Zone (Z-A)', field: 'malayalamZone', direction: 'desc', type: 'alpha' },
+    { value: 'urduZone-alpha-asc', label: 'Urdu Zone (A-Z)', field: 'urduZone', direction: 'asc', type: 'alpha' },
+    { value: 'urduZone-alpha-desc', label: 'Urdu Zone (Z-A)', field: 'urduZone', direction: 'desc', type: 'alpha' },
     { value: 'country-alpha-asc', label: 'Country (A-Z)', field: 'country', direction: 'asc', type: 'alpha' },
     { value: 'country-alpha-desc', label: 'Country (Z-A)', field: 'country', direction: 'desc', type: 'alpha' },
     { value: 'poll-alpha-asc', label: 'Poll (A-Z)', field: 'poll', direction: 'asc', type: 'alpha' },
@@ -391,12 +323,22 @@ const UmrahCamp = () => {
         setCampData(updatedResponse.data);
         setNewCamp({
           maktab: '',
+          malayalamMaktab: '',
+          urduMaktab: '',
           zone: '',
+          malayalamZone: '',
+          urduZone: '',
           country: '',
           otherCountry: '',
           poll: '',
+          malayalamPoll: '',
+          urduPoll: '',
           road: '',
+          malayalamRoad: '',
+          urduRoad: '',
           tent: '',
+          malayalamTent: '',
+          urduTent: '',
           location: { lat: '', lng: '' }
         });
         setShowAddForm(false);
@@ -452,10 +394,20 @@ const UmrahCamp = () => {
         const countryName = item.otherCountry || item.country?.name || '';
         return (
           (item.maktab && item.maktab.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamMaktab && item.malayalamMaktab.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduMaktab && item.urduMaktab.toLowerCase().includes(lowerCaseSearch)) ||
           (item.zone && item.zone.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamZone && item.malayalamZone.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduZone && item.urduZone.toLowerCase().includes(lowerCaseSearch)) ||
           (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamPoll && item.malayalamPoll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduPoll && item.urduPoll.toLowerCase().includes(lowerCaseSearch)) ||
           (item.road && item.road.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamRoad && item.malayalamRoad.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduRoad && item.urduRoad.toLowerCase().includes(lowerCaseSearch)) ||
           (item.tent && item.tent.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamTent && item.malayalamTent.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduTent && item.urduTent.toLowerCase().includes(lowerCaseSearch)) ||
           countryName.toLowerCase().includes(lowerCaseSearch)
         );
       });
@@ -485,11 +437,21 @@ const UmrahCamp = () => {
       const sampleData = [
         {
           maktab: 'Sample Maktab',
+          malayalam_maktab: 'മക്തബ് സാമ്പിൾ',
+          urdu_maktab: 'نمونہ مکتب',
           zone: 'Zone A',
+          malayalam_zone: 'മേഖല എ',
+          urdu_zone: 'علاقہ اے',
           country: 'Saudi Arabia',
           poll: 'Poll 1',
+          malayalam_poll: 'പോൾ 1',
+          urdu_poll: 'پول 1',
           road: 'Road 123',
+          malayalam_road: 'റോഡ് 123',
+          urdu_road: 'سڑک 123',
           tent: 'Tent A1',
+          malayalam_tent: 'കൂടാരം എ1',
+          urdu_tent: 'خیمہ اے1',
           latitude: '21.4225',
           longitude: '39.8262'
         }
@@ -499,11 +461,21 @@ const UmrahCamp = () => {
       
       utils.sheet_add_aoa(ws, [[
         'maktab',
+        'malayalam_maktab',
+        'urdu_maktab',
         'zone',
+        'malayalam_zone',
+        'urdu_zone',
         'country',
         'poll',
+        'malayalam_poll',
+        'urdu_poll',
         'road',
+        'malayalam_road',
+        'urdu_road',
         'tent',
+        'malayalam_tent',
+        'urdu_tent',
         'latitude',
         'longitude'
       ]], { origin: 'A1' });
@@ -515,11 +487,21 @@ const UmrahCamp = () => {
 
       ws['!cols'] = [
         { wch: 20 }, // maktab
+        { wch: 20 }, // malayalam_maktab
+        { wch: 20 }, // urdu_maktab
         { wch: 15 }, // zone
+        { wch: 15 }, // malayalam_zone
+        { wch: 15 }, // urdu_zone
         { wch: 20 }, // country
         { wch: 15 }, // poll
+        { wch: 15 }, // malayalam_poll
+        { wch: 15 }, // urdu_poll
         { wch: 15 }, // road
+        { wch: 15 }, // malayalam_road
+        { wch: 15 }, // urdu_road
         { wch: 15 }, // tent
+        { wch: 15 }, // malayalam_tent
+        { wch: 15 }, // urdu_tent
         { wch: 15 }, // latitude
         { wch: 15 }  // longitude
       ];
@@ -716,12 +698,52 @@ const UmrahCamp = () => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Maktab</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamMaktab}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamMaktab: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മക്തബ്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Maktab</label>
+                <input
+                  type="text"
+                  value={newCamp.urduMaktab}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduMaktab: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="مکتب"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Zone</label>
                 <input
                   type="text"
                   value={newCamp.zone}
                   onChange={(e) => setNewCamp({ ...newCamp, zone: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Zone</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamZone}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamZone: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="മേഖല"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Zone</label>
+                <input
+                  type="text"
+                  value={newCamp.urduZone}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduZone: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="علاقہ"
                 />
               </div>
               <div className="mb-4">
@@ -759,6 +781,26 @@ const UmrahCamp = () => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Poll</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamPoll}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamPoll: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="പോൾ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Poll</label>
+                <input
+                  type="text"
+                  value={newCamp.urduPoll}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduPoll: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="پول"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Road</label>
                 <input
                   type="text"
@@ -768,12 +810,52 @@ const UmrahCamp = () => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Road</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamRoad}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamRoad: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="റോഡ്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Road</label>
+                <input
+                  type="text"
+                  value={newCamp.urduRoad}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduRoad: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="سڑک"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Tent</label>
                 <input
                   type="text"
                   value={newCamp.tent}
                   onChange={(e) => setNewCamp({ ...newCamp, tent: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Tent</label>
+                <input
+                  type="text"
+                  value={newCamp.malayalamTent}
+                  onChange={(e) => setNewCamp({ ...newCamp, malayalamTent: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="കൂടാരം"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Tent</label>
+                <input
+                  type="text"
+                  value={newCamp.urduTent}
+                  onChange={(e) => setNewCamp({ ...newCamp, urduTent: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="خیمہ"
                 />
               </div>
               <div className="mb-4 md:col-span-2">
@@ -866,13 +948,252 @@ const UmrahCamp = () => {
                   </tr>
                 ) : (
                   filteredCampData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
-                      {campColumns.map((column) => (
-                        <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {column.render(row)}
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {campColumns.map((column) => (
+                          <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {column.render(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={campColumns.length} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Camp</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Maktab Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Maktab Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Maktab
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.maktab || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "maktab", e.target.value)
+                                      }
+                                      placeholder="Maktab name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Maktab
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamMaktab || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamMaktab", e.target.value)
+                                      }
+                                      placeholder="മലയാളം മക്തബ്"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Maktab
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduMaktab || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduMaktab", e.target.value)
+                                      }
+                                      placeholder="اردو مکتوب"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Zone Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Zone Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Zone
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.zone || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "zone", e.target.value)
+                                      }
+                                      placeholder="Zone name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Zone
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamZone || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamZone", e.target.value)
+                                      }
+                                      placeholder="മലയാളം സോൺ"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Zone
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduZone || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduZone", e.target.value)
+                                      }
+                                      placeholder="اردو زون"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Additional Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Additional Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Country
+                                    </label>
+                                    <select
+                                      value={row.country?._id || row.country || ""}
+                                      onChange={(e) => handleEditChange(row._id, "country", e.target.value)}
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                      <option value="">Select Country</option>
+                                      {countries.map(country => (
+                                        <option key={country._id} value={country._id}>
+                                          {country.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Other Country
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.otherCountry || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "otherCountry", e.target.value)
+                                      }
+                                      placeholder="Or enter other country"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.poll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "poll", e.target.value)
+                                      }
+                                      placeholder="Poll information"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Road, Tent, and Location - Full Width */}
+                              <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-4">Location Details</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Road
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.road || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "road", e.target.value)
+                                      }
+                                      placeholder="Road information"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Tent
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.tent || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "tent", e.target.value)
+                                      }
+                                      placeholder="Tent information"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Location (Optional)
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="number"
+                                        value={row.location?.lat || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lat: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Latitude"
+                                        className="w-1/2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                      <input
+                                        type="number"
+                                        value={row.location?.lng || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lng: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Longitude"
+                                        className="w-1/2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -882,8 +1203,8 @@ const UmrahCamp = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="text-red-500 mr-3" size={24} />
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>

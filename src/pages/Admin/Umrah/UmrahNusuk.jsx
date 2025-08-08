@@ -10,7 +10,8 @@ import {
   X, 
   Building2,
   MapPin,
-  Calendar
+  Calendar,
+  AlertTriangle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Sidebar from '../../../components/Sidebar';
@@ -31,7 +32,11 @@ const UmrahNusuk = ({ isOpen }) => {
 
   const [formData, setFormData] = useState({
     name: '',
+    malayalamName: '',
+    urduName: '',
     building: '',
+    malayalamBuilding: '',
+    urduBuilding: '',
     location: { lat: '', lng: '' }
   });
 
@@ -64,7 +69,11 @@ const UmrahNusuk = ({ isOpen }) => {
       const token = localStorage.getItem('token');
       const submitData = {
         name: formData.name.trim(),
+        malayalamName: formData.malayalamName.trim() || undefined,
+        urduName: formData.urduName.trim() || undefined,
         building: formData.building.trim(),
+        malayalamBuilding: formData.malayalamBuilding.trim() || undefined,
+        urduBuilding: formData.urduBuilding.trim() || undefined,
         location: {}
       };
 
@@ -106,9 +115,14 @@ const UmrahNusuk = ({ isOpen }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this nusuk?')) return;
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
+  const handleDelete = async (id) => {
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.id;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/nusuk-umrah/${id}`, {
@@ -118,19 +132,28 @@ const UmrahNusuk = ({ isOpen }) => {
       });
 
       setSuccess('Nusuk deleted successfully!');
+      setDeleteConfirm({ show: false, id: null });
       fetchNusuks();
     } catch (error) {
       setError(error.response?.data?.message || 'Delete failed');
+      setDeleteConfirm({ show: false, id: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, id: null });
   };
 
   const handleBulkDelete = async () => {
     if (selectedItems.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} selected nusuks?`)) return;
+    setDeleteConfirm({ show: true, id: selectedItems });
+  };
 
+  const handleBulkDeleteConfirm = async () => {
+    const ids = deleteConfirm.id;
     try {
       const token = localStorage.getItem('token');
-      const deletePromises = selectedItems.map(id =>
+      const deletePromises = ids.map(id =>
         axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/nusuk-umrah/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -139,11 +162,13 @@ const UmrahNusuk = ({ isOpen }) => {
       );
 
       await Promise.all(deletePromises);
-      setSuccess(`${selectedItems.length} nusuks deleted successfully!`);
+      setSuccess(`${ids.length} nusuks deleted successfully!`);
       setSelectedItems([]);
+      setDeleteConfirm({ show: false, id: null });
       fetchNusuks();
     } catch (error) {
       setError('Error during bulk delete: ' + error.message);
+      setDeleteConfirm({ show: false, id: null });
     }
   };
 
@@ -185,9 +210,36 @@ const UmrahNusuk = ({ isOpen }) => {
 
   const downloadTemplate = () => {
     const template = [
-      { name: 'Nusuk Care Center', building: 'Alyad', latitude: 21.4201507503122235, longitude: 39.8269900531054 },
-      { name: 'B200', building: '1/110', latitude: 21.412691, longitude: 39.883142 },
-      { name: 'B201', building: 'Jamrat', latitude: '', longitude: '' }
+      { 
+        name: 'Nusuk Care Center', 
+        malayalam_name: 'നുസുക് കെയർ സെന്റർ',
+        urdu_name: 'نسک کیئر سینٹر',
+        building: 'Alyad', 
+        malayalam_building: 'അലിയാദ്',
+        urdu_building: 'الیاد',
+        latitude: 21.4201507503122235, 
+        longitude: 39.8269900531054 
+      },
+      { 
+        name: 'B200', 
+        malayalam_name: 'ബി200',
+        urdu_name: 'بی200',
+        building: '1/110', 
+        malayalam_building: '1/110',
+        urdu_building: '1/110',
+        latitude: 21.412691, 
+        longitude: 39.883142 
+      },
+      { 
+        name: 'B201', 
+        malayalam_name: 'ബി201',
+        urdu_name: 'بی201',
+        building: 'Jamrat', 
+        malayalam_building: 'ജമ്രത്',
+        urdu_building: 'جمرات',
+        latitude: '', 
+        longitude: '' 
+      }
     ];
 
     const ws = XLSX.utils.json_to_sheet(template);
@@ -197,7 +249,15 @@ const UmrahNusuk = ({ isOpen }) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', building: '', location: { lat: '', lng: '' } });
+    setFormData({ 
+      name: '', 
+      malayalamName: '',
+      urduName: '',
+      building: '', 
+      malayalamBuilding: '',
+      urduBuilding: '',
+      location: { lat: '', lng: '' } 
+    });
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -205,7 +265,11 @@ const UmrahNusuk = ({ isOpen }) => {
   const startEdit = (nusuk) => {
     setFormData({
       name: nusuk.name,
+      malayalamName: nusuk.malayalamName || '',
+      urduName: nusuk.urduName || '',
       building: nusuk.building,
+      malayalamBuilding: nusuk.malayalamBuilding || '',
+      urduBuilding: nusuk.urduBuilding || '',
       location: {
         lat: nusuk.location?.lat || '',
         lng: nusuk.location?.lng || ''
@@ -245,7 +309,11 @@ const UmrahNusuk = ({ isOpen }) => {
 
   const filteredNusuks = sortedNusuks.filter(nusuk =>
     nusuk.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    nusuk.building.toLowerCase().includes(searchTerm.toLowerCase())
+    (nusuk.malayalamName && nusuk.malayalamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (nusuk.urduName && nusuk.urduName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    nusuk.building.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (nusuk.malayalamBuilding && nusuk.malayalamBuilding.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (nusuk.urduBuilding && nusuk.urduBuilding.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const toggleSelectAll = () => {
@@ -379,7 +447,7 @@ const UmrahNusuk = ({ isOpen }) => {
               <h2 className="text-xl font-semibold mb-4 text-gray-800">
                 {editingId ? 'Edit Nusuk' : 'Add New Nusuk'}
               </h2>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Name *
@@ -395,6 +463,33 @@ const UmrahNusuk = ({ isOpen }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Malayalam Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.malayalamName}
+                    onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="നുസുക്"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urdu Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.urduName}
+                    onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="نسک"
+                    dir="rtl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Building *
                   </label>
                   <input
@@ -403,6 +498,33 @@ const UmrahNusuk = ({ isOpen }) => {
                     onChange={(e) => setFormData({ ...formData, building: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Malayalam Building
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.malayalamBuilding}
+                    onChange={(e) => setFormData({ ...formData, malayalamBuilding: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="കെട്ടിടം"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urdu Building
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.urduBuilding}
+                    onChange={(e) => setFormData({ ...formData, urduBuilding: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="عمارت"
+                    dir="rtl"
                   />
                 </div>
 
@@ -440,7 +562,7 @@ const UmrahNusuk = ({ isOpen }) => {
                   />
                 </div>
 
-                <div className="md:col-span-2 flex gap-2">
+                <div className="md:col-span-2 lg:col-span-3 flex gap-2">
                   <button
                     type="submit"
                     className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
@@ -479,7 +601,19 @@ const UmrahNusuk = ({ isOpen }) => {
                       NAME
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM NAME
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU NAME
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       BUILDING
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM BUILDING
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU BUILDING
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       LOCATION
@@ -491,46 +625,210 @@ const UmrahNusuk = ({ isOpen }) => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {filteredNusuks.map((nusuk, index) => (
-                    <tr key={nusuk._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.includes(nusuk._id)}
-                          onChange={() => toggleSelectItem(nusuk._id)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm font-medium text-gray-900">{nusuk.name}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700">{nusuk.building}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700">
-                          {nusuk.location?.lat && nusuk.location?.lng 
-                            ? `${nusuk.location.lat}, ${nusuk.location.lng}`
-                            : '-'
-                          }
-                        </div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => startEdit(nusuk)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(nusuk._id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <React.Fragment key={nusuk._id}>
+                      <tr className={`hover:bg-gray-50 transition-colors ${editingId === nusuk._id ? 'bg-blue-50' : ''}`}>
+                        <td className="px-4 py-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(nusuk._id)}
+                            onChange={() => toggleSelectItem(nusuk._id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm font-medium text-gray-900">{nusuk.name}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">{nusuk.malayalamName || '-'}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700" dir="rtl">{nusuk.urduName || '-'}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">{nusuk.building}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">{nusuk.malayalamBuilding || '-'}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700" dir="rtl">{nusuk.urduBuilding || '-'}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">
+                            {nusuk.location?.lat && nusuk.location?.lng 
+                              ? `${nusuk.location.lat}, ${nusuk.location.lng}`
+                              : '-'
+                            }
+                          </div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => startEdit(nusuk)}
+                              className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(nusuk._id)}
+                              className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {editingId === nusuk._id && (
+                        <tr>
+                          <td colSpan={9} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Nusuk</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSubmit({ preventDefault: () => {} })}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={resetForm}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Basic Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.name || ""}
+                                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                      placeholder="Nusuk name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.malayalamName || ""}
+                                      onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                                      placeholder="നുസുക്"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.urduName || ""}
+                                      onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                                      placeholder="نسک"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Building Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Building Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Building *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.building || ""}
+                                      onChange={(e) => setFormData({ ...formData, building: e.target.value })}
+                                      placeholder="Building name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Building
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.malayalamBuilding || ""}
+                                      onChange={(e) => setFormData({ ...formData, malayalamBuilding: e.target.value })}
+                                      placeholder="കെട്ടിടം"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Building
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.urduBuilding || ""}
+                                      onChange={(e) => setFormData({ ...formData, urduBuilding: e.target.value })}
+                                      placeholder="عمارت"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Location Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Location Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Latitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      value={formData.location?.lat || ""}
+                                      onChange={(e) => setFormData({ 
+                                        ...formData, 
+                                        location: { ...formData.location, lat: e.target.value }
+                                      })}
+                                      placeholder="21.4225"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Longitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      value={formData.location?.lng || ""}
+                                      onChange={(e) => setFormData({ 
+                                        ...formData, 
+                                        location: { ...formData.location, lng: e.target.value }
+                                      })}
+                                      placeholder="39.8262"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -546,6 +844,37 @@ const UmrahNusuk = ({ isOpen }) => {
               </div>
             )}
           </div>
+
+          {/* Delete Confirmation Modal */}
+          {deleteConfirm.show && (
+            <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
+                <div className="flex items-center gap-3 text-amber-500 mb-4">
+                  <AlertTriangle className="h-6 w-6" />
+                  <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  {Array.isArray(deleteConfirm.id)
+                    ? `Are you sure you want to delete ${deleteConfirm.id.length} selected nusuks? This action cannot be undone.`
+                    : 'Are you sure you want to delete this nusuk? This action cannot be undone.'}
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={handleDeleteCancel}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={Array.isArray(deleteConfirm.id) ? handleBulkDeleteConfirm : handleDeleteConfirm}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -16,6 +16,7 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
@@ -41,9 +42,15 @@ const UmrahNotification = ({ isOpen }) => {
 
   const [formData, setFormData] = useState({
     title: "",
+    malayalamTitle: "",
+    urduTitle: "",
     description: "",
+    malayalamDescription: "",
+    urduDescription: "",
     type: "text",
     content: "",
+    malayalamContent: "",
+    urduContent: "",
   });
 
   const notificationTypes = [
@@ -116,9 +123,15 @@ const UmrahNotification = ({ isOpen }) => {
       const token = localStorage.getItem("token");
       const submitData = {
         title: formData.title.trim(),
+        malayalamTitle: formData.malayalamTitle.trim() || undefined,
+        urduTitle: formData.urduTitle.trim() || undefined,
         description: formData.description.trim(),
+        malayalamDescription: formData.malayalamDescription.trim() || undefined,
+        urduDescription: formData.urduDescription.trim() || undefined,
         type: formData.type,
         content: formData.content.trim(),
+        malayalamContent: formData.malayalamContent.trim() || undefined,
+        urduContent: formData.urduContent.trim() || undefined,
       };
 
       let response;
@@ -158,10 +171,14 @@ const UmrahNotification = ({ isOpen }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this notification?"))
-      return;
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
+  const handleDelete = async (id) => {
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.id;
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
@@ -174,26 +191,30 @@ const UmrahNotification = ({ isOpen }) => {
       );
 
       setSuccess("Notification deleted successfully!");
+      setDeleteConfirm({ show: false, id: null });
       fetchNotifications();
     } catch (error) {
       setError(error.response?.data?.message || "Delete failed");
+      setDeleteConfirm({ show: false, id: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, id: null });
   };
 
   const handleBulkDelete = async () => {
     if (selectedItems.length === 0) return;
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedItems.length} selected notifications?`
-      )
-    )
-      return;
+    setDeleteConfirm({ show: true, id: selectedItems });
+  };
 
+  const handleBulkDeleteConfirm = async () => {
+    const ids = deleteConfirm.id;
     try {
       const token = localStorage.getItem("token");
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_V2}/notification-umrah/bulk-delete`,
-        { ids: selectedItems },
+        { ids: ids },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -201,11 +222,13 @@ const UmrahNotification = ({ isOpen }) => {
         }
       );
 
-      setSuccess(`${selectedItems.length} notifications deleted successfully!`);
+      setSuccess(`${ids.length} notifications deleted successfully!`);
       setSelectedItems([]);
+      setDeleteConfirm({ show: false, id: null });
       fetchNotifications();
     } catch (error) {
       setError("Error during bulk delete: " + error.message);
+      setDeleteConfirm({ show: false, id: null });
     }
   };
 
@@ -240,7 +263,18 @@ const UmrahNotification = ({ isOpen }) => {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", description: "", type: "text", content: "" });
+    setFormData({ 
+      title: "", 
+      malayalamTitle: "",
+      urduTitle: "",
+      description: "", 
+      malayalamDescription: "",
+      urduDescription: "",
+      type: "text", 
+      content: "",
+      malayalamContent: "",
+      urduContent: ""
+    });
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -248,9 +282,15 @@ const UmrahNotification = ({ isOpen }) => {
   const startEdit = (notification) => {
     setFormData({
       title: notification.title,
+      malayalamTitle: notification.malayalamTitle || "",
+      urduTitle: notification.urduTitle || "",
       description: notification.description || "",
+      malayalamDescription: notification.malayalamDescription || "",
+      urduDescription: notification.urduDescription || "",
       type: notification.type,
       content: notification.content,
+      malayalamContent: notification.malayalamContent || "",
+      urduContent: notification.urduContent || "",
     });
     setEditingId(notification._id);
     setShowAddForm(true);
@@ -259,7 +299,14 @@ const UmrahNotification = ({ isOpen }) => {
   const filteredNotifications = notifications.filter(
     (notification) =>
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (notification.malayalamTitle && notification.malayalamTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (notification.urduTitle && notification.urduTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      notification.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (notification.malayalamDescription && notification.malayalamDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (notification.urduDescription && notification.urduDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      notification.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (notification.malayalamContent && notification.malayalamContent.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (notification.urduContent && notification.urduContent.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const toggleSelectAll = () => {
@@ -332,9 +379,21 @@ const UmrahNotification = ({ isOpen }) => {
         );
       default:
         return (
-          <span className="text-sm text-gray-700 truncate max-w-xs block">
-            {content}
-          </span>
+          <div className="space-y-1">
+            <div className="text-sm text-gray-700 truncate max-w-xs">
+              <span className="font-medium">EN:</span> {content}
+            </div>
+            {notification.malayalamContent && (
+              <div className="text-sm text-gray-600 truncate max-w-xs">
+                <span className="font-medium">ML:</span> {notification.malayalamContent}
+              </div>
+            )}
+            {notification.urduContent && (
+              <div className="text-sm text-gray-600 truncate max-w-xs" dir="rtl">
+                <span className="font-medium">UR:</span> {notification.urduContent}
+              </div>
+            )}
+          </div>
         );
     }
   };
@@ -443,7 +502,7 @@ const UmrahNotification = ({ isOpen }) => {
                 {editingId ? "Edit Notification" : "Add New Notification"}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Title *
@@ -461,6 +520,37 @@ const UmrahNotification = ({ isOpen }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Malayalam Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.malayalamTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, malayalamTitle: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="അറിയിപ്പ് ശീർഷകം"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Urdu Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.urduTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, urduTitle: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="اطلاع کا عنوان"
+                      dir="rtl"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Type *
                     </label>
                     <select
@@ -470,6 +560,8 @@ const UmrahNotification = ({ isOpen }) => {
                           ...formData,
                           type: e.target.value,
                           content: "",
+                          malayalamContent: "",
+                          urduContent: "",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -483,18 +575,52 @@ const UmrahNotification = ({ isOpen }) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter description..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Malayalam Description
+                    </label>
+                    <textarea
+                      value={formData.malayalamDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, malayalamDescription: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="വിവരണം നൽകുക..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Urdu Description
+                    </label>
+                    <textarea
+                      value={formData.urduDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, urduDescription: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="تفصیل درج کریں..."
+                      dir="rtl"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -502,16 +628,52 @@ const UmrahNotification = ({ isOpen }) => {
                     Content *
                   </label>
                   {formData.type === "text" && (
-                    <textarea
-                      value={formData.content}
-                      onChange={(e) =>
-                        setFormData({ ...formData, content: e.target.value })
-                      }
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter your text content..."
-                      required
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          English Content *
+                        </label>
+                        <textarea
+                          value={formData.content}
+                          onChange={(e) =>
+                            setFormData({ ...formData, content: e.target.value })
+                          }
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter your text content..."
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Malayalam Content
+                        </label>
+                        <textarea
+                          value={formData.malayalamContent}
+                          onChange={(e) =>
+                            setFormData({ ...formData, malayalamContent: e.target.value })
+                          }
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="മലയാളം ഉള്ളടക്കം നൽകുക..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Urdu Content
+                        </label>
+                        <textarea
+                          value={formData.urduContent}
+                          onChange={(e) =>
+                            setFormData({ ...formData, urduContent: e.target.value })
+                          }
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="اردو مواد درج کریں..."
+                          dir="rtl"
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {formData.type === "link" && (
@@ -594,6 +756,12 @@ const UmrahNotification = ({ isOpen }) => {
                       TITLE
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      MALAYALAM TITLE
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      URDU TITLE
+                    </th>
+                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                       TYPE
                     </th>
                     <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
@@ -609,63 +777,231 @@ const UmrahNotification = ({ isOpen }) => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {filteredNotifications.map((notification) => (
-                    <tr
-                      key={notification._id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-4 py-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.includes(notification._id)}
-                          onChange={() => toggleSelectItem(notification._id)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {notification.title}
-                        </div>
-                        {notification.description && (
-                          <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
-                            {notification.description}
+                    <React.Fragment key={notification._id}>
+                      <tr
+                        className={`hover:bg-gray-50 transition-colors ${editingId === notification._id ? 'bg-blue-50' : ''}`}
+                      >
+                        <td className="px-4 py-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(notification._id)}
+                            onChange={() => toggleSelectItem(notification._id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm font-medium text-gray-900">
+                            {notification.title}
                           </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="flex items-center gap-2">
-                          {getTypeIcon(notification.type)}
-                          <span className="text-sm text-gray-700 capitalize">
-                            {notification.type}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-1">
-                        {renderContent(notification)}
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700">
-                          {new Date(
-                            notification.createdAt
-                          ).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => startEdit(notification)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(notification._id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                          {notification.description && (
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                              {notification.description}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">
+                            {notification.malayalamTitle || '-'}
+                          </div>
+                          {notification.malayalamDescription && (
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                              {notification.malayalamDescription}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700" dir="rtl">
+                            {notification.urduTitle || '-'}
+                          </div>
+                          {notification.urduDescription && (
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs" dir="rtl">
+                              {notification.urduDescription}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="flex items-center gap-2">
+                            {getTypeIcon(notification.type)}
+                            <span className="text-sm text-gray-700 capitalize">
+                              {notification.type}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-1">
+                          {renderContent(notification)}
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">
+                            {new Date(
+                              notification.createdAt
+                            ).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => startEdit(notification)}
+                              className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(notification._id)}
+                              className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {editingId === notification._id && (
+                        <tr>
+                          <td colSpan={8} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Notification</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSubmit({ preventDefault: () => {} })}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={resetForm}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Title Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Title Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Title *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.title || ""}
+                                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                      placeholder="Notification title"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.malayalamTitle || ""}
+                                      onChange={(e) => setFormData({ ...formData, malayalamTitle: e.target.value })}
+                                      placeholder="മലയാളം ശീർഷകം"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.urduTitle || ""}
+                                      onChange={(e) => setFormData({ ...formData, urduTitle: e.target.value })}
+                                      placeholder="اردو عنوان"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Type and Content */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Type & Content</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Type
+                                    </label>
+                                    <select
+                                      value={formData.type || ""}
+                                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                      {notificationTypes.map(type => (
+                                        <option key={type.value} value={type.value}>
+                                          {type.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Content
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.content || ""}
+                                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                      placeholder="Notification content"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Description - Full Width */}
+                              <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-4">Description Information</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Description
+                                    </label>
+                                    <textarea
+                                      value={formData.description || ""}
+                                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                      placeholder="Notification description"
+                                      rows="4"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Description
+                                    </label>
+                                    <textarea
+                                      value={formData.malayalamDescription || ""}
+                                      onChange={(e) => setFormData({ ...formData, malayalamDescription: e.target.value })}
+                                      placeholder="മലയാളം വിവരണം"
+                                      rows="4"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Description
+                                    </label>
+                                    <textarea
+                                      value={formData.urduDescription || ""}
+                                      onChange={(e) => setFormData({ ...formData, urduDescription: e.target.value })}
+                                      placeholder="اردو تفصیل"
+                                      rows="4"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -718,6 +1054,37 @@ const UmrahNotification = ({ isOpen }) => {
                   Next
                   <ChevronRight size={16} />
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Delete Confirmation Modal */}
+          {deleteConfirm.show && (
+            <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
+                <div className="flex items-center gap-3 text-amber-500 mb-4">
+                  <AlertTriangle className="h-6 w-6" />
+                  <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  {Array.isArray(deleteConfirm.id)
+                    ? `Are you sure you want to delete ${deleteConfirm.id.length} selected notifications? This action cannot be undone.`
+                    : 'Are you sure you want to delete this notification? This action cannot be undone.'}
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={handleDeleteCancel}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={Array.isArray(deleteConfirm.id) ? handleBulkDeleteConfirm : handleDeleteConfirm}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           )}

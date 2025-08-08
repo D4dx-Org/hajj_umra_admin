@@ -178,9 +178,15 @@ const Notification = () => {
 
       const notificationData = {
         title: values.title,
+        titleMalayalam: values.titleMalayalam,
+        titleUrdu: values.titleUrdu,
         description: values.description,
+        descriptionMalayalam: values.descriptionMalayalam,
+        descriptionUrdu: values.descriptionUrdu,
         type: values.type,
         content: contentUrl,
+        contentMalayalam: values.contentMalayalam,
+        contentUrdu: values.contentUrdu,
       };
 
       console.log("Submitting notification data:", notificationData);
@@ -385,15 +391,27 @@ const Notification = () => {
         );
       case "text":
         return (
-          <Form.Item
-            name="content"
-            label="Text Content"
-            rules={[
-              { required: true, message: "Please enter the text content" },
-            ]}
-          >
-            <TextArea rows={4} placeholder="Enter your text content here" />
-          </Form.Item>
+          <>
+            <Form.Item
+              name="content"
+              label="Text Content (English)"
+              rules={[{ required: true, message: "Please enter the text content (English)" }]}
+            >
+              <TextArea rows={4} placeholder="Enter your text content here" />
+            </Form.Item>
+            <Form.Item
+              name="contentMalayalam"
+              label="Text Content (Malayalam)"
+            >
+              <TextArea rows={4} placeholder="Enter your text content in Malayalam" />
+            </Form.Item>
+            <Form.Item
+              name="contentUrdu"
+              label="Text Content (Urdu)"
+            >
+              <TextArea rows={4} placeholder="Enter your text content in Urdu" />
+            </Form.Item>
+          </>
         );
       case "image":
         return (
@@ -463,12 +481,19 @@ const Notification = () => {
       title: "Title",
       dataIndex: "title",
       key: "title",
+      render: (_, record) => {
+        const values = [record.title, record.titleMalayalam, record.titleUrdu].filter(Boolean).join(' | ');
+        return values || '-';
+      }
     },
     {
       title: "Description",
       dataIndex: "description",
       key: "description",
-      render: (text) => text || "-",
+      render: (_, record) => {
+        const values = [record.description, record.descriptionMalayalam, record.descriptionUrdu].filter(Boolean).join(' | ');
+        return values || '-';
+      }
     },
     {
       title: "Type",
@@ -635,8 +660,8 @@ const Notification = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -698,12 +723,30 @@ const Notification = () => {
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               name="title"
-              label="Title"
+              label="Title (English)"
               rules={[{ required: true, message: "Please enter title" }]}
             >
               <Input />
             </Form.Item>
-            <Form.Item name="description" label="Description">
+            <Form.Item
+              name="titleMalayalam"
+              label="Title (Malayalam)"
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="titleUrdu"
+              label="Title (Urdu)"
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item name="description" label="Description (English)">
+              <TextArea rows={4} />
+            </Form.Item>
+            <Form.Item name="descriptionMalayalam" label="Description (Malayalam)">
+              <TextArea rows={4} />
+            </Form.Item>
+            <Form.Item name="descriptionUrdu" label="Description (Urdu)">
               <TextArea rows={4} />
             </Form.Item>
             <Form.Item

@@ -52,7 +52,7 @@ const PlaceKSA = () => {
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 20,
+    pageSize: 10,
     total: 0,
   });
   const [editingId, setEditingId] = useState(null);
@@ -104,9 +104,10 @@ const PlaceKSA = () => {
       }
 
       // Fetch both places and locations in parallel
-      const [placesResponse, locationsResponse] = await Promise.all([
+             const [placesResponse, locationsResponse] = await Promise.all([
         axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/places`, {
           headers: { Authorization: `Bearer ${token}` },
+          params: { page: 1, limit: 1000 },
         }),
         axios
           .get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`)
@@ -125,7 +126,7 @@ const PlaceKSA = () => {
       setPlaces(placesResponse.data.placesKSA || []);
       setPagination({
         ...pagination,
-        total: placesResponse.data.count || 0,
+        total: placesResponse.data.total || (placesResponse.data.placesKSA?.length || 0),
       });
 
       // Handle locations response - backend returns array directly
@@ -386,7 +387,11 @@ const PlaceKSA = () => {
       const placeData = {
         id: values.id.trim(),
         title: values.title.trim(),
-        description: values.description?.trim() || "",
+        titleMalayalam: values.titleMalayalam?.trim() || '',
+        titleUrdu: values.titleUrdu?.trim() || '',
+        description: values.description?.trim() || '',
+        descriptionMalayalam: values.descriptionMalayalam?.trim() || '',
+        descriptionUrdu: values.descriptionUrdu?.trim() || '',
         images: imageUrls,
         video: values.video?.trim() || "", // YouTube URL
         map: values.map?.trim() || "", // Map link
@@ -558,13 +563,45 @@ const PlaceKSA = () => {
         item.description?.toLowerCase().includes(searchStr) ||
         item.id?.toLowerCase().includes(searchStr)
       );
+    }).sort((a, b) => {
+      // Sort by ID number (extract numeric part and sort numerically)
+      const aId = parseInt(a.id?.replace(/\D/g, '')) || 0;
+      const bId = parseInt(b.id?.replace(/\D/g, '')) || 0;
+      return aId - bId;
     });
   }, [places, searchTerm]);
+
+  // Handle pagination change
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination({
+      ...pagination,
+      current: page,
+      pageSize: pageSize,
+    });
+  };
+
+  // Get paginated data
+  const paginatedPlaces = useMemo(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const endIndex = startIndex + pagination.pageSize;
+    const paginated = filteredPlaces.slice(startIndex, endIndex);
+    console.log(`Pagination: Page ${pagination.current}, showing ${paginated.length} of ${filteredPlaces.length} total items`);
+    return paginated;
+  }, [filteredPlaces, pagination.current, pagination.pageSize]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setPagination(prev => ({
+      ...prev,
+      current: 1,
+      total: filteredPlaces.length,
+    }));
+  }, [searchTerm]);
 
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredPlaces.map((row) => row._id));
+      setSelectedRows(paginatedPlaces.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -588,7 +625,7 @@ const PlaceKSA = () => {
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === filteredPlaces.length}
+          checked={selectedRows.length === paginatedPlaces.length && paginatedPlaces.length > 0}
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -614,38 +651,34 @@ const PlaceKSA = () => {
       ),
     },
     {
-      title: "Title",
+      title: "Title (Eng | Malayalam | Urdu)",
       dataIndex: "title",
       key: "title",
-      width: 200,
-      ellipsis: {
-        showTitle: false,
+      width: 250,
+      ellipsis: { showTitle: false },
+      render: (_, row) => {
+        const values = [row.title, row.titleMalayalam, row.titleUrdu].filter(Boolean).join(' | ');
+        return <div title={values} className="font-medium text-sm">{values || '-'}</div>;
       },
-      render: (text) => (
-        <div title={text} className="font-medium text-sm">
-          {text}
-        </div>
-      ),
     },
     {
-      title: "Description",
+      title: "Description (Eng | Malayalam | Urdu)",
       dataIndex: "description",
       key: "description",
-      width: 250,
-      ellipsis: {
-        showTitle: false,
+      width: 300,
+      ellipsis: { showTitle: false },
+      render: (_, row) => {
+        const values = [row.description, row.descriptionMalayalam, row.descriptionUrdu].filter(Boolean).join(' | ');
+        return (
+          <div title={values} className="max-w-[300px]">
+            {values ? (
+              <span className="text-sm text-gray-700">{values.length > 80 ? `${values.substring(0, 80)}...` : values}</span>
+            ) : (
+              <span className="text-gray-400 text-sm">No description</span>
+            )}
+          </div>
+        );
       },
-      render: (text) => (
-        <div title={text} className="max-w-[250px]">
-          {text ? (
-            <span className="text-sm text-gray-700">
-              {text.length > 80 ? `${text.substring(0, 80)}...` : text}
-            </span>
-          ) : (
-            <span className="text-gray-400 text-sm">No description</span>
-          )}
-        </div>
-      ),
     },
     {
       title: "Location",
@@ -743,7 +776,11 @@ const PlaceKSA = () => {
               form.setFieldsValue({
                 id: record.id,
                 title: record.title,
+                titleMalayalam: record.titleMalayalam || '',
+                titleUrdu: record.titleUrdu || '',
                 description: record.description || "",
+                descriptionMalayalam: record.descriptionMalayalam || '',
+                descriptionUrdu: record.descriptionUrdu || '',
                 images: recordImages,
                 video: record.video || "",
                 map: record.map || "",
@@ -782,7 +819,7 @@ const PlaceKSA = () => {
       />
 
       <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
-        <div className="flex justify-between items-center mt-16 mb-4">
+        <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold flex items-center gap-2">
               <MapPin size={22} />
@@ -853,8 +890,8 @@ const PlaceKSA = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -887,7 +924,7 @@ const PlaceKSA = () => {
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <Table
             columns={columns}
-            dataSource={filteredPlaces}
+            dataSource={paginatedPlaces}
             rowKey="_id"
             loading={loading}
             pagination={{
@@ -897,6 +934,9 @@ const PlaceKSA = () => {
               showTotal: (total, range) =>
                 `${range[0]}-${range[1]} of ${total} places`,
               pageSizeOptions: ["10", "20", "50", "100"],
+              style: { marginRight: '16px' },
+              onChange: handlePaginationChange,
+              onShowSizeChange: handlePaginationChange,
             }}
             size="small"
             scroll={{ x: "max-content" }}
@@ -942,25 +982,37 @@ const PlaceKSA = () => {
               <Col span={12}>
                 <Form.Item
                   name="title"
-                  label="Title"
+                  label="Title (English)"
                   rules={[
                     { required: true, message: "Please enter title" },
                     { min: 1, message: "Title cannot be empty" },
                     { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
-                  <Input placeholder="Enter place title" />
+                  <Input placeholder="Enter place title in English" />
+                </Form.Item>
+                <Form.Item name="titleMalayalam" label="Title (Malayalam)">
+                  <Input placeholder="Enter place title in Malayalam" />
+                </Form.Item>
+                <Form.Item name="titleUrdu" label="Title (Urdu)">
+                  <Input placeholder="Enter place title in Urdu" />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item name="description" label="Description">
+            <Form.Item name="description" label="Description (English)">
               <TextArea
-                rows={4}
-                placeholder="Enter a detailed description of the place..."
+                rows={2}
+                placeholder="Enter a detailed description of the place in English..."
                 maxLength={500}
                 showCount
               />
+            </Form.Item>
+            <Form.Item name="descriptionMalayalam" label="Description (Malayalam)">
+              <TextArea rows={2} placeholder="Enter description in Malayalam..." maxLength={500} />
+            </Form.Item>
+            <Form.Item name="descriptionUrdu" label="Description (Urdu)">
+              <TextArea rows={2} placeholder="Enter description in Urdu..." maxLength={500} />
             </Form.Item>
 
             {/* File Upload Sections */}
@@ -1235,21 +1287,14 @@ const PlaceKSA = () => {
               >
                 {locations.map((location) => (
                   <Option key={location._id} value={location._id}>
-                    <div className="flex items-center justify-between">
-                      <span>
-                        <strong>{location.title || location.name}</strong>
-                        {location.id && (
-                          <span className="text-gray-500 ml-2">
-                            ({location.id})
-                          </span>
-                        )}
-                      </span>
-                      {location.description && (
-                        <span className="text-xs text-gray-400 truncate ml-2 max-w-[100px]">
-                          {location.description}
-                        </span>
-                      )}
-                    </div>
+                    {[
+                      location.title,
+                      location.titleMalayalam,
+                      location.titleUrdu
+                    ].filter(Boolean).join(' | ')}
+                    {location.id && (
+                      <span className="text-gray-500 ml-2">({location.id})</span>
+                    )}
                   </Option>
                 ))}
               </Select>

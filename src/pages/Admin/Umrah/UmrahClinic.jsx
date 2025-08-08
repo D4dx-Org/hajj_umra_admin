@@ -16,8 +16,14 @@ const UmrahClinic = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newClinic, setNewClinic] = useState({
     name: "",
+    malayalamName: "",
+    urduName: "",
     center: "",
+    malayalamCenter: "",
+    urduCenter: "",
     poll: "",
+    malayalamPoll: "",
+    urduPoll: "",
     location: { lat: "", lng: "" },
     branchRef: "",
   });
@@ -58,93 +64,69 @@ const UmrahClinic = ({ isOpen }) => {
       key: "name",
       title: "Name",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) =>
-                handleEditChange(row._id, "name", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.name;
+      },
+    },
+    {
+      key: "malayalamName",
+      title: "Malayalam Name",
+      render: (row) => {
+        return row.malayalamName || "-";
+      },
+    },
+    {
+      key: "urduName",
+      title: "Urdu Name",
+      render: (row) => {
+        return row.urduName || "-";
       },
     },
     {
       key: "center",
       title: "Center",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.center || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "center", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.center || "N/A";
+      },
+    },
+    {
+      key: "malayalamCenter",
+      title: "Malayalam Center",
+      render: (row) => {
+        return row.malayalamCenter || "-";
+      },
+    },
+    {
+      key: "urduCenter",
+      title: "Urdu Center",
+      render: (row) => {
+        return row.urduCenter || "-";
       },
     },
     {
       key: "poll",
       title: "Poll",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "poll", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.poll || "N/A";
+      },
+    },
+    {
+      key: "malayalamPoll",
+      title: "Malayalam Poll",
+      render: (row) => {
+        return row.malayalamPoll || "-";
+      },
+    },
+    {
+      key: "urduPoll",
+      title: "Urdu Poll",
+      render: (row) => {
+        return row.urduPoll || "-";
       },
     },
     {
       key: "location",
       title: "Location",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ""}
-                onChange={(e) =>
-                  handleEditChange(row._id, "location", {
-                    ...row.location,
-                    lat: e.target.value,
-                  })
-                }
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ""}
-                onChange={(e) =>
-                  handleEditChange(row._id, "location", {
-                    ...row.location,
-                    lng: e.target.value,
-                  })
-                }
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
         return row.location
           ? `${row.location.lat}, ${row.location.lng}`
           : "N/A";
@@ -154,24 +136,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "branchRef",
       title: "Branch",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.branchRef?._id || row.branchRef || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "branchRef", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Branch</option>
-              {branches.map((branch) => (
-                <option key={branch._id} value={branch._id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          );
-        }
         return row.branchRef?.name || "N/A";
       },
     },
@@ -180,37 +144,18 @@ const UmrahClinic = ({ isOpen }) => {
       title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       ),
     },
@@ -229,6 +174,34 @@ const UmrahClinic = ({ isOpen }) => {
       value: "name-alpha-desc",
       label: "Name (Z-A)",
       field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-asc",
+      label: "Malayalam Name (A-Z)",
+      field: "malayalamName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-desc",
+      label: "Malayalam Name (Z-A)",
+      field: "malayalamName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-asc",
+      label: "Urdu Name (A-Z)",
+      field: "urduName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-desc",
+      label: "Urdu Name (Z-A)",
+      field: "urduName",
       direction: "desc",
       type: "alpha",
     },
@@ -439,8 +412,14 @@ const UmrahClinic = ({ isOpen }) => {
         setClinicData(updatedResponse.data);
         setNewClinic({
           name: "",
+          malayalamName: "",
+          urduName: "",
           center: "",
+          malayalamCenter: "",
+          urduCenter: "",
           poll: "",
+          malayalamPoll: "",
+          urduPoll: "",
           location: { lat: "", lng: "" },
           branchRef: "",
         });
@@ -501,9 +480,14 @@ const UmrahClinic = ({ isOpen }) => {
         const branchName = item.branchRef?.name || "";
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.center &&
-            item.center.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.center && item.center.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamCenter && item.malayalamCenter.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduCenter && item.urduCenter.toLowerCase().includes(lowerCaseSearch)) ||
           (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamPoll && item.malayalamPoll.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduPoll && item.urduPoll.toLowerCase().includes(lowerCaseSearch)) ||
           branchName.toLowerCase().includes(lowerCaseSearch)
         );
       });
@@ -533,9 +517,15 @@ const UmrahClinic = ({ isOpen }) => {
       const sampleData = [
         {
           name: "Sample Clinic",
+          malayalam_name: "ക്ലിനിക് സാമ്പിൾ",
+          urdu_name: "نمونہ کلینک",
           branch_name: "Sample Branch",
           center: "Sample Center",
+          malayalam_center: "സെന്റർ സാമ്പിൾ",
+          urdu_center: "نمونہ سینٹر",
           poll: "Sample Poll",
+          malayalam_poll: "പോൾ സാമ്പിൾ",
+          urdu_poll: "نمونہ پول",
           latitude: "21.4225",
           longitude: "39.8262",
         },
@@ -545,7 +535,7 @@ const UmrahClinic = ({ isOpen }) => {
 
       utils.sheet_add_aoa(
         ws,
-        [["name", "branch_name", "center", "poll", "latitude", "longitude"]],
+        [["name", "malayalam_name", "urdu_name", "branch_name", "center", "malayalam_center", "urdu_center", "poll", "malayalam_poll", "urdu_poll", "latitude", "longitude"]],
         { origin: "A1" }
       );
 
@@ -556,9 +546,15 @@ const UmrahClinic = ({ isOpen }) => {
 
       ws["!cols"] = [
         { wch: 25 }, // name
+        { wch: 25 }, // malayalam_name
+        { wch: 25 }, // urdu_name
         { wch: 20 }, // branch_name
         { wch: 20 }, // center
+        { wch: 20 }, // malayalam_center
+        { wch: 20 }, // urdu_center
         { wch: 15 }, // poll
+        { wch: 15 }, // malayalam_poll
+        { wch: 15 }, // urdu_poll
         { wch: 15 }, // latitude
         { wch: 15 }, // longitude
       ];
@@ -758,6 +754,30 @@ const UmrahClinic = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Name</label>
+                <input
+                  type="text"
+                  value={newClinic.malayalamName}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, malayalamName: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="ക്ലിനിക്"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Name</label>
+                <input
+                  type="text"
+                  value={newClinic.urduName}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, urduName: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="کلینک"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Branch *</label>
                 <select
                   value={newClinic.branchRef}
@@ -787,6 +807,30 @@ const UmrahClinic = ({ isOpen }) => {
                 />
               </div>
               <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Center</label>
+                <input
+                  type="text"
+                  value={newClinic.malayalamCenter}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, malayalamCenter: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="സെന്റർ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Center</label>
+                <input
+                  type="text"
+                  value={newClinic.urduCenter}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, urduCenter: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="سینٹر"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium">Poll</label>
                 <input
                   type="text"
@@ -795,6 +839,30 @@ const UmrahClinic = ({ isOpen }) => {
                     setNewClinic({ ...newClinic, poll: e.target.value })
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Malayalam Poll</label>
+                <input
+                  type="text"
+                  value={newClinic.malayalamPoll}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, malayalamPoll: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="പോൾ"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Urdu Poll</label>
+                <input
+                  type="text"
+                  value={newClinic.urduPoll}
+                  onChange={(e) =>
+                    setNewClinic({ ...newClinic, urduPoll: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="پول"
                 />
               </div>
               <div className="mb-4 md:col-span-2">
@@ -906,16 +974,243 @@ const UmrahClinic = ({ isOpen }) => {
                   </tr>
                 ) : (
                   filteredClinicData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
-                      {clinicColumns.map((column) => (
-                        <td
-                          key={column.key}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                        >
-                          {column.render(row)}
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {clinicColumns.map((column) => (
+                          <td
+                            key={column.key}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                          >
+                            {column.render(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={clinicColumns.length} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Clinic</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Basic Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "name", e.target.value)
+                                      }
+                                      placeholder="Clinic name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamName", e.target.value)
+                                      }
+                                      placeholder="മലയാളം പേര്"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduName", e.target.value)
+                                      }
+                                      placeholder="اردو نام"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Center Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Center Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.center || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "center", e.target.value)
+                                      }
+                                      placeholder="Center name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamCenter || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamCenter", e.target.value)
+                                      }
+                                      placeholder="മലയാളം സെന്റർ"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduCenter || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduCenter", e.target.value)
+                                      }
+                                      placeholder="اردو سینٹر"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Poll Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Poll Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.poll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "poll", e.target.value)
+                                      }
+                                      placeholder="Poll information"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamPoll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamPoll", e.target.value)
+                                      }
+                                      placeholder="മലയാളം പോൾ"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduPoll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduPoll", e.target.value)
+                                      }
+                                      placeholder="اردو پول"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Branch and Location - Full Width */}
+                              <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-4">Additional Information</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Branch *
+                                    </label>
+                                    <select
+                                      value={row.branchRef?._id || row.branchRef || ""}
+                                      onChange={(e) => handleEditChange(row._id, "branchRef", e.target.value)}
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    >
+                                      <option value="">Select Branch</option>
+                                      {branches.map(branch => (
+                                        <option key={branch._id} value={branch._id}>
+                                          {branch.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Location (Optional)
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="number"
+                                        value={row.location?.lat || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lat: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Latitude"
+                                        className="w-1/2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                      <input
+                                        type="number"
+                                        value={row.location?.lng || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lng: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Longitude"
+                                        className="w-1/2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -925,8 +1220,8 @@ const UmrahClinic = ({ isOpen }) => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="text-red-500 mr-3" size={24} />
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>

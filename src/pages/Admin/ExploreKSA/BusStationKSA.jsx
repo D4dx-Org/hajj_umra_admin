@@ -17,10 +17,22 @@ const BusStationKSA = ({ isOpen }) => {
   const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [newBusStation, setNewBusStation] = useState({
-    name: '',
-    stationPoint: '',
+    name: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    },
+    stationPoint: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    },
     link: '',
-    destinationPoint: '',
+    destinationPoint: {
+      english: '',
+      malayalam: '',
+      urdu: ''
+    },
     ref: '',
     locationRef: ''
   });
@@ -53,116 +65,114 @@ const BusStationKSA = ({ isOpen }) => {
     },
     {
       key: 'name',
-      title: 'Name',
+      title: 'Name (English)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.name;
+        return row.name?.english || 'N/A';
+      }
+    },
+    {
+      key: 'nameMalayalam',
+      title: 'Name (Malayalam)',
+      render: (row) => {
+        return row.name?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'nameUrdu',
+      title: 'Name (Urdu)',
+      render: (row) => {
+        return row.name?.urdu || 'N/A';
       }
     },
     {
       key: 'stationPoint',
-      title: 'Station Point',
+      title: 'Station Point (English)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.stationPoint}
-              onChange={(e) => handleEditChange(row._id, 'stationPoint', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.stationPoint;
+        return row.stationPoint?.english || 'N/A';
+      }
+    },
+    {
+      key: 'stationPointMalayalam',
+      title: 'Station Point (Malayalam)',
+      render: (row) => {
+        return row.stationPoint?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'stationPointUrdu',
+      title: 'Station Point (Urdu)',
+      render: (row) => {
+        return row.stationPoint?.urdu || 'N/A';
       }
     },
     {
       key: 'link',
       title: 'Link',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.link}
-              onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{row.link}</a>;
       }
     },
     {
       key: 'destinationPoint',
-      title: 'Destination Point',
+      title: 'Destination Point (English)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.destinationPoint}
-              onChange={(e) => handleEditChange(row._id, 'destinationPoint', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.destinationPoint;
+        return row.destinationPoint?.english || 'N/A';
+      }
+    },
+    {
+      key: 'destinationPointMalayalam',
+      title: 'Destination Point (Malayalam)',
+      render: (row) => {
+        return row.destinationPoint?.malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'destinationPointUrdu',
+      title: 'Destination Point (Urdu)',
+      render: (row) => {
+        return row.destinationPoint?.urdu || 'N/A';
       }
     },
     {
       key: 'ref',
-      title: 'Branch Reference',
+      title: 'Branch (English)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.ref?._id || row.ref || ''}
-              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Branch</option>
-              {branches.map(branch => (
-                <option key={branch._id} value={branch._id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          );
-        }
         return row.ref?.name || 'N/A';
       }
     },
     {
-      key: 'locationRef',
-      title: 'Location Reference',
+      key: 'refMalayalam',
+      title: 'Branch (Malayalam)',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.locationRef?._id || row.locationRef || ''}
-              onChange={(e) => handleEditChange(row._id, 'locationRef', e.target.value)}
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Location</option>
-              {locations.map(location => (
-                <option key={location._id} value={location._id}>
-                  {location.title}
-                </option>
-              ))}
-            </select>
-          );
-        }
+        return row.ref?.name_malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'refUrdu',
+      title: 'Branch (Urdu)',
+      render: (row) => {
+        return row.ref?.name_urdu || 'N/A';
+      }
+    },
+    {
+      key: 'locationRef',
+      title: 'Location (English)',
+      render: (row) => {
         return row.locationRef?.title || 'N/A';
+      }
+    },
+    {
+      key: 'locationRefMalayalam',
+      title: 'Location (Malayalam)',
+      render: (row) => {
+        return row.locationRef?.title_malayalam || 'N/A';
+      }
+    },
+    {
+      key: 'locationRefUrdu',
+      title: 'Location (Urdu)',
+      render: (row) => {
+        return row.locationRef?.title_urdu || 'N/A';
       }
     },
     {
@@ -170,37 +180,18 @@ const BusStationKSA = ({ isOpen }) => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       )
     }
@@ -392,10 +383,22 @@ const BusStationKSA = ({ isOpen }) => {
         const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/busStation`);
         setBusStationData(updatedResponse.data);
         setNewBusStation({
-          name: '',
-          stationPoint: '',
+          name: {
+            english: '',
+            malayalam: '',
+            urdu: ''
+          },
+          stationPoint: {
+            english: '',
+            malayalam: '',
+            urdu: ''
+          },
           link: '',
-          destinationPoint: '',
+          destinationPoint: {
+            english: '',
+            malayalam: '',
+            urdu: ''
+          },
           ref: '',
           locationRef: ''
         });
@@ -599,11 +602,21 @@ const BusStationKSA = ({ isOpen }) => {
     if (lowerCaseSearch) {
       filtered = busStationData.filter((item) => {
         return (
-          (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.stationPoint && item.stationPoint.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.destinationPoint && item.destinationPoint.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.name?.english && item.name.english.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.name?.malayalam && item.name.malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.name?.urdu && item.name.urdu.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.stationPoint?.english && item.stationPoint.english.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.stationPoint?.malayalam && item.stationPoint.malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.stationPoint?.urdu && item.stationPoint.urdu.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.destinationPoint?.english && item.destinationPoint.english.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.destinationPoint?.malayalam && item.destinationPoint.malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.destinationPoint?.urdu && item.destinationPoint.urdu.toLowerCase().includes(lowerCaseSearch)) ||
           (item.ref?.name && item.ref.name.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.locationRef?.title && item.locationRef.title.toLowerCase().includes(lowerCaseSearch))
+          (item.ref?.name_malayalam && item.ref.name_malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.ref?.name_urdu && item.ref.name_urdu.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.locationRef?.title && item.locationRef.title.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.locationRef?.title_malayalam && item.locationRef.title_malayalam.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.locationRef?.title_urdu && item.locationRef.title_urdu.toLowerCase().includes(lowerCaseSearch))
         );
       });
     }
@@ -682,25 +695,90 @@ const BusStationKSA = ({ isOpen }) => {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <h2 className="text-lg font-bold mb-4">Add New Bus Station</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
-              <input
-                type="text"
-                value={newBusStation.name}
-                onChange={(e) => setNewBusStation({ ...newBusStation, name: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                placeholder="Enter station name"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium">Name (English)</label>
+                <input
+                  type="text"
+                  value={newBusStation.name.english}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    name: { ...newBusStation.name, english: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter station name in English"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Name (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newBusStation.name.malayalam}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    name: { ...newBusStation.name, malayalam: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter station name in Malayalam"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Name (Urdu)</label>
+                <input
+                  type="text"
+                  value={newBusStation.name.urdu}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    name: { ...newBusStation.name, urdu: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter station name in Urdu"
+                  required
+                />
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Station Point</label>
-              <input
-                type="text"
-                value={newBusStation.stationPoint}
-                onChange={(e) => setNewBusStation({ ...newBusStation, stationPoint: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                placeholder="Enter station point"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium">Station Point (English)</label>
+                <input
+                  type="text"
+                  value={newBusStation.stationPoint.english}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    stationPoint: { ...newBusStation.stationPoint, english: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter station point in English"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Station Point (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newBusStation.stationPoint.malayalam}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    stationPoint: { ...newBusStation.stationPoint, malayalam: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter station point in Malayalam"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Station Point (Urdu)</label>
+                <input
+                  type="text"
+                  value={newBusStation.stationPoint.urdu}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    stationPoint: { ...newBusStation.stationPoint, urdu: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter station point in Urdu"
+                />
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Link</label>
@@ -712,15 +790,46 @@ const BusStationKSA = ({ isOpen }) => {
                 placeholder="Enter map link"
               />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Destination Point</label>
-              <input
-                type="text"
-                value={newBusStation.destinationPoint}
-                onChange={(e) => setNewBusStation({ ...newBusStation, destinationPoint: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                placeholder="Enter destination point"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium">Destination Point (English)</label>
+                <input
+                  type="text"
+                  value={newBusStation.destinationPoint.english}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    destinationPoint: { ...newBusStation.destinationPoint, english: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter destination point in English"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Destination Point (Malayalam)</label>
+                <input
+                  type="text"
+                  value={newBusStation.destinationPoint.malayalam}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    destinationPoint: { ...newBusStation.destinationPoint, malayalam: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter destination point in Malayalam"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Destination Point (Urdu)</label>
+                <input
+                  type="text"
+                  value={newBusStation.destinationPoint.urdu}
+                  onChange={(e) => setNewBusStation({ 
+                    ...newBusStation, 
+                    destinationPoint: { ...newBusStation.destinationPoint, urdu: e.target.value } 
+                  })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Enter destination point in Urdu"
+                />
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium">Branch Reference</label>
@@ -732,7 +841,7 @@ const BusStationKSA = ({ isOpen }) => {
                 <option value="">Select Branch</option>
                 {branches.map(branch => (
                   <option key={branch._id} value={branch._id}>
-                    {branch.name}
+                    {branch.name} {branch.name_malayalam && `| ${branch.name_malayalam}`} {branch.name_urdu && `| ${branch.name_urdu}`}
                   </option>
                 ))}
               </select>
@@ -747,7 +856,7 @@ const BusStationKSA = ({ isOpen }) => {
                 <option value="">Select Location</option>
                 {locations.map(location => (
                   <option key={location._id} value={location._id}>
-                    {location.title}
+                    {location.title} {location.title_malayalam && `| ${location.title_malayalam}`} {location.title_urdu && `| ${location.title_urdu}`}
                   </option>
                 ))}
               </select>
@@ -793,8 +902,8 @@ const BusStationKSA = ({ isOpen }) => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle className="h-6 w-6" />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -841,13 +950,224 @@ const BusStationKSA = ({ isOpen }) => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredBusStationData.map((row) => (
-                  <tr key={row._id}>
-                    {busStationColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
-                    ))}
-                  </tr>
+                  <React.Fragment key={row._id}>
+                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      {busStationColumns.map((column) => (
+                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                          {column.render ? column.render(row) : row[column.key]}
+                        </td>
+                      ))}
+                    </tr>
+                    {editingId === row._id && (
+                      <tr>
+                        <td colSpan={busStationColumns.length} className="p-0">
+                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                            <div className="flex justify-between items-center mb-6">
+                              <h3 className="text-lg font-semibold text-gray-900">Edit Bus Station</h3>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Basic Information */}
+                              <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name (English) *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.name?.english || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, english: e.target.value })}
+                                    placeholder="Bus station name"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name (Malayalam)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.name?.malayalam || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, malayalam: e.target.value })}
+                                    placeholder="ബസ് സ്റ്റേഷൻ"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name (Urdu)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.name?.urdu || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, urdu: e.target.value })}
+                                    placeholder="بس اسٹیشن"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    dir="rtl"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Link
+                                  </label>
+                                  <input
+                                    type="url"
+                                    value={row.link || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
+                                    placeholder="https://example.com"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Station Point Information */}
+                              <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">Station Point</h4>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Station Point (English)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.stationPoint?.english || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, english: e.target.value })}
+                                    placeholder="Station point"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Station Point (Malayalam)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.stationPoint?.malayalam || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, malayalam: e.target.value })}
+                                    placeholder="സ്റ്റേഷൻ പോയിന്റ്"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Station Point (Urdu)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.stationPoint?.urdu || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, urdu: e.target.value })}
+                                    placeholder="اسٹیشن پوائنٹ"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Destination Point Information */}
+                            <div className="mt-6">
+                              <h4 className="font-medium text-gray-700 mb-4">Destination Point</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Destination Point (English)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.destinationPoint?.english || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, english: e.target.value })}
+                                    placeholder="Destination point"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Destination Point (Malayalam)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.destinationPoint?.malayalam || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, malayalam: e.target.value })}
+                                    placeholder="ലക്ഷ്യസ്ഥാനം"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Destination Point (Urdu)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.destinationPoint?.urdu || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, urdu: e.target.value })}
+                                    placeholder="منزل"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* References */}
+                            <div className="mt-6">
+                              <h4 className="font-medium text-gray-700 mb-4">References</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Branch Reference
+                                  </label>
+                                  <select
+                                    value={row.ref?._id || row.ref || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="">Select Branch</option>
+                                    {branches.map(branch => (
+                                      <option key={branch._id} value={branch._id}>
+                                        {branch.name} {branch.name_malayalam && `| ${branch.name_malayalam}`} {branch.name_urdu && `| ${branch.name_urdu}`}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Location Reference
+                                  </label>
+                                  <select
+                                    value={row.locationRef?._id || row.locationRef || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'locationRef', e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="">Select Location</option>
+                                    {locations.map(location => (
+                                      <option key={location._id} value={location._id}>
+                                        {location.title}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
