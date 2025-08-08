@@ -11,7 +11,8 @@ import {
   HandHelping,
   Phone,
   Calendar,
-  IdCard
+  IdCard,
+  AlertTriangle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Sidebar from '../../../components/Sidebar';
@@ -104,9 +105,14 @@ const UmrahThanima = ({ isOpen }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this thanima?')) return;
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
+  const handleDelete = async (id) => {
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.id;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/thanima-umrah/${id}`, {
@@ -116,19 +122,28 @@ const UmrahThanima = ({ isOpen }) => {
       });
 
       setSuccess('Thanima deleted successfully!');
+      setDeleteConfirm({ show: false, id: null });
       fetchThanimas();
     } catch (error) {
       setError(error.response?.data?.message || 'Delete failed');
+      setDeleteConfirm({ show: false, id: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, id: null });
   };
 
   const handleBulkDelete = async () => {
     if (selectedItems.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} selected thanimas?`)) return;
+    setDeleteConfirm({ show: true, id: selectedItems });
+  };
 
+  const handleBulkDeleteConfirm = async () => {
+    const ids = deleteConfirm.id;
     try {
       const token = localStorage.getItem('token');
-      const deletePromises = selectedItems.map(id =>
+      const deletePromises = ids.map(id =>
         axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/thanima-umrah/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -137,11 +152,13 @@ const UmrahThanima = ({ isOpen }) => {
       );
 
       await Promise.all(deletePromises);
-      setSuccess(`${selectedItems.length} thanimas deleted successfully!`);
+      setSuccess(`${ids.length} thanimas deleted successfully!`);
       setSelectedItems([]);
+      setDeleteConfirm({ show: false, id: null });
       fetchThanimas();
     } catch (error) {
       setError('Error during bulk delete: ' + error.message);
+      setDeleteConfirm({ show: false, id: null });
     }
   };
 
@@ -530,52 +547,155 @@ const UmrahThanima = ({ isOpen }) => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {filteredThanimas.map((thanima, index) => (
-                    <tr key={thanima._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.includes(thanima._id)}
-                          onChange={() => toggleSelectItem(thanima._id)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm font-medium text-gray-900">{thanima.name}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700">{thanima.malayalamName || '-'}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700" dir="rtl">{thanima.urduName || '-'}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700">{thanima.phone}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700 font-mono">{thanima.id}</div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="text-sm text-gray-700">
-                          {new Date(thanima.createdAt).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-4 py-1">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => startEdit(thanima)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(thanima._id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <React.Fragment key={thanima._id}>
+                      <tr className={`hover:bg-gray-50 transition-colors ${editingId === thanima._id ? 'bg-blue-50' : ''}`}>
+                        <td className="px-4 py-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(thanima._id)}
+                            onChange={() => toggleSelectItem(thanima._id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm font-medium text-gray-900">{thanima.name}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">{thanima.malayalamName || '-'}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700" dir="rtl">{thanima.urduName || '-'}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">{thanima.phone}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700 font-mono">{thanima.id}</div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="text-sm text-gray-700">
+                            {new Date(thanima.createdAt).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-1">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => startEdit(thanima)}
+                              className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(thanima._id)}
+                              className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {editingId === thanima._id && (
+                        <tr>
+                          <td colSpan={8} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Thanima</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSubmit({ preventDefault: () => {} })}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={resetForm}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Basic Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.name || ""}
+                                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                      placeholder="Thanima name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.malayalamName || ""}
+                                      onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                                      placeholder="തനിമ"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.urduName || ""}
+                                      onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                                      placeholder="تھانیما"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Contact Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Contact Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Phone *
+                                    </label>
+                                    <input
+                                      type="tel"
+                                      value={formData.phone || ""}
+                                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                      placeholder="+966501234567"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      ID *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.id || ""}
+                                      onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                                      placeholder="TH001"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -591,6 +711,37 @@ const UmrahThanima = ({ isOpen }) => {
               </div>
             )}
           </div>
+
+          {/* Delete Confirmation Modal */}
+          {deleteConfirm.show && (
+            <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
+                <div className="flex items-center gap-3 text-amber-500 mb-4">
+                  <AlertTriangle className="h-6 w-6" />
+                  <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  {Array.isArray(deleteConfirm.id)
+                    ? `Are you sure you want to delete ${deleteConfirm.id.length} selected thanimas? This action cannot be undone.`
+                    : 'Are you sure you want to delete this thanima? This action cannot be undone.'}
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={handleDeleteCancel}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={Array.isArray(deleteConfirm.id) ? handleBulkDeleteConfirm : handleDeleteConfirm}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -53,16 +53,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'title',
       title: 'Title',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.title}
-              onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return (
           <div className="max-w-xs">
             <div className="font-medium text-gray-900 truncate" title={row.title}>
@@ -76,16 +66,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'malayalamTitle',
       title: 'Malayalam Title',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.malayalamTitle || ''}
-              onChange={(e) => handleEditChange(row._id, 'malayalamTitle', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return (
           <div className="max-w-xs">
             <div className="text-sm text-gray-900 truncate" title={row.malayalamTitle}>
@@ -99,17 +79,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'urduTitle',
       title: 'Urdu Title',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.urduTitle || ''}
-              onChange={(e) => handleEditChange(row._id, 'urduTitle', e.target.value)}
-              className="w-full p-1 border rounded"
-              dir="rtl"
-            />
-          );
-        }
         return (
           <div className="max-w-xs">
             <div className="text-sm text-gray-900 truncate" title={row.urduTitle} dir="rtl">
@@ -123,16 +92,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'description',
       title: 'Description',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <textarea
-              value={row.description || ''}
-              onChange={(e) => handleEditChange(row._id, 'description', e.target.value)}
-              className="w-full p-1 border rounded"
-              rows="2"
-            />
-          );
-        }
         return (
           <div className="max-w-sm">
             <div className="text-sm text-gray-600 line-clamp-2" title={row.description}>
@@ -146,16 +105,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'malayalamDescription',
       title: 'Malayalam Description',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <textarea
-              value={row.malayalamDescription || ''}
-              onChange={(e) => handleEditChange(row._id, 'malayalamDescription', e.target.value)}
-              className="w-full p-1 border rounded"
-              rows="2"
-            />
-          );
-        }
         return (
           <div className="max-w-sm">
             <div className="text-sm text-gray-600 line-clamp-2" title={row.malayalamDescription}>
@@ -169,17 +118,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'urduDescription',
       title: 'Urdu Description',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <textarea
-              value={row.urduDescription || ''}
-              onChange={(e) => handleEditChange(row._id, 'urduDescription', e.target.value)}
-              className="w-full p-1 border rounded"
-              rows="2"
-              dir="rtl"
-            />
-          );
-        }
         return (
           <div className="max-w-sm">
             <div className="text-sm text-gray-600 line-clamp-2" title={row.urduDescription} dir="rtl">
@@ -193,17 +131,6 @@ const UmrahNews = ({ isOpen }) => {
       key: 'link',
       title: 'Link',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="url"
-              value={row.link || ''}
-              onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-              className="w-full p-1 border rounded"
-              placeholder="https://example.com"
-            />
-          );
-        }
         return row.link ? (
           <a 
             href={row.link} 
@@ -235,37 +162,18 @@ const UmrahNews = ({ isOpen }) => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       )
     }
@@ -848,13 +756,160 @@ const UmrahNews = ({ isOpen }) => {
                   </tr>
                 ) : (
                   filteredNewsData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
-                      {newsColumns.map((column) => (
-                        <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {column.render(row)}
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {newsColumns.map((column) => (
+                          <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {column.render(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={newsColumns.length} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit News</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Title Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Title Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Title *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.title || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "title", e.target.value)
+                                      }
+                                      placeholder="News title"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamTitle || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamTitle", e.target.value)
+                                      }
+                                      placeholder="മലയാളം ശീർഷകം"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Title
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduTitle || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduTitle", e.target.value)
+                                      }
+                                      placeholder="اردو عنوان"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Link Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Link Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Link
+                                    </label>
+                                    <input
+                                      type="url"
+                                      value={row.link || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "link", e.target.value)
+                                      }
+                                      placeholder="https://example.com"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Description - Full Width */}
+                              <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-4">Description Information</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Description
+                                    </label>
+                                    <textarea
+                                      value={row.description || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "description", e.target.value)
+                                      }
+                                      placeholder="News description"
+                                      rows="4"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Description
+                                    </label>
+                                    <textarea
+                                      value={row.malayalamDescription || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamDescription", e.target.value)
+                                      }
+                                      placeholder="മലയാളം വിവരണം"
+                                      rows="4"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Description
+                                    </label>
+                                    <textarea
+                                      value={row.urduDescription || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduDescription", e.target.value)
+                                      }
+                                      placeholder="اردو تفصیل"
+                                      rows="4"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -864,8 +919,8 @@ const UmrahNews = ({ isOpen }) => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="text-red-500 mr-3" size={24} />
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>

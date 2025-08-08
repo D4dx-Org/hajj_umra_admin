@@ -64,18 +64,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "name",
       title: "Name",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) =>
-                handleEditChange(row._id, "name", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.name;
       },
     },
@@ -83,18 +71,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "malayalamName",
       title: "Malayalam Name",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.malayalamName || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "malayalamName", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.malayalamName || "-";
       },
     },
@@ -102,18 +78,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "urduName",
       title: "Urdu Name",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.urduName || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "urduName", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.urduName || "-";
       },
     },
@@ -121,18 +85,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "center",
       title: "Center",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.center || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "center", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.center || "N/A";
       },
     },
@@ -140,18 +92,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "malayalamCenter",
       title: "Malayalam Center",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.malayalamCenter || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "malayalamCenter", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.malayalamCenter || "-";
       },
     },
@@ -159,18 +99,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "urduCenter",
       title: "Urdu Center",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.urduCenter || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "urduCenter", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.urduCenter || "-";
       },
     },
@@ -178,18 +106,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "poll",
       title: "Poll",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "poll", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.poll || "N/A";
       },
     },
@@ -197,18 +113,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "malayalamPoll",
       title: "Malayalam Poll",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.malayalamPoll || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "malayalamPoll", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.malayalamPoll || "-";
       },
     },
@@ -216,18 +120,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "urduPoll",
       title: "Urdu Poll",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.urduPoll || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "urduPoll", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.urduPoll || "-";
       },
     },
@@ -235,36 +127,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "location",
       title: "Location",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ""}
-                onChange={(e) =>
-                  handleEditChange(row._id, "location", {
-                    ...row.location,
-                    lat: e.target.value,
-                  })
-                }
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ""}
-                onChange={(e) =>
-                  handleEditChange(row._id, "location", {
-                    ...row.location,
-                    lng: e.target.value,
-                  })
-                }
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
         return row.location
           ? `${row.location.lat}, ${row.location.lng}`
           : "N/A";
@@ -274,24 +136,6 @@ const UmrahClinic = ({ isOpen }) => {
       key: "branchRef",
       title: "Branch",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.branchRef?._id || row.branchRef || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "branchRef", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Branch</option>
-              {branches.map((branch) => (
-                <option key={branch._id} value={branch._id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          );
-        }
         return row.branchRef?.name || "N/A";
       },
     },
@@ -300,37 +144,18 @@ const UmrahClinic = ({ isOpen }) => {
       title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       ),
     },
@@ -1149,16 +974,243 @@ const UmrahClinic = ({ isOpen }) => {
                   </tr>
                 ) : (
                   filteredClinicData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
-                      {clinicColumns.map((column) => (
-                        <td
-                          key={column.key}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                        >
-                          {column.render(row)}
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {clinicColumns.map((column) => (
+                          <td
+                            key={column.key}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                          >
+                            {column.render(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={clinicColumns.length} className="p-0">
+                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                              <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Clinic</h3>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Basic Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "name", e.target.value)
+                                      }
+                                      placeholder="Clinic name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamName", e.target.value)
+                                      }
+                                      placeholder="മലയാളം പേര്"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduName || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduName", e.target.value)
+                                      }
+                                      placeholder="اردو نام"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Center Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Center Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.center || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "center", e.target.value)
+                                      }
+                                      placeholder="Center name"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamCenter || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamCenter", e.target.value)
+                                      }
+                                      placeholder="മലയാളം സെന്റർ"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduCenter || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduCenter", e.target.value)
+                                      }
+                                      placeholder="اردو سینٹر"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Poll Information */}
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-700">Poll Information</h4>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.poll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "poll", e.target.value)
+                                      }
+                                      placeholder="Poll information"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Malayalam Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.malayalamPoll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "malayalamPoll", e.target.value)
+                                      }
+                                      placeholder="മലയാളം പോൾ"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Urdu Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.urduPoll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "urduPoll", e.target.value)
+                                      }
+                                      placeholder="اردو پول"
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Branch and Location - Full Width */}
+                              <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-4">Additional Information</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Branch *
+                                    </label>
+                                    <select
+                                      value={row.branchRef?._id || row.branchRef || ""}
+                                      onChange={(e) => handleEditChange(row._id, "branchRef", e.target.value)}
+                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      required
+                                    >
+                                      <option value="">Select Branch</option>
+                                      {branches.map(branch => (
+                                        <option key={branch._id} value={branch._id}>
+                                          {branch.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Location (Optional)
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="number"
+                                        value={row.location?.lat || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lat: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Latitude"
+                                        className="w-1/2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                      <input
+                                        type="number"
+                                        value={row.location?.lng || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lng: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Longitude"
+                                        className="w-1/2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -1168,8 +1220,8 @@ const UmrahClinic = ({ isOpen }) => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="text-red-500 mr-3" size={24} />
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>

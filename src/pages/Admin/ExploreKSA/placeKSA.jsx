@@ -52,7 +52,7 @@ const PlaceKSA = () => {
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 20,
+    pageSize: 10,
     total: 0,
   });
   const [editingId, setEditingId] = useState(null);
@@ -104,9 +104,10 @@ const PlaceKSA = () => {
       }
 
       // Fetch both places and locations in parallel
-      const [placesResponse, locationsResponse] = await Promise.all([
+             const [placesResponse, locationsResponse] = await Promise.all([
         axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/places`, {
           headers: { Authorization: `Bearer ${token}` },
+          params: { page: 1, limit: 1000 },
         }),
         axios
           .get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`)
@@ -125,7 +126,7 @@ const PlaceKSA = () => {
       setPlaces(placesResponse.data.placesKSA || []);
       setPagination({
         ...pagination,
-        total: placesResponse.data.count || 0,
+        total: placesResponse.data.total || (placesResponse.data.placesKSA?.length || 0),
       });
 
       // Handle locations response - backend returns array directly
@@ -562,13 +563,45 @@ const PlaceKSA = () => {
         item.description?.toLowerCase().includes(searchStr) ||
         item.id?.toLowerCase().includes(searchStr)
       );
+    }).sort((a, b) => {
+      // Sort by ID number (extract numeric part and sort numerically)
+      const aId = parseInt(a.id?.replace(/\D/g, '')) || 0;
+      const bId = parseInt(b.id?.replace(/\D/g, '')) || 0;
+      return aId - bId;
     });
   }, [places, searchTerm]);
+
+  // Handle pagination change
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination({
+      ...pagination,
+      current: page,
+      pageSize: pageSize,
+    });
+  };
+
+  // Get paginated data
+  const paginatedPlaces = useMemo(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const endIndex = startIndex + pagination.pageSize;
+    const paginated = filteredPlaces.slice(startIndex, endIndex);
+    console.log(`Pagination: Page ${pagination.current}, showing ${paginated.length} of ${filteredPlaces.length} total items`);
+    return paginated;
+  }, [filteredPlaces, pagination.current, pagination.pageSize]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setPagination(prev => ({
+      ...prev,
+      current: 1,
+      total: filteredPlaces.length,
+    }));
+  }, [searchTerm]);
 
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredPlaces.map((row) => row._id));
+      setSelectedRows(paginatedPlaces.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -592,7 +625,7 @@ const PlaceKSA = () => {
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === filteredPlaces.length}
+          checked={selectedRows.length === paginatedPlaces.length && paginatedPlaces.length > 0}
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -786,7 +819,7 @@ const PlaceKSA = () => {
       />
 
       <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
-        <div className="flex justify-between items-center mt-16 mb-4">
+        <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold flex items-center gap-2">
               <MapPin size={22} />
@@ -857,8 +890,8 @@ const PlaceKSA = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -891,7 +924,7 @@ const PlaceKSA = () => {
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <Table
             columns={columns}
-            dataSource={filteredPlaces}
+            dataSource={paginatedPlaces}
             rowKey="_id"
             loading={loading}
             pagination={{
@@ -901,6 +934,9 @@ const PlaceKSA = () => {
               showTotal: (total, range) =>
                 `${range[0]}-${range[1]} of ${total} places`,
               pageSizeOptions: ["10", "20", "50", "100"],
+              style: { marginRight: '16px' },
+              onChange: handlePaginationChange,
+              onShowSizeChange: handlePaginationChange,
             }}
             size="small"
             scroll={{ x: "max-content" }}

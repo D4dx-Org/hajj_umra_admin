@@ -1226,13 +1226,24 @@ const Camp = ({ isOpen }) => {
           <p className="text-center">No items found</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
+            <table className="min-w-full text-sm table-fixed">
               <thead className="bg-gray-50">
                 <tr>
                   {campColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'maktab' ? 'w-20' :
+                        column.key === 'zone' ? 'w-20' :
+                        column.key === 'country' ? 'w-32' :
+                        column.key === 'poll' ? 'w-24' :
+                        column.key === 'location' ? 'w-32' :
+                        column.key === 'ref' ? 'w-32' :
+                        column.key === 'road' ? 'w-24' :
+                        column.key === 'tent' ? 'w-24' :
+                        column.key === 'actions' ? 'w-32' : ''
+                      }`}
                     >
                       {column.title}
                     </th>
@@ -1245,7 +1256,18 @@ const Camp = ({ isOpen }) => {
                     {campColumns.map((column) => (
                       <td
                         key={`${row._id}-${column.key}`}
-                        className="px-4 py-1 whitespace-nowrap"
+                        className={`px-3 py-2 ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'maktab' ? 'w-20' :
+                          column.key === 'zone' ? 'w-20' :
+                          column.key === 'country' ? 'w-32' :
+                          column.key === 'poll' ? 'w-24' :
+                          column.key === 'location' ? 'w-32' :
+                          column.key === 'ref' ? 'w-32' :
+                          column.key === 'road' ? 'w-24' :
+                          column.key === 'tent' ? 'w-24' :
+                          column.key === 'actions' ? 'w-32' : ''
+                        }`}
                       >
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
@@ -1259,8 +1281,8 @@ const Camp = ({ isOpen }) => {
 
         {/* Add Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle className="h-6 w-6" />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>

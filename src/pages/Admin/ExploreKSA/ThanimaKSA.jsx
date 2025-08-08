@@ -85,7 +85,7 @@ const Thanima = ({ isOpen }) => {
     }
   };
 
-  // Define the table columns with editable configuration
+  // Define the table columns
   const thanimaColumns = useMemo(() => [
     {
       key: 'select',
@@ -110,15 +110,6 @@ const Thanima = ({ isOpen }) => {
       key: 'name', 
       title: 'Name',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex flex-col gap-1">
-              <input type="text" value={row.name} onChange={(e) => handleEditChange(row._id, 'name', e.target.value)} className="w-full p-1 border rounded" placeholder="English" />
-              <input type="text" value={row.nameMalayalam} onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)} className="w-full p-1 border rounded" placeholder="Malayalam" />
-              <input type="text" value={row.nameUrdu} onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)} className="w-full p-1 border rounded" placeholder="Urdu" />
-            </div>
-          );
-        }
         const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
         return values || '-';
       }
@@ -127,16 +118,6 @@ const Thanima = ({ isOpen }) => {
       key: 'phone', 
       title: 'Phone',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.phone}
-              onChange={(e) => handleEditChange(row._id, 'phone', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.phone;
       }
     },
@@ -144,16 +125,6 @@ const Thanima = ({ isOpen }) => {
       key: 'id', 
       title: 'ID',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.id}
-              onChange={(e) => handleEditChange(row._id, 'id', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
         return row.id;
       }
     },
@@ -161,22 +132,6 @@ const Thanima = ({ isOpen }) => {
       key: 'ref',
       title: 'Location Reference',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.ref?._id || row.ref || ''}
-              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Location</option>
-              {locations.map(location => (
-                <option key={location._id} value={location._id}>
-                  {location.title}
-                </option>
-              ))}
-            </select>
-          );
-        }
         const locationName = row.ref?.title || locations.find(loc => loc._id === row.ref)?.title || 'N/A';
         return locationName;
       }
@@ -186,41 +141,22 @@ const Thanima = ({ isOpen }) => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+          >
+            Delete
+          </button>
         </div>
       )
     }
-  ], [editingId, selectedRows, (thanimaData || []).length, locations]);
+  ], [selectedRows, (thanimaData || []).length, locations]);
 
   // Fetch data from API using Axios
   useEffect(() => {
@@ -690,13 +626,133 @@ const Thanima = ({ isOpen }) => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredThanimaData.map((row) => (
-                  <tr key={row._id}>
-                    {thanimaColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
-                    ))}
-                  </tr>
+                  <React.Fragment key={row._id}>
+                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      {thanimaColumns.map((column) => (
+                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                          {column.render ? column.render(row) : row[column.key]}
+                        </td>
+                      ))}
+                    </tr>
+                    {editingId === row._id && (
+                      <tr>
+                        <td colSpan={thanimaColumns.length} className="p-0">
+                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                            <div className="flex justify-between items-center mb-6">
+                              <h3 className="text-lg font-semibold text-gray-900">Edit Thanima</h3>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Basic Information */}
+                              <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name (English) *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.name || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
+                                    placeholder="Enter name in English"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name (Malayalam)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.nameMalayalam || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)}
+                                    placeholder="Enter name in Malayalam"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name (Urdu)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.nameUrdu || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)}
+                                    placeholder="Enter name in Urdu"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Contact & Location */}
+                              <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">Contact & Location</h4>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.phone || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'phone', e.target.value)}
+                                    placeholder="Enter phone number"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    ID *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.id || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'id', e.target.value)}
+                                    placeholder="Enter unique ID"
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Location Reference
+                                  </label>
+                                  <select
+                                    value={row.ref?._id || row.ref || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="">Select Location</option>
+                                    {locations.map(location => (
+                                      <option key={location._id} value={location._id}>
+                                        {location.title}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -706,8 +762,8 @@ const Thanima = ({ isOpen }) => {
 
       {/* Add Delete Confirmation Modal */}
       {deleteConfirm.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
             <div className="flex items-center gap-3 text-amber-500 mb-4">
               <AlertTriangle className="h-6 w-6" />
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>
