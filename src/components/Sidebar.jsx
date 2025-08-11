@@ -618,7 +618,7 @@ const Sidebar = ({ isOpen }) => {
       )}
 
       {/* Menu Items Container */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-4 scrollbar-hide">
         <nav className="p-2">
           {isOpen ? (
             <div className="space-y-1">

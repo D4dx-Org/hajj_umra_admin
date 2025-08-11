@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle } from 'lucide-react';
+import { Search, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -50,15 +50,15 @@ const News = () => {
     });
   };
 
-  // Define table columns
-  const newsColumns = useMemo(() => [
+  // Define the table columns
+  const newsColumns = [
     {
       key: 'select',
       title: (
         <input
           type="checkbox"
-          checked={newsData.length > 0 && selectedRows.length === newsData.length}
-          onChange={handleSelectAll}
+          checked={selectedRows.length === newsData.length}
+          onChange={(event) => handleSelectAll(event)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -66,106 +66,44 @@ const News = () => {
         <input
           type="checkbox"
           checked={selectedRows.includes(row._id)}
-          onChange={() => handleSelectRow(row._id)}
+          onChange={(event) => handleSelectRow(row._id)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
     },
-    { 
-      key: 'title', 
+    {
+      key: 'title',
       title: 'Title',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.title}
-              onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.title;
-      }
+      render: (row) => row.title
     },
-    { 
-      key: 'link', 
-      title: 'Link',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.link}
-              onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.link ? (
-          <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-            {row.link}
-          </a>
-        ) : 'N/A';
-      }
-    },
-    { 
-      key: 'description', 
-      title: 'Description',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <textarea
-              value={row.description}
-              onChange={(e) => handleEditChange(row._id, 'description', e.target.value)}
-              className="w-full p-1 border rounded"
-              rows="3"
-            />
-          );
-        }
-        return row.description || 'N/A';
-      }
+    {
+      key: 'content',
+      title: 'Content',
+      render: (row) => row.content
     },
     {
       key: 'actions',
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )
     }
-  ], [editingId, selectedRows, newsData.length]);
+  ];
 
   // Fetch news data
   useEffect(() => {
@@ -401,34 +339,112 @@ const News = () => {
           </div>
         </div>
 
+        {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
         ) : filteredNewsData.length === 0 ? (
-          <p className="text-center">No news items found</p>
+          <p className="text-center">No news found</p>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {newsColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {column.title}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredNewsData.map((row) => (
-                  <tr key={row._id}>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
                     {newsColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-3 py-1 whitespace-nowrap">
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
+                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {column.title}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredNewsData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={newsColumns.length}
+                        className="px-4 py-1 text-center text-gray-500"
+                      >
+                        No news found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredNewsData.map((row) => (
+                      <React.Fragment key={row._id}>
+                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                          {newsColumns.map((column) => (
+                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {column.render(row)}
+                            </td>
+                          ))}
+                        </tr>
+                        {editingId === row._id && (
+                          <tr>
+                            <td colSpan={newsColumns.length} className="p-0">
+                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                  <h3 className="text-lg font-semibold text-gray-900">Edit News</h3>
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => handleSaveEdit(row)}
+                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                    >
+                                      Save Changes
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 gap-6">
+                                  {/* Basic Information */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Title *
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.title || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "title", e.target.value)
+                                        }
+                                        placeholder="News title"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Content *
+                                      </label>
+                                      <textarea
+                                        value={row.content || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "content", e.target.value)
+                                        }
+                                        placeholder="News content"
+                                        rows="4"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

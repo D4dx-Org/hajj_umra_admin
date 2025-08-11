@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, AlertTriangle, Download, ArrowUpDown } from "lucide-react";
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
@@ -80,23 +80,6 @@ const Ambulance = ({ isOpen }) => {
       key: "category",
       title: "Category",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <Select
-              value={ambulanceCategories.categories.find(
-                (cat) => cat.value === row.category
-              )}
-              onChange={(selected) =>
-                handleEditChange(row._id, "category", selected.value)
-              }
-              options={ambulanceCategories.categories}
-              styles={customStyles}
-              className="w-full"
-              isSearchable
-              placeholder="Select category..."
-            />
-          );
-        }
         const category = ambulanceCategories.categories.find(
           (cat) => cat.value === row.category
         );
@@ -106,75 +89,17 @@ const Ambulance = ({ isOpen }) => {
     {
       key: "center",
       title: "Center",
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.center}
-              onChange={(e) =>
-                handleEditChange(row._id, "center", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.center;
-      },
+      render: (row) => row.center,
     },
     {
       key: "poll",
       title: "Poll",
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.poll}
-              onChange={(e) =>
-                handleEditChange(row._id, "poll", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.poll;
-      },
+      render: (row) => row.poll,
     },
     {
       key: "location",
       title: "Location",
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ""}
-                onChange={(e) =>
-                  handleEditChange(row._id, "location", {
-                    ...row.location,
-                    lat: e.target.value,
-                  })
-                }
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ""}
-                onChange={(e) =>
-                  handleEditChange(row._id, "location", {
-                    ...row.location,
-                    lng: e.target.value,
-                  })
-                }
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
         return row.location
           ? `${row.location.lat}, ${row.location.lng}`
           : "N/A";
@@ -183,64 +108,27 @@ const Ambulance = ({ isOpen }) => {
     {
       key: "locationRef",
       title: "Location Reference",
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.locationRef?._id || row.locationRef || ""}
-              onChange={(e) =>
-                handleEditChange(row._id, "locationRef", e.target.value)
-              }
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Location</option>
-              {locations.map((location) => (
-                <option key={location._id} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          );
-        }
-        return row.locationRef?.name || "N/A";
-      },
+      render: (row) => row.locationRef?.name || "N/A",
     },
     {
       key: "actions",
       title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       ),
     },
@@ -1041,35 +929,200 @@ const Ambulance = ({ isOpen }) => {
         ) : filteredAmbulanceData.length === 0 ? (
           <p className="text-center">No ambulances found</p>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  {ambulanceColumns.map((column) => (
-                    <th
-                      key={column.key}
-                      className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {column.title}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAmbulanceData.map((row) => (
-                  <tr key={row._id}>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
                     {ambulanceColumns.map((column) => (
-                      <td
-                        key={`${row._id}-${column.key}`}
-                        className="px-6 py-2 whitespace-nowrap"
+                      <th
+                        key={column.key}
+                        className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
+                        {column.title}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredAmbulanceData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={ambulanceColumns.length}
+                        className="px-4 py-1 text-center text-gray-500"
+                      >
+                        No ambulances found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAmbulanceData.map((row) => (
+                      <React.Fragment key={row._id}>
+                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                          {ambulanceColumns.map((column) => (
+                            <td
+                              key={column.key}
+                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            >
+                              {column.render(row)}
+                            </td>
+                          ))}
+                        </tr>
+                        {editingId === row._id && (
+                          <tr>
+                            <td colSpan={ambulanceColumns.length} className="p-0">
+                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                  <h3 className="text-lg font-semibold text-gray-900">Edit Ambulance</h3>
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => handleSaveEdit(row)}
+                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                    >
+                                      Save Changes
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  {/* Category Fields */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Category Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Category *
+                                      </label>
+                                      <Select
+                                        value={ambulanceCategories.categories.find(
+                                          (cat) => cat.value === row.category
+                                        )}
+                                        onChange={(selected) =>
+                                          handleEditChange(row._id, "category", selected.value)
+                                        }
+                                        options={ambulanceCategories.categories}
+                                        styles={customStyles}
+                                        className="w-full"
+                                        isSearchable
+                                        placeholder="Select category..."
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Center Fields */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Center Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Center *
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.center || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "center", e.target.value)
+                                        }
+                                        placeholder="Center name"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Poll Fields */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Poll Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Poll *
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.poll || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "poll", e.target.value)
+                                        }
+                                        placeholder="Poll information"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Location Fields - Full Width */}
+                                <div className="mt-6">
+                                  <h4 className="font-medium text-gray-700 mb-4">Location Information</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Latitude
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={row.location?.lat || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lat: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Enter latitude"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Longitude
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={row.location?.lng || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "location", {
+                                            ...row.location,
+                                            lng: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Enter longitude"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Location Reference
+                                      </label>
+                                      <select
+                                        value={row.locationRef?._id || row.locationRef || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "locationRef", e.target.value)
+                                        }
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      >
+                                        <option value="">Select Location</option>
+                                        {locations.map((location) => (
+                                          <option key={location._id} value={location._id}>
+                                            {location.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

@@ -11,7 +11,8 @@ import {
   Building2,
   MapPin,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  Edit,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Sidebar from '../../../components/Sidebar';
@@ -442,10 +443,10 @@ const UmrahNusuk = ({ isOpen }) => {
             </div>
           )}
 
-          {showAddForm && (
+          {showAddForm && !editingId && (
             <div className="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                {editingId ? 'Edit Nusuk' : 'Add New Nusuk'}
+                Add New Nusuk
               </h2>
               <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
@@ -568,7 +569,7 @@ const UmrahNusuk = ({ isOpen }) => {
                     className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
                   >
                     <Save size={16} />
-                    {editingId ? 'Update' : 'Save'}
+                    Save
                   </button>
                   <button
                     type="button"
@@ -665,15 +666,17 @@ const UmrahNusuk = ({ isOpen }) => {
                           <div className="flex gap-2">
                             <button
                               onClick={() => startEdit(nusuk)}
-                              className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                              title="Edit"
                             >
-                              Edit
+                              <Edit size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(nusuk._id)}
-                              className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              title="Delete"
                             >
-                              Delete
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
