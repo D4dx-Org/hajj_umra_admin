@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -340,15 +340,17 @@ const Hospital = ({ isOpen }) => {
             <>
               <button
                 onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                title="Edit"
               >
-                Edit
+                <Edit size={16} />
               </button>
               <button
                 onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
+                className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                title="Delete"
               >
-                Delete
+                <Trash2 size={16} />
               </button>
             </>
           )}

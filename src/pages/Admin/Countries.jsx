@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, Upload as UploadIcon, ArrowUpDown } from 'lucide-react';
+import { Search, AlertTriangle, Download, Upload as UploadIcon, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -198,7 +198,7 @@ const Countries = () => {
         <input
           type="checkbox"
           checked={selectedRows.includes(row._id)}
-          onChange={() => handleSelectRow(row._id)}
+          onChange={(event) => handleSelectRow(row._id)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
@@ -206,94 +206,39 @@ const Countries = () => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.name;
-      }
+      render: (row) => row.name
     },
     {
       key: 'arabicName',
       title: 'Arabic Name',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.arabicName}
-              onChange={(e) => handleEditChange(row._id, 'arabicName', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.arabicName || 'N/A';
-      }
+      render: (row) => row.arabicName || 'N/A'
     },
-    flagColumn,
     {
-      key: 'category',
-      title: 'Category',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <Select
-              value={countryCategories.find(cat => cat.value === row.category)}
-              onChange={(selected) => handleEditChange(row._id, 'category', selected.value)}
-              options={countryCategories}
-              styles={customStyles}
-              className="w-full"
-              isSearchable
-              placeholder="Select category..."
-            />
-          );
-        }
-        return row.category;
-      }
+      key: 'flag',
+      title: 'Flag',
+      render: (row) => row.flag ? (
+        <img src={row.flag} alt={`${row.name} flag`} className="w-8 h-6 object-cover rounded" />
+      ) : 'N/A'
     },
     {
       key: 'actions',
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )
     }
@@ -741,35 +686,142 @@ const Countries = () => {
           </div>
         )}
 
-        {/* Table */}
+        {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
         ) : filteredCountryData.length === 0 ? (
           <p className="text-center">No countries found</p>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {countryColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {column.title}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCountryData.map((row) => (
-                  <tr key={row._id}>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
                     {countryColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
+                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {column.title}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredCountryData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={countryColumns.length}
+                        className="px-4 py-1 text-center text-gray-500"
+                      >
+                        No countries found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCountryData.map((row) => (
+                      <React.Fragment key={row._id}>
+                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                          {countryColumns.map((column) => (
+                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {column.render(row)}
+                            </td>
+                          ))}
+                        </tr>
+                        {editingId === row._id && (
+                          <tr>
+                            <td colSpan={countryColumns.length} className="p-0">
+                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                  <h3 className="text-lg font-semibold text-gray-900">Edit Country</h3>
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => handleSaveEdit(row)}
+                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                    >
+                                      Save Changes
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {/* Basic Information */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Name *
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.name || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "name", e.target.value)
+                                        }
+                                        placeholder="Country name"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Arabic Name
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.arabicName || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "arabicName", e.target.value)
+                                        }
+                                        placeholder="Arabic name"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Flag Information */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Flag Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Flag URL
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.flag || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "flag", e.target.value)
+                                        }
+                                        placeholder="Flag image URL"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                    {row.flag && (
+                                      <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                          Current Flag Preview
+                                        </label>
+                                        <img 
+                                          src={row.flag} 
+                                          alt={`${row.name} flag`} 
+                                          className="w-16 h-12 object-cover rounded border"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

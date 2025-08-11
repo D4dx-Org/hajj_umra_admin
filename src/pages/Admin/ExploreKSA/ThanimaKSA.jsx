@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download } from 'lucide-react';
+import { Search, AlertTriangle, Download, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 import axios from 'axios';
@@ -143,15 +143,17 @@ const Thanima = ({ isOpen }) => {
         <div className="flex gap-2">
           <button
             onClick={() => handleEditClick(row)}
-            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
-            Edit
+            <Edit size={16} />
           </button>
           <button
             onClick={() => handleDelete(row._id)}
-            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
-            Delete
+            <Trash2 size={16} />
           </button>
         </div>
       )

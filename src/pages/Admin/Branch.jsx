@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import axios from 'axios';
@@ -68,96 +68,37 @@ const Branch = ({ isOpen }) => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.name}
-              onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.name;
-      }
+      render: (row) => row.name
     },
     {
       key: 'phoneNumber',
       title: 'Phone Number',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <input
-              type="text"
-              value={row.phoneNumber || ''}
-              onChange={(e) => handleEditChange(row._id, 'phoneNumber', e.target.value)}
-              className="w-full p-1 border rounded"
-            />
-          );
-        }
-        return row.phoneNumber || 'N/A';
-      }
+      render: (row) => row.phoneNumber || 'N/A'
     },
     {
       key: 'ref',
       title: 'Location Reference',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.ref?._id || row.ref || ''}
-              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Location</option>
-              {locations.map(location => (
-                <option key={location._id} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          );
-        }
-        return row.ref?.name || 'N/A';
-      }
+      render: (row) => row.ref?.name || 'N/A'
     },
     {
       key: 'actions',
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )
     }
@@ -786,29 +727,130 @@ const Branch = ({ isOpen }) => {
         ) : filteredBranchData.length === 0 ? (
           <p className="text-center">No branches found</p>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {branchColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {column.title}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredBranchData.map((row) => (
-                  <tr key={row._id}>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
                     {branchColumns.map((column) => (
-                      <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                        {column.render ? column.render(row) : row[column.key]}
-                      </td>
+                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {column.title}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredBranchData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={branchColumns.length}
+                        className="px-4 py-1 text-center text-gray-500"
+                      >
+                        No branches found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredBranchData.map((row) => (
+                      <React.Fragment key={row._id}>
+                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                          {branchColumns.map((column) => (
+                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {column.render(row)}
+                            </td>
+                          ))}
+                        </tr>
+                        {editingId === row._id && (
+                          <tr>
+                            <td colSpan={branchColumns.length} className="p-0">
+                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                  <h3 className="text-lg font-semibold text-gray-900">Edit Branch</h3>
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => handleSaveEdit(row)}
+                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                                    >
+                                      Save Changes
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {/* Basic Information */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Name *
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.name || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "name", e.target.value)
+                                        }
+                                        placeholder="Branch name"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Phone Number
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={row.phoneNumber || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "phoneNumber", e.target.value)
+                                        }
+                                        placeholder="Phone number"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Location Information */}
+                                  <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">Location Information</h4>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Location Reference *
+                                      </label>
+                                      <select
+                                        value={row.ref?._id || row.ref || ""}
+                                        onChange={(e) =>
+                                          handleEditChange(row._id, "ref", e.target.value)
+                                        }
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                      >
+                                        <option value="">Select Location</option>
+                                        {locations.map(location => (
+                                          <option key={location._id} value={location._id}>
+                                            {location.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
