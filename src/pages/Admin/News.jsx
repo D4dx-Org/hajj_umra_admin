@@ -74,12 +74,12 @@ const News = () => {
     {
       key: 'title',
       title: 'Title',
-      render: (row) => row.title
+      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
     },
     {
       key: 'content',
       title: 'Content',
-      render: (row) => row.content
+      render: (row) => <span className="truncate" title={row.content || 'N/A'}>{row.content || 'N/A'}</span>
     },
     {
       key: 'actions',
@@ -347,11 +347,19 @@ const News = () => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {newsColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'title' ? 'w-32' :
+                          column.key === 'content' ? 'w-48' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -362,7 +370,7 @@ const News = () => {
                     <tr>
                       <td
                         colSpan={newsColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No news found
                       </td>
@@ -372,68 +380,64 @@ const News = () => {
                       <React.Fragment key={row._id}>
                         <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
                           {newsColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'title' ? 'max-w-32 truncate' :
+                                column.key === 'content' ? 'max-w-48 truncate' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}
                         </tr>
                         {editingId === row._id && (
                           <tr>
-                            <td colSpan={newsColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit News</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                    >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
+                            <td colSpan={newsColumns.length} className="p-4">
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">Edit News</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">Title *</label>
+                                    <input
+                                      type="text"
+                                      value={row.title || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "title", e.target.value)
+                                      }
+                                      placeholder="News title"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Content *</label>
+                                    <textarea
+                                      value={row.content || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "content", e.target.value)
+                                      }
+                                      placeholder="News content"
+                                      rows="4"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 gap-6">
-                                  {/* Basic Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Title *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.title || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "title", e.target.value)
-                                        }
-                                        placeholder="News title"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Content *
-                                      </label>
-                                      <textarea
-                                        value={row.content || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "content", e.target.value)
-                                        }
-                                        placeholder="News content"
-                                        rows="4"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                  </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
                             </td>

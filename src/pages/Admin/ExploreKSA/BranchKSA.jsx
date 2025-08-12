@@ -87,13 +87,10 @@ const BranchKSA = ({ isOpen }) => {
           </div>
         );
       }
-    },
-    {
-      key: 'phoneNumber',
+    },    { 
+      key: 'phoneNumber', 
       title: 'Phone Number',
-      render: (row) => {
-        return row.phoneNumber || 'N/A';
-      }
+      render: (row) => <span className="truncate" title={row.phoneNumber || '-'}>{row.phoneNumber || '-'}</span>
     },
     {
       key: 'ref',
@@ -828,105 +825,83 @@ const BranchKSA = ({ isOpen }) => {
                     </tr>
                     {editingId === row._id && (
                       <tr>
-                        <td colSpan={branchColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Branch</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                        <td colSpan={branchColumns.length} className="p-4">
+                          <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                            <h2 className="text-lg font-bold mb-4">Edit Branch</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Name *</label>
+                                <input
+                                  type="text"
+                                  value={row.name || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
+                                  placeholder="Branch name"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Name (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.name_malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'name_malayalam', e.target.value)}
+                                  placeholder="ശാഖ"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Name (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.name_urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'name_urdu', e.target.value)}
+                                  placeholder="شاخ"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Phone Number</label>
+                                <input
+                                  type="tel"
+                                  value={row.phoneNumber || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'phoneNumber', e.target.value)}
+                                  placeholder="+966501234567"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Location Reference</label>
+                                <select
+                                  value={row.ref?._id || row.ref || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                 >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
+                                  <option value="">Select Location</option>
+                                  {locations.map(location => (
+                                    <option key={location._id} value={location._id}>
+                                      {location.title}
+                                      {location.title_malayalam && ` | ${location.title_malayalam}`}
+                                      {location.title_urdu && ` | ${location.title_urdu}`}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Basic Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.name || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-                                    placeholder="Branch name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.name_malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'name_malayalam', e.target.value)}
-                                    placeholder="ശാഖ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.name_urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'name_urdu', e.target.value)}
-                                    placeholder="شاخ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Contact & Location Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Contact & Location</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Phone Number
-                                  </label>
-                                  <input
-                                    type="tel"
-                                    value={row.phoneNumber || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'phoneNumber', e.target.value)}
-                                    placeholder="+966501234567"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Location Reference
-                                  </label>
-                                  <select
-                                    value={row.ref?._id || row.ref || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  >
-                                    <option value="">Select Location</option>
-                                    {locations.map(location => (
-                                      <option key={location._id} value={location._id}>
-                                        {location.title}
-                                        {location.title_malayalam && ` | ${location.title_malayalam}`}
-                                        {location.title_urdu && ` | ${location.title_urdu}`}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleSaveEdit(row)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         </td>

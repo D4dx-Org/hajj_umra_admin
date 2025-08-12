@@ -142,7 +142,7 @@ const Clinic = ({ isOpen }) => {
   }, [clinicData, searchTerm, sortConfig]);
 
   // Define the table columns
-  const clinicColumns = useMemo(() => [
+  const clinicColumns = [
     {
       key: 'select',
       title: (
@@ -165,47 +165,65 @@ const Clinic = ({ isOpen }) => {
     { 
       key: 'name', 
       title: 'Name',
-      render: (row) => {
-        const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
-        return values || '-';
-      }
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
+    },
+    { 
+      key: 'nameMalayalam', 
+      title: 'Ml Name',
+      render: (row) => <span className="truncate" title={row.nameMalayalam || '-'}>{row.nameMalayalam || '-'}</span>
+    },
+    { 
+      key: 'nameUrdu', 
+      title: 'Ur Name',
+      render: (row) => <span className="truncate" title={row.nameUrdu || '-'}>{row.nameUrdu || '-'}</span>
     },
     { 
       key: 'center', 
       title: 'Center',
-      render: (row) => {
-        const values = [row.center, row.centerMalayalam, row.centerUrdu].filter(Boolean).join(' | ');
-        return values || '-';
-      }
+      render: (row) => <span className="truncate" title={row.center}>{row.center}</span>
+    },
+    { 
+      key: 'centerMalayalam', 
+      title: 'Ml Center',
+      render: (row) => <span className="truncate" title={row.centerMalayalam || '-'}>{row.centerMalayalam || '-'}</span>
+    },
+    { 
+      key: 'centerUrdu', 
+      title: 'Ur Center',
+      render: (row) => <span className="truncate" title={row.centerUrdu || '-'}>{row.centerUrdu || '-'}</span>
     },
     { 
       key: 'poll', 
       title: 'Poll',
-      render: (row) => {
-        const values = [row.poll, row.pollMalayalam, row.pollUrdu].filter(Boolean).join(' | ');
-        return values || '-';
-      }
+      render: (row) => <span className="truncate" title={row.poll}>{row.poll}</span>
+    },
+    { 
+      key: 'pollMalayalam', 
+      title: 'Ml Poll',
+      render: (row) => <span className="truncate" title={row.pollMalayalam || '-'}>{row.pollMalayalam || '-'}</span>
+    },
+    { 
+      key: 'pollUrdu', 
+      title: 'Ur Poll',
+      render: (row) => <span className="truncate" title={row.pollUrdu || '-'}>{row.pollUrdu || '-'}</span>
     },
     { 
       key: 'location', 
       title: 'Location',
       render: (row) => {
-        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
+        const locationText = row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
+        return <span className="truncate" title={locationText}>{locationText}</span>;
       }
     },
     {
       key: 'ref',
-      title: 'Location Reference',
-      render: (row) => {
-        return row.ref?.title || 'N/A';
-      }
+      title: 'Location Ref',
+      render: (row) => <span className="truncate" title={row.ref?.title || 'N/A'}>{row.ref?.title || 'N/A'}</span>
     },
     {
       key: 'branchRef',
-      title: 'Branch Reference',
-      render: (row) => {
-        return row.branchRef?.name || 'N/A';
-      }
+      title: 'Branch Ref',
+      render: (row) => <span className="truncate" title={row.branchRef?.name || 'N/A'}>{row.branchRef?.name || 'N/A'}</span>
     },
     {
       key: 'actions',
@@ -229,7 +247,7 @@ const Clinic = ({ isOpen }) => {
         </div>
       )
     }
-  ], [editingId, selectedRows, filteredClinicData.length, locations, branches]);
+  ];
 
   // Fetch data from API using Axios
   useEffect(() => {
@@ -868,223 +886,207 @@ const Clinic = ({ isOpen }) => {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-center">Loading...</p>
-        ) : filteredClinicData.length === 0 ? (
-          <p className="text-center">No items found</p>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
                   {clinicColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'name' ? 'w-20' :
+                        column.key === 'nameMalayalam' ? 'w-20' :
+                        column.key === 'nameUrdu' ? 'w-20' :
+                        column.key === 'center' ? 'w-20' :
+                        column.key === 'centerMalayalam' ? 'w-20' :
+                        column.key === 'centerUrdu' ? 'w-20' :
+                        column.key === 'poll' ? 'w-16' :
+                        column.key === 'pollMalayalam' ? 'w-20' :
+                        column.key === 'pollUrdu' ? 'w-20' :
+                        column.key === 'location' ? 'w-24' :
+                        column.key === 'ref' ? 'w-24' :
+                        column.key === 'branchRef' ? 'w-24' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
+                    >
                       {column.title}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClinicData.map((row) => (
-                  <React.Fragment key={row._id}>
-                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
-                      {clinicColumns.map((column) => (
-                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                          {column.render ? column.render(row) : row[column.key]}
-                        </td>
-                      ))}
-                    </tr>
-                    {editingId === row._id && (
-                      <tr>
-                        <td colSpan={clinicColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Clinic</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Basic Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Basic Information</h4>
+                {loading ? (
+                  <tr>
+                    <td colSpan={clinicColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredClinicData.length === 0 ? (
+                  <tr>
+                    <td colSpan={clinicColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      No items found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredClinicData.map((row) => (
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {clinicColumns.map((column) => (
+                          <td
+                            key={`${row._id}-${column.key}`}
+                            className={`px-2 py-2 text-sm text-gray-900 ${
+                              column.key === 'name' ? 'max-w-20 truncate' :
+                              column.key === 'nameMalayalam' ? 'max-w-20 truncate' :
+                              column.key === 'nameUrdu' ? 'max-w-20 truncate' :
+                              column.key === 'center' ? 'max-w-20 truncate' :
+                              column.key === 'centerMalayalam' ? 'max-w-20 truncate' :
+                              column.key === 'centerUrdu' ? 'max-w-20 truncate' :
+                              column.key === 'poll' ? 'max-w-16 truncate' :
+                              column.key === 'pollMalayalam' ? 'max-w-20 truncate' :
+                              column.key === 'pollUrdu' ? 'max-w-20 truncate' :
+                              column.key === 'location' ? 'max-w-24 truncate' :
+                              column.key === 'ref' ? 'max-w-24 truncate' :
+                              column.key === 'branchRef' ? 'max-w-24 truncate' :
+                              column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                            }`}
+                          >
+                            {column.render ? column.render(row) : row[column.key]}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={clinicColumns.length} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">Edit Clinic</h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name *
-                                  </label>
+                                  <label className="block text-sm font-medium">Name *</label>
                                   <input
                                     type="text"
                                     value={row.name || ""}
                                     onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
                                     placeholder="Clinic name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     required
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Malayalam)
-                                  </label>
+                                  <label className="block text-sm font-medium">Name (Malayalam)</label>
                                   <input
                                     type="text"
                                     value={row.nameMalayalam || ""}
                                     onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)}
                                     placeholder="ക്ലിനിക്"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Urdu)
-                                  </label>
+                                  <label className="block text-sm font-medium">Name (Urdu)</label>
                                   <input
                                     type="text"
                                     value={row.nameUrdu || ""}
                                     onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)}
                                     placeholder="کلینک"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     dir="rtl"
                                   />
                                 </div>
-                              </div>
-
-                              {/* Center Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Center Information</h4>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Center
-                                  </label>
+                                  <label className="block text-sm font-medium">Center</label>
                                   <input
                                     type="text"
                                     value={row.center || ""}
                                     onChange={(e) => handleEditChange(row._id, 'center', e.target.value)}
                                     placeholder="Center name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Center (Malayalam)
-                                  </label>
+                                  <label className="block text-sm font-medium">Center (Malayalam)</label>
                                   <input
                                     type="text"
                                     value={row.centerMalayalam || ""}
                                     onChange={(e) => handleEditChange(row._id, 'centerMalayalam', e.target.value)}
                                     placeholder="കേന്ദ്രം"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Center (Urdu)
-                                  </label>
+                                  <label className="block text-sm font-medium">Center (Urdu)</label>
                                   <input
                                     type="text"
                                     value={row.centerUrdu || ""}
                                     onChange={(e) => handleEditChange(row._id, 'centerUrdu', e.target.value)}
                                     placeholder="مرکز"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     dir="rtl"
                                   />
                                 </div>
-                              </div>
-                            </div>
-
-                            {/* Poll Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Poll Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Poll
-                                  </label>
+                                  <label className="block text-sm font-medium">Poll</label>
                                   <input
                                     type="text"
                                     value={row.poll || ""}
                                     onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
                                     placeholder="Poll name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Poll (Malayalam)
-                                  </label>
+                                  <label className="block text-sm font-medium">Poll (Malayalam)</label>
                                   <input
                                     type="text"
                                     value={row.pollMalayalam || ""}
                                     onChange={(e) => handleEditChange(row._id, 'pollMalayalam', e.target.value)}
                                     placeholder="പോൾ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Poll (Urdu)
-                                  </label>
+                                  <label className="block text-sm font-medium">Poll (Urdu)</label>
                                   <input
                                     type="text"
                                     value={row.pollUrdu || ""}
                                     onChange={(e) => handleEditChange(row._id, 'pollUrdu', e.target.value)}
                                     placeholder="پول"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     dir="rtl"
                                   />
                                 </div>
                               </div>
-                            </div>
-
-                            {/* Location & References */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Location & References</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Latitude
-                                  </label>
+                                  <label className="block text-sm font-medium">Latitude</label>
                                   <input
                                     type="number"
                                     step="any"
                                     value={row.location?.lat || ""}
                                     onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
                                     placeholder="21.4225"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Longitude
-                                  </label>
+                                  <label className="block text-sm font-medium">Longitude</label>
                                   <input
                                     type="number"
                                     step="any"
                                     value={row.location?.lng || ""}
                                     onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
                                     placeholder="39.8262"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Location Reference
-                                  </label>
+                                  <label className="block text-sm font-medium">Location Reference</label>
                                   <select
                                     value={row.ref?._id || row.ref || ""}
                                     onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   >
                                     <option value="">Select Location</option>
                                     {locations.map(location => (
@@ -1095,13 +1097,11 @@ const Clinic = ({ isOpen }) => {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Branch Reference
-                                  </label>
+                                  <label className="block text-sm font-medium">Branch Reference</label>
                                   <select
                                     value={row.branchRef?._id || row.branchRef || ""}
                                     onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   >
                                     <option value="">Select Branch</option>
                                     {branches.map(branch => (
@@ -1112,17 +1112,31 @@ const Clinic = ({ isOpen }) => {
                                   </select>
                                 </div>
                               </div>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Add Delete Confirmation Modal */}

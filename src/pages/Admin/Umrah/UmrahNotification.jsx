@@ -737,10 +737,10 @@ const UmrahNotification = ({ isOpen }) => {
           {/* Table Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full full text-sm">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-1 text-left w-12">
+                    <th className="px-2 py-2 text-left w-12">
                       <input
                         type="checkbox"
                         checked={
@@ -752,25 +752,25 @@ const UmrahNotification = ({ isOpen }) => {
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       TITLE
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       MALAYALAM TITLE
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       URDU TITLE
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-16">
                       TYPE
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       CONTENT
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       CREATED
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       ACTIONS
                     </th>
                   </tr>
@@ -781,7 +781,7 @@ const UmrahNotification = ({ isOpen }) => {
                       <tr
                         className={`hover:bg-gray-50 transition-colors ${editingId === notification._id ? 'bg-blue-50' : ''}`}
                       >
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           <input
                             type="checkbox"
                             checked={selectedItems.includes(notification._id)}
@@ -789,37 +789,37 @@ const UmrahNotification = ({ isOpen }) => {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm font-medium text-gray-900">
+                        <td className="px-2 py-2">
+                          <div className="text-sm font-medium text-gray-900 max-w-24 truncate" title={notification.title}>
                             {notification.title}
                           </div>
                           {notification.description && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-24" title={notification.description}>
                               {notification.description}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-24 truncate" title={notification.malayalamTitle || '-'}>
                             {notification.malayalamTitle || '-'}
                           </div>
                           {notification.malayalamDescription && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-24" title={notification.malayalamDescription}>
                               {notification.malayalamDescription}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700" dir="rtl">
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-24 truncate" dir="rtl" title={notification.urduTitle || '-'}>
                             {notification.urduTitle || '-'}
                           </div>
                           {notification.urduDescription && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs" dir="rtl">
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-24" dir="rtl" title={notification.urduDescription}>
                               {notification.urduDescription}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           <div className="flex items-center gap-2">
                             {getTypeIcon(notification.type)}
                             <span className="text-sm text-gray-700 capitalize">
@@ -827,7 +827,7 @@ const UmrahNotification = ({ isOpen }) => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           {renderContent(notification)}
                         </td>
                         <td className="px-4 py-1">

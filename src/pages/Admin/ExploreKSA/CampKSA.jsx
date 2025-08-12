@@ -204,48 +204,30 @@ const Camp = ({ isOpen }) => {
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
-    },
-    {
-      key: 'maktab',
+    },    { 
+      key: 'maktab', 
       title: 'Maktab',
-      render: (row) => {
-        return row.maktab;
-      }
-    },
-    {
-      key: 'maktabMalayalam',
+      render: (row) => <span className="truncate" title={row.maktab || '-'}>{row.maktab || '-'}</span>
+    },    { 
+      key: 'maktabMalayalam', 
       title: 'Maktab (Malayalam)',
-      render: (row) => {
-        return row.maktabMalayalam;
-      }
-    },
-    {
-      key: 'maktabUrdu',
+      render: (row) => <span className="truncate" title={row.maktabMalayalam || '-'}>{row.maktabMalayalam || '-'}</span>
+    },    { 
+      key: 'maktabUrdu', 
       title: 'Maktab (Urdu)',
-      render: (row) => {
-        return row.maktabUrdu;
-      }
-    },
-    {
-      key: 'zone',
+      render: (row) => <span className="truncate" title={row.maktabUrdu || '-'}>{row.maktabUrdu || '-'}</span>
+    },    { 
+      key: 'zone', 
       title: 'Zone',
-      render: (row) => {
-        return row.zone;
-      }
-    },
-    {
-      key: 'zoneMalayalam',
+      render: (row) => <span className="truncate" title={row.zone || '-'}>{row.zone || '-'}</span>
+    },    { 
+      key: 'zoneMalayalam', 
       title: 'Zone (Malayalam)',
-      render: (row) => {
-        return row.zoneMalayalam;
-      }
-    },
-    {
-      key: 'zoneUrdu',
+      render: (row) => <span className="truncate" title={row.zoneMalayalam || '-'}>{row.zoneMalayalam || '-'}</span>
+    },    { 
+      key: 'zoneUrdu', 
       title: 'Zone (Urdu)',
-      render: (row) => {
-        return row.zoneUrdu;
-      }
+      render: (row) => <span className="truncate" title={row.zoneUrdu || '-'}>{row.zoneUrdu || '-'}</span>
     },
     {
       key: 'country',
@@ -261,69 +243,42 @@ const Camp = ({ isOpen }) => {
           </div>
         ) : 'N/A';
       }
-    },
-    {
-      key: 'poll',
+    },    { 
+      key: 'poll', 
       title: 'Poll',
-      render: (row) => {
-        return row.poll;
-      }
-    },
-    {
-      key: 'pollMalayalam',
+      render: (row) => <span className="truncate" title={row.poll || '-'}>{row.poll || '-'}</span>
+    },    { 
+      key: 'pollMalayalam', 
       title: 'Poll (Malayalam)',
-      render: (row) => {
-        return row.pollMalayalam;
-      }
-    },
-    {
-      key: 'pollUrdu',
+      render: (row) => <span className="truncate" title={row.pollMalayalam || '-'}>{row.pollMalayalam || '-'}</span>
+    },    { 
+      key: 'pollUrdu', 
       title: 'Poll (Urdu)',
-      render: (row) => {
-        return row.pollUrdu;
-      }
-    },
-    {
-      key: 'road',
+      render: (row) => <span className="truncate" title={row.pollUrdu || '-'}>{row.pollUrdu || '-'}</span>
+    },    { 
+      key: 'road', 
       title: 'Road',
-      render: (row) => {
-        return row.road || 'N/A';
-      }
-    },
-    {
-      key: 'roadMalayalam',
+      render: (row) => <span className="truncate" title={row.road || '-'}>{row.road || '-'}</span>
+    },    { 
+      key: 'roadMalayalam', 
       title: 'Road (Malayalam)',
-      render: (row) => {
-        return row.roadMalayalam;
-      }
-    },
-    {
-      key: 'roadUrdu',
+      render: (row) => <span className="truncate" title={row.roadMalayalam || '-'}>{row.roadMalayalam || '-'}</span>
+    },    { 
+      key: 'roadUrdu', 
       title: 'Road (Urdu)',
-      render: (row) => {
-        return row.roadUrdu;
-      }
-    },
-    {
-      key: 'tent',
+      render: (row) => <span className="truncate" title={row.roadUrdu || '-'}>{row.roadUrdu || '-'}</span>
+    },    { 
+      key: 'tent', 
       title: 'Tent',
-      render: (row) => {
-        return row.tent || 'N/A';
-      }
-    },
-    {
-      key: 'tentMalayalam',
+      render: (row) => <span className="truncate" title={row.tent || '-'}>{row.tent || '-'}</span>
+    },    { 
+      key: 'tentMalayalam', 
       title: 'Tent (Malayalam)',
-      render: (row) => {
-        return row.tentMalayalam;
-      }
-    },
-    {
-      key: 'tentUrdu',
+      render: (row) => <span className="truncate" title={row.tentMalayalam || '-'}>{row.tentMalayalam || '-'}</span>
+    },    { 
+      key: 'tentUrdu', 
       title: 'Tent (Urdu)',
-      render: (row) => {
-        return row.tentUrdu;
-      }
+      render: (row) => <span className="truncate" title={row.tentUrdu || '-'}>{row.tentUrdu || '-'}</span>
     },
     {
       key: 'location',
@@ -336,14 +291,10 @@ const Camp = ({ isOpen }) => {
         if ((lng === undefined || lng === '') && (lat !== undefined && lat !== '')) return `${lat}, N/A`;
         return `${lat ?? 'N/A'}, ${lng ?? 'N/A'}`;
       }
-    },
-    {
-      key: 'ref',
+    },    { 
+      key: 'ref', 
       title: 'Location Reference',
-      render: (row) => {
-        const locationName = row.ref?.title || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
-        return locationName;
-      }
+      render: (row) => <span className="truncate" title={row.ref?.title || row.ref || '-'}>{row.ref?.title || row.ref || '-'}</span>
     },
     {
       key: 'actions',
@@ -1208,331 +1159,246 @@ const Camp = ({ isOpen }) => {
                     </tr>
                     {editingId === row._id && (
                       <tr>
-                        <td colSpan={campColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Camp</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                        <td colSpan={campColumns.length} className="p-4">
+                          <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                            <h2 className="text-lg font-bold mb-4">Edit Camp</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Maktab</label>
+                                <input
+                                  type="text"
+                                  value={row.maktab || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'maktab', e.target.value)}
+                                  placeholder="Maktab name"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Maktab (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.maktabMalayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'maktabMalayalam', e.target.value)}
+                                  placeholder="മക്തബ്"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Maktab (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.maktabUrdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'maktabUrdu', e.target.value)}
+                                  placeholder="مکتب"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Zone</label>
+                                <input
+                                  type="text"
+                                  value={row.zone || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'zone', e.target.value)}
+                                  placeholder="Zone name"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Zone (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.zoneMalayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'zoneMalayalam', e.target.value)}
+                                  placeholder="മേഖല"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Zone (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.zoneUrdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'zoneUrdu', e.target.value)}
+                                  placeholder="زون"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Poll</label>
+                                <input
+                                  type="text"
+                                  value={row.poll || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
+                                  placeholder="Poll name"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Poll (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.pollMalayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'pollMalayalam', e.target.value)}
+                                  placeholder="പോൾ"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Poll (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.pollUrdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'pollUrdu', e.target.value)}
+                                  placeholder="پول"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Road</label>
+                                <input
+                                  type="text"
+                                  value={row.road || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
+                                  placeholder="Road name"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Road (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.roadMalayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'roadMalayalam', e.target.value)}
+                                  placeholder="റോഡ്"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Road (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.roadUrdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'roadUrdu', e.target.value)}
+                                  placeholder="سڑک"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Tent</label>
+                                <input
+                                  type="text"
+                                  value={row.tent || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
+                                  placeholder="Tent name"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Tent (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.tentMalayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'tentMalayalam', e.target.value)}
+                                  placeholder="കൂടാരം"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Tent (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.tentUrdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'tentUrdu', e.target.value)}
+                                  placeholder="خیمہ"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Country</label>
+                                <select
+                                  value={row.country?._id || row.country || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'country', e.target.value)}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                 >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  <option value="">Select Country</option>
+                                  <option value="others">Others</option>
+                                  {Array.isArray(countries) && countries.map(country => (
+                                    <option key={country._id} value={country._id}>
+                                      {country.name} {country.arabicName ? `(${country.arabicName})` : ''}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              {(row.country === 'others' || row.otherCountry) && (
+                                <div>
+                                  <label className="block text-sm font-medium">Other Country Name</label>
+                                  <input
+                                    type="text"
+                                    value={row.otherCountry || ""}
+                                    onChange={(e) => handleEditChange(row._id, 'otherCountry', e.target.value)}
+                                    placeholder="Enter other country name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <label className="block text-sm font-medium">Latitude</label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  value={row.location?.lat || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
+                                  placeholder="21.4225"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Longitude</label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  value={row.location?.lng || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
+                                  placeholder="39.8262"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Location Reference</label>
+                                <select
+                                  value={row.ref?._id || row.ref || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                 >
-                                  Cancel
-                                </button>
+                                  <option value="">Select Location</option>
+                                  {Array.isArray(locations) && locations.map(location => (
+                                    <option key={location._id} value={location._id}>
+                                      {location.title}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Maktab Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Maktab Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Maktab
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.maktab || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'maktab', e.target.value)}
-                                    placeholder="Maktab name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Maktab (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.maktabMalayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'maktabMalayalam', e.target.value)}
-                                    placeholder="മക്തബ്"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Maktab (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.maktabUrdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'maktabUrdu', e.target.value)}
-                                    placeholder="مکتب"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Zone Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Zone Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Zone
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.zone || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'zone', e.target.value)}
-                                    placeholder="Zone name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Zone (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.zoneMalayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'zoneMalayalam', e.target.value)}
-                                    placeholder="മേഖല"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Zone (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.zoneUrdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'zoneUrdu', e.target.value)}
-                                    placeholder="زون"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Country Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Country Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Country
-                                  </label>
-                                  <select
-                                    value={row.country?._id || row.country || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'country', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  >
-                                    <option value="">Select Country</option>
-                                    <option value="others">Others</option>
-                                    {Array.isArray(countries) && countries.map(country => (
-                                      <option key={country._id} value={country._id}>
-                                        {country.name} {country.arabicName ? `(${country.arabicName})` : ''}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                {(row.country === 'others' || row.otherCountry) && (
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Other Country Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.otherCountry || ""}
-                                      onChange={(e) => handleEditChange(row._id, 'otherCountry', e.target.value)}
-                                      placeholder="Enter other country name"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Poll Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Poll Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Poll
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.poll || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'poll', e.target.value)}
-                                    placeholder="Poll name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Poll (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.pollMalayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'pollMalayalam', e.target.value)}
-                                    placeholder="പോൾ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Poll (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.pollUrdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'pollUrdu', e.target.value)}
-                                    placeholder="پول"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Road Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Road Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Road
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.road || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'road', e.target.value)}
-                                    placeholder="Road name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Road (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.roadMalayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'roadMalayalam', e.target.value)}
-                                    placeholder="റോഡ്"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Road (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.roadUrdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'roadUrdu', e.target.value)}
-                                    placeholder="سڑک"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Tent Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Tent Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tent
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.tent || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'tent', e.target.value)}
-                                    placeholder="Tent name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tent (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.tentMalayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'tentMalayalam', e.target.value)}
-                                    placeholder="കൂടാരം"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tent (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.tentUrdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'tentUrdu', e.target.value)}
-                                    placeholder="خیمہ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Location Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Location Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Latitude
-                                  </label>
-                                  <input
-                                    type="number"
-                                    step="any"
-                                    value={row.location?.lat || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
-                                    placeholder="21.4225"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Longitude
-                                  </label>
-                                  <input
-                                    type="number"
-                                    step="any"
-                                    value={row.location?.lng || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
-                                    placeholder="39.8262"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Location Reference
-                                  </label>
-                                  <select
-                                    value={row.ref?._id || row.ref || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  >
-                                    <option value="">Select Location</option>
-                                    {Array.isArray(locations) && locations.map(location => (
-                                      <option key={location._id} value={location._id}>
-                                        {location.title}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleSaveEdit(row)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         </td>

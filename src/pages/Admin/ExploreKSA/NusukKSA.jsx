@@ -87,8 +87,8 @@ const Nusuk = ({ isOpen }) => {
     }
   };
 
-  // Define the table columns with editable configuration
-  const nusukColumns = useMemo(() => [
+  // Define the table columns
+  const nusukColumns = [
     {
       key: 'select',
       title: (
@@ -111,86 +111,47 @@ const Nusuk = ({ isOpen }) => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex flex-col gap-1">
-              <input type="text" value={row.name} onChange={(e) => handleEditChange(row._id, 'name', e.target.value)} className="w-full p-1 border rounded" placeholder="English" />
-              <input type="text" value={row.nameMalayalam} onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)} className="w-full p-1 border rounded" placeholder="Malayalam" />
-              <input type="text" value={row.nameUrdu} onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)} className="w-full p-1 border rounded" placeholder="Urdu" />
-            </div>
-          );
-        }
-        const values = [row.name, row.nameMalayalam, row.nameUrdu].filter(Boolean).join(' | ');
-        return values || '-';
-      }
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
+    },
+    {
+      key: 'nameMalayalam',
+      title: 'Ml Name',
+      render: (row) => <span className="truncate" title={row.nameMalayalam || '-'}>{row.nameMalayalam || '-'}</span>
+    },
+    {
+      key: 'nameUrdu',
+      title: 'Ur Name',
+      render: (row) => <span className="truncate" title={row.nameUrdu || '-'}>{row.nameUrdu || '-'}</span>
     },
     {
       key: 'building',
       title: 'Building',
-      render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex flex-col gap-1">
-              <input type="text" value={row.building} onChange={(e) => handleEditChange(row._id, 'building', e.target.value)} className="w-full p-1 border rounded" placeholder="English" />
-              <input type="text" value={row.buildingMalayalam} onChange={(e) => handleEditChange(row._id, 'buildingMalayalam', e.target.value)} className="w-full p-1 border rounded" placeholder="Malayalam" />
-              <input type="text" value={row.buildingUrdu} onChange={(e) => handleEditChange(row._id, 'buildingUrdu', e.target.value)} className="w-full p-1 border rounded" placeholder="Urdu" />
-            </div>
-          );
-        }
-        const values = [row.building, row.buildingMalayalam, row.buildingUrdu].filter(Boolean).join(' | ');
-        return values || '-';
-      }
+      render: (row) => <span className="truncate" title={row.building}>{row.building}</span>
+    },
+    {
+      key: 'buildingMalayalam',
+      title: 'Ml Building',
+      render: (row) => <span className="truncate" title={row.buildingMalayalam || '-'}>{row.buildingMalayalam || '-'}</span>
+    },
+    {
+      key: 'buildingUrdu',
+      title: 'Ur Building',
+      render: (row) => <span className="truncate" title={row.buildingUrdu || '-'}>{row.buildingUrdu || '-'}</span>
     },
     {
       key: 'location',
       title: 'Location',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={row.location?.lat || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
-                placeholder="Latitude"
-                className="w-1/2 p-1 border rounded"
-              />
-              <input
-                type="number"
-                value={row.location?.lng || ''}
-                onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
-                placeholder="Longitude"
-                className="w-1/2 p-1 border rounded"
-              />
-            </div>
-          );
-        }
-        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
+        const locationText = row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
+        return <span className="truncate" title={locationText}>{locationText}</span>;
       }
     },
     {
       key: 'ref',
-      title: 'Location Reference',
+      title: 'Location Ref',
       render: (row) => {
-        if (editingId === row._id) {
-          return (
-            <select
-              value={row.ref?._id || row.ref || ''}
-              onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-              className="w-full p-1 border rounded"
-            >
-              <option value="">Select Location</option>
-              {locations.map(location => (
-                <option key={location._id} value={location._id}>
-                  {[location.title, location.titleMalayalam, location.titleUrdu].filter(Boolean).join(' | ')}
-                </option>
-              ))}
-            </select>
-          );
-        }
         const locationName = row.ref?.title || locations.find(loc => loc._id === row.ref)?.title || 'N/A';
-        return locationName;
+        return <span className="truncate" title={locationName}>{locationName}</span>;
       }
     },
     {
@@ -198,43 +159,24 @@ const Nusuk = ({ isOpen }) => {
       title: 'Actions',
       render: (row) => (
         <div className="flex gap-2">
-          {editingId === row._id ? (
-            <>
-              <button
-                onClick={() => handleSaveEdit(row)}
-                className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleEditClick(row)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                title="Edit"
-              >
-                <Edit size={16} />
-              </button>
-              <button
-                onClick={() => handleDelete(row._id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={16} />
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => handleEditClick(row)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )
     }
-  ], [editingId, selectedRows, nusukData.length, locations]);
+  ];
 
   // Fetch data from API using Axios
   useEffect(() => {
@@ -731,180 +673,169 @@ const Nusuk = ({ isOpen }) => {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-center">Loading...</p>
-        ) : filteredNusukData.length === 0 ? (
-          <p className="text-center">No items found</p>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
                   {nusukColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'name' ? 'w-20' :
+                        column.key === 'nameMalayalam' ? 'w-20' :
+                        column.key === 'nameUrdu' ? 'w-20' :
+                        column.key === 'building' ? 'w-20' :
+                        column.key === 'buildingMalayalam' ? 'w-20' :
+                        column.key === 'buildingUrdu' ? 'w-20' :
+                        column.key === 'location' ? 'w-24' :
+                        column.key === 'ref' ? 'w-24' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
+                    >
                       {column.title}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredNusukData.map((row) => (
-                  <React.Fragment key={row._id}>
-                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
-                      {nusukColumns.map((column) => (
-                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                          {column.render ? column.render(row) : row[column.key]}
-                        </td>
-                      ))}
-                    </tr>
-                    {editingId === row._id && (
-                      <tr>
-                        <td colSpan={nusukColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Nusuk</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Name Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Name Information</h4>
+                {loading ? (
+                  <tr>
+                    <td colSpan={nusukColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredNusukData.length === 0 ? (
+                  <tr>
+                    <td colSpan={nusukColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      No items found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredNusukData.map((row) => (
+                    <React.Fragment key={row._id}>
+                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        {nusukColumns.map((column) => (
+                          <td
+                            key={`${row._id}-${column.key}`}
+                            className={`px-2 py-2 text-sm text-gray-900 ${
+                              column.key === 'name' ? 'max-w-20 truncate' :
+                              column.key === 'nameMalayalam' ? 'max-w-20 truncate' :
+                              column.key === 'nameUrdu' ? 'max-w-20 truncate' :
+                              column.key === 'building' ? 'max-w-20 truncate' :
+                              column.key === 'buildingMalayalam' ? 'max-w-20 truncate' :
+                              column.key === 'buildingUrdu' ? 'max-w-20 truncate' :
+                              column.key === 'location' ? 'max-w-24 truncate' :
+                              column.key === 'ref' ? 'max-w-24 truncate' :
+                              column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                            }`}
+                          >
+                            {column.render ? column.render(row) : row[column.key]}
+                          </td>
+                        ))}
+                      </tr>
+                      {editingId === row._id && (
+                        <tr>
+                          <td colSpan={nusukColumns.length} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">Edit Nusuk</h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (English) *
-                                  </label>
+                                  <label className="block text-sm font-medium">Name (English) *</label>
                                   <input
                                     type="text"
                                     value={row.name || ""}
                                     onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
                                     placeholder="Enter name in English"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     required
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Malayalam)
-                                  </label>
+                                  <label className="block text-sm font-medium">Name (Malayalam)</label>
                                   <input
                                     type="text"
                                     value={row.nameMalayalam || ""}
                                     onChange={(e) => handleEditChange(row._id, 'nameMalayalam', e.target.value)}
                                     placeholder="Enter name in Malayalam"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Urdu)
-                                  </label>
+                                  <label className="block text-sm font-medium">Name (Urdu)</label>
                                   <input
                                     type="text"
                                     value={row.nameUrdu || ""}
                                     onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)}
                                     placeholder="Enter name in Urdu"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     dir="rtl"
                                   />
                                 </div>
-                              </div>
-
-                              {/* Building Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Building Information</h4>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Building (English) *
-                                  </label>
+                                  <label className="block text-sm font-medium">Building (English) *</label>
                                   <input
                                     type="text"
                                     value={row.building || ""}
                                     onChange={(e) => handleEditChange(row._id, 'building', e.target.value)}
                                     placeholder="Enter building name in English"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     required
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Building (Malayalam)
-                                  </label>
+                                  <label className="block text-sm font-medium">Building (Malayalam)</label>
                                   <input
                                     type="text"
                                     value={row.buildingMalayalam || ""}
                                     onChange={(e) => handleEditChange(row._id, 'buildingMalayalam', e.target.value)}
                                     placeholder="Enter building name in Malayalam"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Building (Urdu)
-                                  </label>
+                                  <label className="block text-sm font-medium">Building (Urdu)</label>
                                   <input
                                     type="text"
                                     value={row.buildingUrdu || ""}
                                     onChange={(e) => handleEditChange(row._id, 'buildingUrdu', e.target.value)}
                                     placeholder="Enter building name in Urdu"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     dir="rtl"
                                   />
                                 </div>
                               </div>
-                            </div>
-
-                            {/* Location Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Location Information</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Latitude
-                                  </label>
+                                  <label className="block text-sm font-medium">Latitude</label>
                                   <input
                                     type="number"
                                     step="any"
                                     value={row.location?.lat || ""}
                                     onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
                                     placeholder="Enter latitude"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Longitude
-                                  </label>
+                                  <label className="block text-sm font-medium">Longitude</label>
                                   <input
                                     type="number"
                                     step="any"
                                     value={row.location?.lng || ""}
                                     onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
                                     placeholder="Enter longitude"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   />
                                 </div>
-                                <div className="md:col-span-2">
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Location Reference
-                                  </label>
+                                <div>
+                                  <label className="block text-sm font-medium">Location Reference</label>
                                   <select
                                     value={row.ref?._id || row.ref || ""}
                                     onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   >
                                     <option value="">Select Location</option>
                                     {locations.map(location => (
@@ -915,17 +846,31 @@ const Nusuk = ({ isOpen }) => {
                                   </select>
                                 </div>
                               </div>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Add Delete Confirmation Modal */}

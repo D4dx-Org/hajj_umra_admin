@@ -599,7 +599,7 @@ const DuasManagement = () => {
   };
 
   // Table columns configuration
-  const columns = [
+  const duasColumns = [
     {
       key: 'select',
       title: (
@@ -620,144 +620,99 @@ const DuasManagement = () => {
       )
     },
     {
+      key: 'id',
       title: 'ID',
-      dataIndex: 'id',
-      key: 'id'
+      render: (row) => <span className="truncate" title={row.id}>{row.id}</span>
     },
     {
-      title: 'Title',
-      dataIndex: 'title',
       key: 'title',
-      render: (text, record) => (
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900">{text}</div>
-          {record.malayalamTitle && (
-            <div className="text-sm text-blue-600" style={{ fontFamily: 'Arial, sans-serif' }}>
-              {record.malayalamTitle}
-            </div>
-          )}
-          {record.urduTitle && (
-            <div className="text-sm text-green-600" dir="rtl" style={{ fontFamily: 'Arial, sans-serif' }}>
-              {record.urduTitle}
-            </div>
-          )}
-        </div>
-      )
+      title: 'Title',
+      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
     },
     {
-      title: 'Description',
-      dataIndex: 'description',
+      key: 'malayalamTitle',
+      title: 'Ml Title',
+      render: (row) => <span className="truncate" title={row.malayalamTitle || '-'}>{row.malayalamTitle || '-'}</span>
+    },
+    {
+      key: 'urduTitle',
+      title: 'Ur Title',
+      render: (row) => <span className="truncate" title={row.urduTitle || '-'}>{row.urduTitle || '-'}</span>
+    },
+    {
       key: 'description',
-      render: (text, record) => (
-        <div className="space-y-1">
-          <div className="text-gray-900">{text || '-'}</div>
-          {record.malayalamDescription && (
-            <div className="text-sm text-blue-600" style={{ fontFamily: 'Arial, sans-serif' }}>
-              {record.malayalamDescription}
-            </div>
-          )}
-          {record.urduDescription && (
-            <div className="text-sm text-green-600" dir="rtl" style={{ fontFamily: 'Arial, sans-serif' }}>
-              {record.urduDescription}
-            </div>
-          )}
-        </div>
-      )
+      title: 'Description',
+      render: (row) => <span className="truncate" title={row.description || '-'}>{row.description || '-'}</span>
     },
     {
-      title: 'Media',
+      key: 'malayalamDescription',
+      title: 'Ml Description',
+      render: (row) => <span className="truncate" title={row.malayalamDescription || '-'}>{row.malayalamDescription || '-'}</span>
+    },
+    {
+      key: 'urduDescription',
+      title: 'Ur Description',
+      render: (row) => <span className="truncate" title={row.urduDescription || '-'}>{row.urduDescription || '-'}</span>
+    },
+    {
       key: 'media',
-      render: (_, record) => (
-        <Space direction="vertical" size="small">
-          {record.images && record.images.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Tag color="green" size="small">Images ({record.images.length})</Tag>
-              <div className="flex gap-1">
-                {record.images.slice(0, 3).map((img, index) => (
-                  <Image
-                    key={index}
-                    width={40}
-                    height={30}
-                    src={img}
-                    preview={{
-                      src: img,
-                      mask: index === 2 && record.images.length > 3 ? `+${record.images.length - 3}` : false
-                    }}
-                    style={{ objectFit: 'cover', borderRadius: '4px' }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          {record.video && (
-            <div className="flex items-center gap-2">
-              <Tag color="purple" size="small">Video</Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.video, '_blank')}
-                className="p-0 h-auto text-red-600"
-                title="Open video"
-              >
-                ▶ Watch
-              </Button>
-            </div>
-          )}
-          {record.map && (
-            <div className="flex items-center gap-2">
-              <Tag color="orange" size="small">Map</Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.map, '_blank')}
-                className="p-0 h-auto"
-              >
-                View Map
-              </Button>
-            </div>
-          )}
-        </Space>
-      )
+      title: 'Media',
+      render: (row) => {
+        const mediaItems = [];
+        if (row.images && row.images.length > 0) {
+          mediaItems.push(`Images (${row.images.length})`);
+        }
+        if (row.video) {
+          mediaItems.push('Video');
+        }
+        if (row.map) {
+          mediaItems.push('Map');
+        }
+        const mediaText = mediaItems.length > 0 ? mediaItems.join(', ') : 'N/A';
+        return <span className="truncate" title={mediaText}>{mediaText}</span>;
+      }
     },
     {
-      title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <Space>
+      title: 'Actions',
+      render: (row) => (
+        <div className="flex gap-2">
           <button
             onClick={() => {
-              setEditingId(record._id);
-              const recordImages = record.images || [];
+              setEditingId(row._id);
+              const recordImages = row.images || [];
 
               setExistingImages(recordImages);
               form.setFieldsValue({
-                id: record.id,
-                title: record.title,
-                malayalamTitle: record.malayalamTitle || '',
-                urduTitle: record.urduTitle || '',
-                description: record.description || '',
-                malayalamDescription: record.malayalamDescription || '',
-                urduDescription: record.urduDescription || '',
+                id: row.id,
+                title: row.title,
+                malayalamTitle: row.malayalamTitle || '',
+                urduTitle: row.urduTitle || '',
+                description: row.description || '',
+                malayalamDescription: row.malayalamDescription || '',
+                urduDescription: row.urduDescription || '',
                 images: recordImages,
-                video: record.video || '',
-                map: record.map || ''
+                video: row.video || '',
+                map: row.map || ''
               });
 
               setUploadedFiles({ images: [], video: null });
               setFileList({ images: [], video: [] });
               setModalVisible(true);
             }}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
-            <Edit size={18} className="text-blue-500" />
+            <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(record._id)}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
-            <Trash2 size={18} className="text-red-500" />
+            <Trash2 size={16} />
           </button>
-        </Space>
+        </div>
       )
     }
   ];
@@ -912,15 +867,73 @@ const DuasManagement = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={filteredDuasData}
-            rowKey="_id"
-            loading={loading}
-            pagination={pagination}
-          />
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {duasColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'id' ? 'w-16' :
+                        column.key === 'title' ? 'w-24' :
+                        column.key === 'malayalamTitle' ? 'w-20' :
+                        column.key === 'urduTitle' ? 'w-20' :
+                        column.key === 'description' ? 'w-32' :
+                        column.key === 'malayalamDescription' ? 'w-28' :
+                        column.key === 'urduDescription' ? 'w-28' :
+                        column.key === 'media' ? 'w-20' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
+                    >
+                      {column.title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={duasColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredDuasData.length === 0 ? (
+                  <tr>
+                    <td colSpan={duasColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      No duas entries found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDuasData.map((row) => (
+                    <tr key={row._id} className="hover:bg-gray-50">
+                      {duasColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-2 py-2 text-sm text-gray-900 ${
+                            column.key === 'id' ? 'max-w-16 truncate' :
+                            column.key === 'title' ? 'max-w-24 truncate' :
+                            column.key === 'malayalamTitle' ? 'max-w-20 truncate' :
+                            column.key === 'urduTitle' ? 'max-w-20 truncate' :
+                            column.key === 'description' ? 'max-w-32 truncate' :
+                            column.key === 'malayalamDescription' ? 'max-w-28 truncate' :
+                            column.key === 'urduDescription' ? 'max-w-28 truncate' :
+                            column.key === 'media' ? 'max-w-20 truncate' :
+                            column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                          }`}
+                        >
+                          {column.render(row)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Create/Edit Modal */}

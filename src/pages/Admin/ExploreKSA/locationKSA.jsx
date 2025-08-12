@@ -16,13 +16,10 @@ const LocationKSA = ({ isOpen }) => {
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
 
   // Define the table columns
-  const locationColumns = [
-    {
-      key: 'id',
+  const locationColumns = [    { 
+      key: 'id', 
       title: 'ID',
-      render: (row) => {
-        return row.id;
-      }
+      render: (row) => <span className="truncate" title={row.id || '-'}>{row.id || '-'}</span>
     },
     {
       key: 'title',
@@ -348,87 +345,67 @@ const LocationKSA = ({ isOpen }) => {
                     </tr>
                     {editingId === row._id && (
                       <tr>
-                        <td colSpan={locationColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Location</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
+                        <td colSpan={locationColumns.length} className="p-4">
+                          <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                            <h2 className="text-lg font-bold mb-4">Edit Location</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">ID *</label>
+                                <input
+                                  type="text"
+                                  value={row.id || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'id', e.target.value)}
+                                  placeholder="Enter unique ID"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Title (English) *</label>
+                                <input
+                                  type="text"
+                                  value={row.title || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
+                                  placeholder="Enter title in English"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Title (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.title_malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'title_malayalam', e.target.value)}
+                                  placeholder="Enter title in Malayalam"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Title (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.title_urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'title_urdu', e.target.value)}
+                                  placeholder="Enter title in Urdu"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Basic Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    ID *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.id || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'id', e.target.value)}
-                                    placeholder="Enter unique ID"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (English) *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
-                                    placeholder="Enter title in English"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Translations */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Translations</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title_malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title_malayalam', e.target.value)}
-                                    placeholder="Enter title in Malayalam"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title_urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title_urdu', e.target.value)}
-                                    placeholder="Enter title in Urdu"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleSaveEdit(row)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         </td>

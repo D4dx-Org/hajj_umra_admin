@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Table,
   Button,
   Space,
   Modal,
@@ -8,7 +7,6 @@ import {
   Input,
   Select,
   Badge,
-  Tag,
   message,
   Popconfirm,
   Card,
@@ -16,7 +14,6 @@ import {
   Col,
   Typography,
   Upload,
-  Image,
 } from "antd";
 import {
   MapPin,
@@ -619,7 +616,7 @@ const PlaceKSA = () => {
   };
 
   // Table columns configuration
-  const columns = [
+  const placeColumns = [
     {
       key: "select",
       title: (
@@ -640,151 +637,84 @@ const PlaceKSA = () => {
       ),
     },
     {
-      title: "ID",
-      dataIndex: "id",
       key: "id",
-      width: 120,
-      render: (text) => (
-        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-          {text}
-        </span>
-      ),
+      title: "ID",
+      render: (row) => <span className="truncate" title={row.id || '-'}>{row.id || '-'}</span>
     },
     {
-      title: "Title (Eng | Malayalam | Urdu)",
-      dataIndex: "title",
       key: "title",
-      width: 250,
-      ellipsis: { showTitle: false },
-      render: (_, row) => {
-        const values = [row.title, row.titleMalayalam, row.titleUrdu].filter(Boolean).join(' | ');
-        return <div title={values} className="font-medium text-sm">{values || '-'}</div>;
-      },
+      title: "Title",
+      render: (row) => <span className="truncate" title={row.title || '-'}>{row.title || '-'}</span>
     },
     {
-      title: "Description (Eng | Malayalam | Urdu)",
-      dataIndex: "description",
+      key: "titleMalayalam",
+      title: "Ml Title",
+      render: (row) => <span className="truncate" title={row.titleMalayalam || '-'}>{row.titleMalayalam || '-'}</span>
+    },
+    {
+      key: "titleUrdu",
+      title: "Ur Title",
+      render: (row) => <span className="truncate" title={row.titleUrdu || '-'}>{row.titleUrdu || '-'}</span>
+    },
+    {
       key: "description",
-      width: 300,
-      ellipsis: { showTitle: false },
-      render: (_, row) => {
-        const values = [row.description, row.descriptionMalayalam, row.descriptionUrdu].filter(Boolean).join(' | ');
-        return (
-          <div title={values} className="max-w-[300px]">
-            {values ? (
-              <span className="text-sm text-gray-700">{values.length > 80 ? `${values.substring(0, 80)}...` : values}</span>
-            ) : (
-              <span className="text-gray-400 text-sm">No description</span>
-            )}
-          </div>
-        );
-      },
+      title: "Description",
+      render: (row) => <span className="truncate" title={row.description || '-'}>{row.description || '-'}</span>
     },
     {
+      key: "descriptionMalayalam",
+      title: "Ml Description",
+      render: (row) => <span className="truncate" title={row.descriptionMalayalam || '-'}>{row.descriptionMalayalam || '-'}</span>
+    },
+    {
+      key: "descriptionUrdu",
+      title: "Ur Description",
+      render: (row) => <span className="truncate" title={row.descriptionUrdu || '-'}>{row.descriptionUrdu || '-'}</span>
+    },
+    {
+      key: "locationRef",
       title: "Location",
-      key: "location",
-      width: 150,
-      render: (_, record) => {
-        if (record.locationRef) {
-          return (
-            <Tag color="blue" size="small" className="text-xs">
-              📍 {record.locationRef.title || record.locationRef.name}
-            </Tag>
-          );
-        } else {
-          return (
-            <Tag color="gray" size="small" className="text-xs">
-              No location
-            </Tag>
-          );
-        }
-      },
+      render: (row) => {
+        const locationText = row.locationRef?.title || row.locationRef?.name || 'No location';
+        return <span className="truncate" title={locationText}>{locationText}</span>
+      }
     },
     {
-      title: "Media",
       key: "media",
-      width: 200,
-      render: (_, record) => (
-        <div className="space-y-1">
-          {record.images && record.images.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Tag color="green" size="small">
-                📷 {record.images.length}
-              </Tag>
-              <div className="flex gap-1">
-                {record.images.slice(0, 2).map((img, index) => (
-                  <Image
-                    key={index}
-                    width={24}
-                    height={18}
-                    src={img}
-                    preview={{
-                      src: img,
-                      mask:
-                        index === 1 && record.images.length > 2
-                          ? `+${record.images.length - 2}`
-                          : false,
-                    }}
-                    style={{ objectFit: "cover", borderRadius: "2px" }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="flex gap-1">
-            {record.video && (
-              <Tag
-                color="purple"
-                size="small"
-                className="cursor-pointer"
-                onClick={() => window.open(record.video, "_blank")}
-                title="Open YouTube video"
-              >
-                🎥 Video
-              </Tag>
-            )}
-            {record.map && (
-              <Tag
-                color="orange"
-                size="small"
-                className="cursor-pointer"
-                onClick={() => window.open(record.map, "_blank")}
-                title="View map"
-              >
-                🗺️ Map
-              </Tag>
-            )}
-          </div>
-        </div>
-      ),
+      title: "Media",
+      render: (row) => {
+        const imageCount = row.images?.length || 0;
+        const hasVideo = row.video ? 1 : 0;
+        const hasMap = row.map ? 1 : 0;
+        const totalMedia = imageCount + hasVideo + hasMap;
+        return <span className="truncate" title={`${imageCount} images, ${hasVideo} video, ${hasMap} map`}>{totalMedia} items</span>
+      }
     },
     {
-      title: "Actions",
       key: "actions",
-      width: 80,
-      fixed: "right",
-      render: (_, record) => (
-        <div className="flex gap-1">
+      title: "Actions",
+      render: (row) => (
+        <div className="flex gap-2">
           <button
             onClick={() => {
-              setEditingId(record._id);
-              const recordImages = record.images || [];
-              console.log("Setting up edit for record:", record);
+              setEditingId(row._id);
+              const recordImages = row.images || [];
+              console.log("Setting up edit for record:", row);
               console.log("Record images:", recordImages);
 
               setExistingImages(recordImages);
               form.setFieldsValue({
-                id: record.id,
-                title: record.title,
-                titleMalayalam: record.titleMalayalam || '',
-                titleUrdu: record.titleUrdu || '',
-                description: record.description || "",
-                descriptionMalayalam: record.descriptionMalayalam || '',
-                descriptionUrdu: record.descriptionUrdu || '',
+                id: row.id,
+                title: row.title,
+                titleMalayalam: row.titleMalayalam || '',
+                titleUrdu: row.titleUrdu || '',
+                description: row.description || "",
+                descriptionMalayalam: row.descriptionMalayalam || '',
+                descriptionUrdu: row.descriptionUrdu || '',
                 images: recordImages,
-                video: record.video || "",
-                map: record.map || "",
-                locationRef: record.locationRef?._id || undefined,
+                video: row.video || "",
+                map: row.map || "",
+                locationRef: row.locationRef?._id || undefined,
               });
 
               // Reset upload state for editing
@@ -792,21 +722,21 @@ const PlaceKSA = () => {
               setFileList({ images: [], video: [] });
               setModalVisible(true);
             }}
-            className="p-1 hover:bg-blue-50 rounded text-blue-500"
-            title="Edit place"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(record._id)}
-            className="p-1 hover:bg-red-50 rounded text-red-500"
-            title="Delete place"
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
             <Trash2 size={16} />
           </button>
         </div>
-      ),
-    },
+      )
+    }
   ];
 
   return (
@@ -920,27 +850,76 @@ const PlaceKSA = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={paginatedPlaces}
-            rowKey="_id"
-            loading={loading}
-            pagination={{
-              ...pagination,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} places`,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              style: { marginRight: '16px' },
-              onChange: handlePaginationChange,
-              onShowSizeChange: handlePaginationChange,
-            }}
-            size="small"
-            scroll={{ x: "max-content" }}
-          />
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {placeColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'id' ? 'w-16' :
+                        column.key === 'title' ? 'w-24' :
+                        column.key === 'titleMalayalam' ? 'w-20' :
+                        column.key === 'titleUrdu' ? 'w-20' :
+                        column.key === 'description' ? 'w-32' :
+                        column.key === 'descriptionMalayalam' ? 'w-28' :
+                        column.key === 'descriptionUrdu' ? 'w-28' :
+                        column.key === 'locationRef' ? 'w-20' :
+                        column.key === 'media' ? 'w-16' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
+                    >
+                      {column.title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={placeColumns.length} className="px-2 py-4 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : paginatedPlaces.length === 0 ? (
+                  <tr>
+                    <td colSpan={placeColumns.length} className="px-2 py-4 text-center text-gray-500">
+                      No places found
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedPlaces.map((row) => (
+                    <tr key={row._id} className="hover:bg-gray-50">
+                      {placeColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-2 py-2 text-sm text-gray-900 ${
+                            column.key === 'select' ? 'w-12' :
+                            column.key === 'id' ? 'w-16 max-w-16 truncate' :
+                            column.key === 'title' ? 'w-24 max-w-24 truncate' :
+                            column.key === 'titleMalayalam' ? 'w-20 max-w-20 truncate' :
+                            column.key === 'titleUrdu' ? 'w-20 max-w-20 truncate' :
+                            column.key === 'description' ? 'w-32 max-w-32 truncate' :
+                            column.key === 'descriptionMalayalam' ? 'w-28 max-w-28 truncate' :
+                            column.key === 'descriptionUrdu' ? 'w-28 max-w-28 truncate' :
+                            column.key === 'locationRef' ? 'w-20 max-w-20 truncate' :
+                            column.key === 'media' ? 'w-16 max-w-16 truncate' :
+                            column.key === 'actions' ? 'w-20' : ''
+                          }`}
+                        >
+                          {column.render ? column.render(row) : row[column.key]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Create/Edit Modal */}

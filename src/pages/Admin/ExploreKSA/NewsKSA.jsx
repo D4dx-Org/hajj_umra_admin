@@ -78,27 +78,18 @@ const News = () => {
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
-    },
-    {
-      key: 'title',
+    },    { 
+      key: 'title', 
       title: 'Title (English)',
-      render: (row) => {
-        return row.title?.english || 'N/A';
-      }
-    },
-    {
-      key: 'titleMalayalam',
+      render: (row) => <span className="truncate" title={row.title?.english || row.title || '-'}>{row.title?.english || row.title || '-'}</span>
+    },    { 
+      key: 'titleMalayalam', 
       title: 'Title (Malayalam)',
-      render: (row) => {
-        return row.title?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'titleUrdu',
+      render: (row) => <span className="truncate" title={row.title?.malayalam || '-'}>{row.title?.malayalam || '-'}</span>
+    },    { 
+      key: 'titleUrdu', 
       title: 'Title (Urdu)',
-      render: (row) => {
-        return row.title?.urdu || 'N/A';
-      }
+      render: (row) => <span className="truncate" title={row.title?.urdu || '-'}>{row.title?.urdu || '-'}</span>
     },
     {
       key: 'link',
@@ -110,27 +101,18 @@ const News = () => {
           </a>
         ) : 'N/A';
       }
-    },
-    {
-      key: 'description',
+    },    { 
+      key: 'description', 
       title: 'Description (English)',
-      render: (row) => {
-        return row.description?.english || 'N/A';
-      }
-    },
-    {
-      key: 'descriptionMalayalam',
+      render: (row) => <span className="truncate" title={row.description?.english || row.description || '-'}>{row.description?.english || row.description || '-'}</span>
+    },    { 
+      key: 'descriptionMalayalam', 
       title: 'Description (Malayalam)',
-      render: (row) => {
-        return row.description?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'descriptionUrdu',
+      render: (row) => <span className="truncate" title={row.description?.malayalam || '-'}>{row.description?.malayalam || '-'}</span>
+    },    { 
+      key: 'descriptionUrdu', 
       title: 'Description (Urdu)',
-      render: (row) => {
-        return row.description?.urdu || 'N/A';
-      }
+      render: (row) => <span className="truncate" title={row.description?.urdu || '-'}>{row.description?.urdu || '-'}</span>
     },
     {
       key: 'actions',
@@ -487,130 +469,99 @@ const News = () => {
                     </tr>
                     {editingId === row._id && (
                       <tr>
-                        <td colSpan={newsColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit News Item</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
+                        <td colSpan={newsColumns.length} className="p-4">
+                          <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                            <h2 className="text-lg font-bold mb-4">Edit News Item</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Title (English) *</label>
+                                <input
+                                  type="text"
+                                  value={row.title?.english || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, english: e.target.value })}
+                                  placeholder="News title in English"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Title (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.title?.malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, malayalam: e.target.value })}
+                                  placeholder="വാർത്താ ശീർഷകം"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Title (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.title?.urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, urdu: e.target.value })}
+                                  placeholder="خبر کا عنوان"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Link</label>
+                                <input
+                                  type="url"
+                                  value={row.link || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
+                                  placeholder="https://example.com"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Title Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Title Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (English) *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, english: e.target.value })}
-                                    placeholder="News title in English"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, malayalam: e.target.value })}
-                                    placeholder="വാർത്താ ശീർഷകം"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, urdu: e.target.value })}
-                                    placeholder="خبر کا عنوان"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Description (English)</label>
+                                <textarea
+                                  value={row.description?.english || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, english: e.target.value })}
+                                  placeholder="News description in English"
+                                  rows="3"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
                               </div>
-
-                              {/* Link & Description */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Link & Description</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Link
-                                  </label>
-                                  <input
-                                    type="url"
-                                    value={row.link || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-                                    placeholder="https://example.com"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (English)
-                                  </label>
-                                  <textarea
-                                    value={row.description?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, english: e.target.value })}
-                                    placeholder="News description in English"
-                                    rows="3"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
+                              <div>
+                                <label className="block text-sm font-medium">Description (Malayalam)</label>
+                                <textarea
+                                  value={row.description?.malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, malayalam: e.target.value })}
+                                  placeholder="വാർത്താ വിവരണം"
+                                  rows="3"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Description (Urdu)</label>
+                                <textarea
+                                  value={row.description?.urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, urdu: e.target.value })}
+                                  placeholder="خبر کی تفصیل"
+                                  rows="3"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl"
+                                />
                               </div>
                             </div>
-
-                            {/* Description Translations */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Description Translations</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (Malayalam)
-                                  </label>
-                                  <textarea
-                                    value={row.description?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, malayalam: e.target.value })}
-                                    placeholder="വാർത്താ വിവരണം"
-                                    rows="3"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (Urdu)
-                                  </label>
-                                  <textarea
-                                    value={row.description?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, urdu: e.target.value })}
-                                    placeholder="خبر کی تفصیل"
-                                    rows="3"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleSaveEdit(row)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         </td>

@@ -587,10 +587,10 @@ const UmrahNusuk = ({ isOpen }) => {
           {/* Table Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full full text-sm">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-1 text-left w-12">
+                    <th className="px-2 py-2 text-left w-12">
                       <input
                         type="checkbox"
                         checked={selectedItems.length === filteredNusuks.length && filteredNusuks.length > 0}
@@ -598,28 +598,28 @@ const UmrahNusuk = ({ isOpen }) => {
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       NAME
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       MALAYALAM NAME
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       URDU NAME
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       BUILDING
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       MALAYALAM BUILDING
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       URDU BUILDING
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       LOCATION
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       ACTIONS
                     </th>
                   </tr>
@@ -628,7 +628,7 @@ const UmrahNusuk = ({ isOpen }) => {
                   {filteredNusuks.map((nusuk, index) => (
                     <React.Fragment key={nusuk._id}>
                       <tr className={`hover:bg-gray-50 transition-colors ${editingId === nusuk._id ? 'bg-blue-50' : ''}`}>
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           <input
                             type="checkbox"
                             checked={selectedItems.includes(nusuk._id)}
@@ -636,33 +636,33 @@ const UmrahNusuk = ({ isOpen }) => {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm font-medium text-gray-900">{nusuk.name}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm font-medium text-gray-900 max-w-20 truncate" title={nusuk.name}>{nusuk.name}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">{nusuk.malayalamName || '-'}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate" title={nusuk.malayalamName || '-'}>{nusuk.malayalamName || '-'}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700" dir="rtl">{nusuk.urduName || '-'}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate" dir="rtl" title={nusuk.urduName || '-'}>{nusuk.urduName || '-'}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">{nusuk.building}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate" title={nusuk.building}>{nusuk.building}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">{nusuk.malayalamBuilding || '-'}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate" title={nusuk.malayalamBuilding || '-'}>{nusuk.malayalamBuilding || '-'}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700" dir="rtl">{nusuk.urduBuilding || '-'}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate" dir="rtl" title={nusuk.urduBuilding || '-'}>{nusuk.urduBuilding || '-'}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-24 truncate">
                             {nusuk.location?.lat && nusuk.location?.lng 
                               ? `${nusuk.location.lat}, ${nusuk.location.lng}`
                               : '-'
                             }
                           </div>
                         </td>
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           <div className="flex gap-2">
                             <button
                               onClick={() => startEdit(nusuk)}
@@ -683,149 +683,118 @@ const UmrahNusuk = ({ isOpen }) => {
                       </tr>
                       {editingId === nusuk._id && (
                         <tr>
-                          <td colSpan={9} className="p-0">
-                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                              <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Edit Nusuk</h3>
-                                <div className="flex gap-3">
-                                  <button
-                                    onClick={() => handleSubmit({ preventDefault: () => {} })}
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                  >
-                                    Save Changes
-                                  </button>
-                                  <button
-                                    onClick={resetForm}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
+                          <td colSpan={9} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">Edit Nusuk</h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">Name *</label>
+                                  <input
+                                    type="text"
+                                    value={formData.name || ""}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="Nusuk name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Malayalam Name</label>
+                                  <input
+                                    type="text"
+                                    value={formData.malayalamName || ""}
+                                    onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                                    placeholder="നുസുക്"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Urdu Name</label>
+                                  <input
+                                    type="text"
+                                    value={formData.urduName || ""}
+                                    onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                                    placeholder="نسک"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    dir="rtl"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Building *</label>
+                                  <input
+                                    type="text"
+                                    value={formData.building || ""}
+                                    onChange={(e) => setFormData({ ...formData, building: e.target.value })}
+                                    placeholder="Building name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Malayalam Building</label>
+                                  <input
+                                    type="text"
+                                    value={formData.malayalamBuilding || ""}
+                                    onChange={(e) => setFormData({ ...formData, malayalamBuilding: e.target.value })}
+                                    placeholder="കെട്ടിടം"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Urdu Building</label>
+                                  <input
+                                    type="text"
+                                    value={formData.urduBuilding || ""}
+                                    onChange={(e) => setFormData({ ...formData, urduBuilding: e.target.value })}
+                                    placeholder="عمارت"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    dir="rtl"
+                                  />
                                 </div>
                               </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* Basic Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Name *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.name || ""}
-                                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                      placeholder="Nusuk name"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Malayalam Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.malayalamName || ""}
-                                      onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
-                                      placeholder="നുസുക്"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Urdu Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.urduName || ""}
-                                      onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
-                                      placeholder="نسک"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      dir="rtl"
-                                    />
-                                  </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">Latitude</label>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    value={formData.location?.lat || ""}
+                                    onChange={(e) => setFormData({ 
+                                      ...formData, 
+                                      location: { ...formData.location, lat: e.target.value }
+                                    })}
+                                    placeholder="21.4225"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
                                 </div>
-
-                                {/* Building Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Building Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Building *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.building || ""}
-                                      onChange={(e) => setFormData({ ...formData, building: e.target.value })}
-                                      placeholder="Building name"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Malayalam Building
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.malayalamBuilding || ""}
-                                      onChange={(e) => setFormData({ ...formData, malayalamBuilding: e.target.value })}
-                                      placeholder="കെട്ടിടം"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Urdu Building
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.urduBuilding || ""}
-                                      onChange={(e) => setFormData({ ...formData, urduBuilding: e.target.value })}
-                                      placeholder="عمارت"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      dir="rtl"
-                                    />
-                                  </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Longitude</label>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    value={formData.location?.lng || ""}
+                                    onChange={(e) => setFormData({ 
+                                      ...formData, 
+                                      location: { ...formData.location, lng: e.target.value }
+                                    })}
+                                    placeholder="39.8262"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
                                 </div>
-
-                                {/* Location Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Location Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Latitude
-                                    </label>
-                                    <input
-                                      type="number"
-                                      step="any"
-                                      value={formData.location?.lat || ""}
-                                      onChange={(e) => setFormData({ 
-                                        ...formData, 
-                                        location: { ...formData.location, lat: e.target.value }
-                                      })}
-                                      placeholder="21.4225"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Longitude
-                                    </label>
-                                    <input
-                                      type="number"
-                                      step="any"
-                                      value={formData.location?.lng || ""}
-                                      onChange={(e) => setFormData({ 
-                                        ...formData, 
-                                        location: { ...formData.location, lng: e.target.value }
-                                      })}
-                                      placeholder="39.8262"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                </div>
+                              </div>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSubmit({ preventDefault: () => {} })}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={resetForm}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
                               </div>
                             </div>
                           </td>
