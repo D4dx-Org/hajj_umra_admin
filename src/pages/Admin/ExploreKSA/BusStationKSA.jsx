@@ -573,15 +573,32 @@ const BusStationKSA = ({ isOpen }) => {
     }
 
     return [...data].sort((a, b) => {
-      let aValue = sortConfig.field === 'ref' || sortConfig.field === 'locationRef'
-        ? a[sortConfig.field]?.name || ''
-        : a[sortConfig.field] || '';
-      let bValue = sortConfig.field === 'ref' || sortConfig.field === 'locationRef'
-        ? b[sortConfig.field]?.name || ''
-        : b[sortConfig.field] || '';
+      let aValue, bValue;
+      
+      // Handle different field types
+      if (sortConfig.field === 'ref') {
+        aValue = a.ref?.name || '';
+        bValue = b.ref?.name || '';
+      } else if (sortConfig.field === 'locationRef') {
+        aValue = a.locationRef?.title || '';
+        bValue = b.locationRef?.title || '';
+      } else if (sortConfig.field === 'name') {
+        aValue = a.name?.english || '';
+        bValue = b.name?.english || '';
+      } else if (sortConfig.field === 'stationPoint') {
+        aValue = a.stationPoint?.english || '';
+        bValue = b.stationPoint?.english || '';
+      } else if (sortConfig.field === 'destinationPoint') {
+        aValue = a.destinationPoint?.english || '';
+        bValue = b.destinationPoint?.english || '';
+      } else {
+        aValue = a[sortConfig.field] || '';
+        bValue = b[sortConfig.field] || '';
+      }
 
-      aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
+      // Ensure values are strings before calling toLowerCase()
+      aValue = String(aValue).toLowerCase();
+      bValue = String(bValue).toLowerCase();
 
       if (sortConfig.direction === 'asc') {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
@@ -962,208 +979,163 @@ const BusStationKSA = ({ isOpen }) => {
                     </tr>
                     {editingId === row._id && (
                       <tr>
-                        <td colSpan={busStationColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Bus Station</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                        <td colSpan={busStationColumns.length} className="p-4">
+                          <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                            <h2 className="text-lg font-bold mb-4">Edit Bus Station</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Name (English)</label>
+                                <input
+                                  type="text"
+                                  value={row.name?.english || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, english: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter station name in English"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Name (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.name?.malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, malayalam: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter station name in Malayalam"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Name (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.name?.urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, urdu: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter station name in Urdu"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Station Point (English)</label>
+                                <input
+                                  type="text"
+                                  value={row.stationPoint?.english || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, english: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter station point in English"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Station Point (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.stationPoint?.malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, malayalam: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter station point in Malayalam"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Station Point (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.stationPoint?.urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, urdu: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter station point in Urdu"
+                                />
+                              </div>
+                            </div>
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium">Link</label>
+                              <input
+                                type="text"
+                                value={row.link || ""}
+                                onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
+                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                placeholder="Enter map link"
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Destination Point (English)</label>
+                                <input
+                                  type="text"
+                                  value={row.destinationPoint?.english || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, english: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter destination point in English"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Destination Point (Malayalam)</label>
+                                <input
+                                  type="text"
+                                  value={row.destinationPoint?.malayalam || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, malayalam: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter destination point in Malayalam"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Destination Point (Urdu)</label>
+                                <input
+                                  type="text"
+                                  value={row.destinationPoint?.urdu || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, urdu: e.target.value })}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  placeholder="Enter destination point in Urdu"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">Branch Reference</label>
+                                <select
+                                  value={row.ref?._id || row.ref || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                 >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                  <option value="">Select Branch</option>
+                                  {branches.map(branch => (
+                                    <option key={branch._id} value={branch._id}>
+                                      {branch.name} {branch.name_malayalam && `| ${branch.name_malayalam}`} {branch.name_urdu && `| ${branch.name_urdu}`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Location Reference</label>
+                                <select
+                                  value={row.locationRef?._id || row.locationRef || ""}
+                                  onChange={(e) => handleEditChange(row._id, 'locationRef', e.target.value)}
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                 >
-                                  Cancel
-                                </button>
+                                  <option value="">Select Location</option>
+                                  {locations.map(location => (
+                                    <option key={location._id} value={location._id}>
+                                      {location.title} {location.title_malayalam && `| ${location.title_malayalam}`} {location.title_urdu && `| ${location.title_urdu}`}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Basic Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (English) *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.name?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, english: e.target.value })}
-                                    placeholder="Bus station name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.name?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, malayalam: e.target.value })}
-                                    placeholder="ബസ് സ്റ്റേഷൻ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.name?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'name', { ...row.name, urdu: e.target.value })}
-                                    placeholder="بس اسٹیشن"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Link
-                                  </label>
-                                  <input
-                                    type="url"
-                                    value={row.link || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-                                    placeholder="https://example.com"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Station Point Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Station Point</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Station Point (English)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.stationPoint?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, english: e.target.value })}
-                                    placeholder="Station point"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Station Point (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.stationPoint?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, malayalam: e.target.value })}
-                                    placeholder="സ്റ്റേഷൻ പോയിന്റ്"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Station Point (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.stationPoint?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'stationPoint', { ...row.stationPoint, urdu: e.target.value })}
-                                    placeholder="اسٹیشن پوائنٹ"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Destination Point Information */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Destination Point</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Destination Point (English)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.destinationPoint?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, english: e.target.value })}
-                                    placeholder="Destination point"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Destination Point (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.destinationPoint?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, malayalam: e.target.value })}
-                                    placeholder="ലക്ഷ്യസ്ഥാനം"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Destination Point (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.destinationPoint?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'destinationPoint', { ...row.destinationPoint, urdu: e.target.value })}
-                                    placeholder="منزل"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* References */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">References</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Branch Reference
-                                  </label>
-                                  <select
-                                    value={row.ref?._id || row.ref || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  >
-                                    <option value="">Select Branch</option>
-                                    {branches.map(branch => (
-                                      <option key={branch._id} value={branch._id}>
-                                        {branch.name} {branch.name_malayalam && `| ${branch.name_malayalam}`} {branch.name_urdu && `| ${branch.name_urdu}`}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Location Reference
-                                  </label>
-                                  <select
-                                    value={row.locationRef?._id || row.locationRef || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'locationRef', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  >
-                                    <option value="">Select Location</option>
-                                    {locations.map(location => (
-                                      <option key={location._id} value={location._id}>
-                                        {location.title}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleSaveEdit(row)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         </td>
