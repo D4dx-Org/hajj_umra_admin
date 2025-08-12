@@ -1010,7 +1010,7 @@ const DuasManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description in English..."
-                maxLength={500}
+                
                 showCount
               />
             </Form.Item>
@@ -1021,7 +1021,7 @@ const DuasManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
-                    maxLength={500}
+                    
                     showCount
                     style={{ fontFamily: 'Arial, sans-serif' }}
                   />
@@ -1032,7 +1032,7 @@ const DuasManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="اردو میں تفصیلی تفصیل درج کریں..."
-                    maxLength={500}
+                    
                     showCount
                     dir="rtl"
                     style={{ fontFamily: 'Arial, sans-serif' }}

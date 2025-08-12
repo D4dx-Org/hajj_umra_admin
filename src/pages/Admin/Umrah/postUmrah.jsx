@@ -958,7 +958,7 @@ const PostUmrahManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description..."
-                maxLength={500}
+              
                 showCount
               />
             </Form.Item>
@@ -992,7 +992,7 @@ const PostUmrahManagement = () => {
                   <TextArea
                     rows={3}
                     placeholder="Enter description in Malayalam..."
-                    maxLength={500}
+                  
                     showCount
                   />
                 </Form.Item>
@@ -1005,7 +1005,7 @@ const PostUmrahManagement = () => {
                   <TextArea
                     rows={3}
                     placeholder="Enter description in Urdu..."
-                    maxLength={500}
+                  
                     showCount
                   />
                 </Form.Item>

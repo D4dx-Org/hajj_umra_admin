@@ -1004,15 +1004,15 @@ const PlaceKSA = () => {
               <TextArea
                 rows={2}
                 placeholder="Enter a detailed description of the place in English..."
-                maxLength={500}
+                
                 showCount
               />
             </Form.Item>
             <Form.Item name="descriptionMalayalam" label="Description (Malayalam)">
-              <TextArea rows={2} placeholder="Enter description in Malayalam..." maxLength={500} />
+              <TextArea rows={2} placeholder="Enter description in Malayalam..."  />
             </Form.Item>
             <Form.Item name="descriptionUrdu" label="Description (Urdu)">
-              <TextArea rows={2} placeholder="Enter description in Urdu..." maxLength={500} />
+              <TextArea rows={2} placeholder="Enter description in Urdu..."  />
             </Form.Item>
 
             {/* File Upload Sections */}

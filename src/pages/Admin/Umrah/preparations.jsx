@@ -1163,7 +1163,7 @@ const PreparationManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description in English..."
-                maxLength={100000}
+
                 showCount
               />
             </Form.Item>
@@ -1174,7 +1174,7 @@ const PreparationManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
-                    maxLength={100000}
+                    
                     showCount
                     style={{ fontFamily: 'Arial, sans-serif' }}
                   />
@@ -1185,7 +1185,7 @@ const PreparationManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="اردو میں تفصیلی تفصیل درج کریں..."
-                    maxLength={100000}
+                    
                     showCount
                     dir="rtl"
                     style={{ fontFamily: 'Arial, sans-serif' }}

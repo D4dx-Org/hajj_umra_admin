@@ -976,7 +976,7 @@ const TourManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description..."
-                maxLength={500}
+              
                 showCount
               />
             </Form.Item>
@@ -1010,7 +1010,7 @@ const TourManagement = () => {
                   <TextArea
                     rows={3}
                     placeholder="Enter description in Malayalam..."
-                    maxLength={500}
+                  
                     showCount
                   />
                 </Form.Item>
@@ -1023,7 +1023,7 @@ const TourManagement = () => {
                   <TextArea
                     rows={3}
                     placeholder="Enter description in Urdu..."
-                    maxLength={500}
+                  
                     showCount
                   />
                 </Form.Item>
