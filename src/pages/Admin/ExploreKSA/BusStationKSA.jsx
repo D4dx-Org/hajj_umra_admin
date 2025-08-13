@@ -62,48 +62,30 @@ const BusStationKSA = ({ isOpen }) => {
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
-    },
-    {
-      key: 'name',
+    },    { 
+      key: 'name', 
       title: 'Name (English)',
-      render: (row) => {
-        return row.name?.english || 'N/A';
-      }
-    },
-    {
-      key: 'nameMalayalam',
+      render: (row) => <span className="truncate" title={row.name?.english || row.name || '-'}>{row.name?.english || row.name || '-'}</span>
+    },    { 
+      key: 'nameMalayalam', 
       title: 'Name (Malayalam)',
-      render: (row) => {
-        return row.name?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'nameUrdu',
+      render: (row) => <span className="truncate" title={row.name?.malayalam || '-'}>{row.name?.malayalam || '-'}</span>
+    },    { 
+      key: 'nameUrdu', 
       title: 'Name (Urdu)',
-      render: (row) => {
-        return row.name?.urdu || 'N/A';
-      }
-    },
-    {
-      key: 'stationPoint',
+      render: (row) => <span className="truncate" title={row.name?.urdu || '-'}>{row.name?.urdu || '-'}</span>
+    },    { 
+      key: 'stationPoint', 
       title: 'Station Point (English)',
-      render: (row) => {
-        return row.stationPoint?.english || 'N/A';
-      }
-    },
-    {
-      key: 'stationPointMalayalam',
+      render: (row) => <span className="truncate" title={row.stationPoint?.english || row.stationPoint || '-'}>{row.stationPoint?.english || row.stationPoint || '-'}</span>
+    },    { 
+      key: 'stationPointMalayalam', 
       title: 'Station Point (Malayalam)',
-      render: (row) => {
-        return row.stationPoint?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'stationPointUrdu',
+      render: (row) => <span className="truncate" title={row.stationPoint?.malayalam || '-'}>{row.stationPoint?.malayalam || '-'}</span>
+    },    { 
+      key: 'stationPointUrdu', 
       title: 'Station Point (Urdu)',
-      render: (row) => {
-        return row.stationPoint?.urdu || 'N/A';
-      }
+      render: (row) => <span className="truncate" title={row.stationPoint?.urdu || '-'}>{row.stationPoint?.urdu || '-'}</span>
     },
     {
       key: 'link',
@@ -111,69 +93,42 @@ const BusStationKSA = ({ isOpen }) => {
       render: (row) => {
         return <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{row.link}</a>;
       }
-    },
-    {
-      key: 'destinationPoint',
+    },    { 
+      key: 'destinationPoint', 
       title: 'Destination Point (English)',
-      render: (row) => {
-        return row.destinationPoint?.english || 'N/A';
-      }
-    },
-    {
-      key: 'destinationPointMalayalam',
+      render: (row) => <span className="truncate" title={row.destinationPoint?.english || row.destinationPoint || '-'}>{row.destinationPoint?.english || row.destinationPoint || '-'}</span>
+    },    { 
+      key: 'destinationPointMalayalam', 
       title: 'Destination Point (Malayalam)',
-      render: (row) => {
-        return row.destinationPoint?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'destinationPointUrdu',
+      render: (row) => <span className="truncate" title={row.destinationPoint?.malayalam || '-'}>{row.destinationPoint?.malayalam || '-'}</span>
+    },    { 
+      key: 'destinationPointUrdu', 
       title: 'Destination Point (Urdu)',
-      render: (row) => {
-        return row.destinationPoint?.urdu || 'N/A';
-      }
-    },
-    {
-      key: 'ref',
+      render: (row) => <span className="truncate" title={row.destinationPoint?.urdu || '-'}>{row.destinationPoint?.urdu || '-'}</span>
+    },    { 
+      key: 'ref', 
       title: 'Branch (English)',
-      render: (row) => {
-        return row.ref?.name || 'N/A';
-      }
-    },
-    {
-      key: 'refMalayalam',
+      render: (row) => <span className="truncate" title={row.ref?.name || row.ref || '-'}>{row.ref?.name || row.ref || '-'}</span>
+    },    { 
+      key: 'refMalayalam', 
       title: 'Branch (Malayalam)',
-      render: (row) => {
-        return row.ref?.name_malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'refUrdu',
+      render: (row) => <span className="truncate" title={row.ref?.name_malayalam || '-'}>{row.ref?.name_malayalam || '-'}</span>
+    },    { 
+      key: 'refUrdu', 
       title: 'Branch (Urdu)',
-      render: (row) => {
-        return row.ref?.name_urdu || 'N/A';
-      }
-    },
-    {
-      key: 'locationRef',
+      render: (row) => <span className="truncate" title={row.ref?.name_urdu || '-'}>{row.ref?.name_urdu || '-'}</span>
+    },    { 
+      key: 'locationRef', 
       title: 'Location (English)',
-      render: (row) => {
-        return row.locationRef?.title || 'N/A';
-      }
-    },
-    {
-      key: 'locationRefMalayalam',
+      render: (row) => <span className="truncate" title={row.locationRef?.title || row.locationRef || '-'}>{row.locationRef?.title || row.locationRef || '-'}</span>
+    },    { 
+      key: 'locationRefMalayalam', 
       title: 'Location (Malayalam)',
-      render: (row) => {
-        return row.locationRef?.title_malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'locationRefUrdu',
+      render: (row) => <span className="truncate" title={row.locationRef?.title_malayalam || '-'}>{row.locationRef?.title_malayalam || '-'}</span>
+    },    { 
+      key: 'locationRefUrdu', 
       title: 'Location (Urdu)',
-      render: (row) => {
-        return row.locationRef?.title_urdu || 'N/A';
-      }
+      render: (row) => <span className="truncate" title={row.locationRef?.title_urdu || '-'}>{row.locationRef?.title_urdu || '-'}</span>
     },
     {
       key: 'actions',

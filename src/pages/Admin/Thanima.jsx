@@ -107,17 +107,20 @@ const Thanima = ({ isOpen }) => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => row.name
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
     },
     {
       key: 'description',
       title: 'Description',
-      render: (row) => row.description
+      render: (row) => <span className="truncate" title={row.description || 'N/A'}>{row.description || 'N/A'}</span>
     },
     {
       key: 'ref',
       title: 'Location Reference',
-      render: (row) => row.ref?.name || 'N/A'
+      render: (row) => {
+        const locationName = row.ref?.name || 'N/A';
+        return <span className="truncate" title={locationName}>{locationName}</span>;
+      }
     },
     {
       key: 'actions',
@@ -565,11 +568,20 @@ const Thanima = ({ isOpen }) => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {thanimaColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'name' ? 'w-24' :
+                          column.key === 'description' ? 'w-40' :
+                          column.key === 'ref' ? 'w-24' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -580,7 +592,7 @@ const Thanima = ({ isOpen }) => {
                     <tr>
                       <td
                         colSpan={thanimaColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No thanima found
                       </td>
@@ -590,91 +602,81 @@ const Thanima = ({ isOpen }) => {
                       <React.Fragment key={row._id}>
                         <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
                           {thanimaColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'name' ? 'max-w-24 truncate' :
+                                column.key === 'description' ? 'max-w-40 truncate' :
+                                column.key === 'ref' ? 'max-w-24 truncate' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}
                         </tr>
                         {editingId === row._id && (
                           <tr>
-                            <td colSpan={thanimaColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit Thanima</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                            <td colSpan={thanimaColumns.length} className="p-4">
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">Edit Thanima</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">Name *</label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "name", e.target.value)
+                                      }
+                                      placeholder="Thanima name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Location Reference</label>
+                                    <select
+                                      value={row.ref?._id || row.ref || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "ref", e.target.value)
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
+                                      <option value="">Select Location</option>
+                                      {locations.map(location => (
+                                        <option key={location._id} value={location._id}>
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  {/* Basic Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Name *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.name || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "name", e.target.value)
-                                        }
-                                        placeholder="Thanima name"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Description
-                                      </label>
-                                      <textarea
-                                        value={row.description || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "description", e.target.value)
-                                        }
-                                        placeholder="Description"
-                                        rows="4"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Location Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Location Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Location Reference
-                                      </label>
-                                      <select
-                                        value={row.ref?._id || row.ref || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "ref", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Location</option>
-                                        {locations.map(location => (
-                                          <option key={location._id} value={location._id}>
-                                            {location.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
+                                <div className="mb-4">
+                                  <label className="block text-sm font-medium">Description</label>
+                                  <textarea
+                                    value={row.description || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "description", e.target.value)
+                                    }
+                                    placeholder="Description"
+                                    rows="4"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
                             </td>

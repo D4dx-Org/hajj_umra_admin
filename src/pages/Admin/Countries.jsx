@@ -206,12 +206,12 @@ const Countries = () => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => row.name
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
     },
     {
       key: 'arabicName',
       title: 'Arabic Name',
-      render: (row) => row.arabicName || 'N/A'
+      render: (row) => <span className="truncate" title={row.arabicName || 'N/A'}>{row.arabicName || 'N/A'}</span>
     },
     {
       key: 'flag',
@@ -694,11 +694,20 @@ const Countries = () => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {countryColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'name' ? 'w-24' :
+                          column.key === 'arabicName' ? 'w-24' :
+                          column.key === 'flag' ? 'w-16' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -709,7 +718,7 @@ const Countries = () => {
                     <tr>
                       <td
                         colSpan={countryColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No countries found
                       </td>
@@ -719,7 +728,15 @@ const Countries = () => {
                       <React.Fragment key={row._id}>
                         <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
                           {countryColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'name' ? 'max-w-24 truncate' :
+                                column.key === 'arabicName' ? 'max-w-24 truncate' :
+                                column.key === 'flag' ? 'whitespace-nowrap' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}

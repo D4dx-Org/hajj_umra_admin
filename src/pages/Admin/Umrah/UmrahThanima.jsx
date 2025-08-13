@@ -512,10 +512,10 @@ const UmrahThanima = ({ isOpen }) => {
           {/* Table Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full full text-sm">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-1 text-left w-12">
+                    <th className="px-2 py-2 text-left w-12">
                       <input
                         type="checkbox"
                         checked={selectedItems.length === filteredThanimas.length && filteredThanimas.length > 0}
@@ -523,25 +523,25 @@ const UmrahThanima = ({ isOpen }) => {
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       NAME
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       MALAYALAM NAME
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       URDU NAME
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       PHONE
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-16">
                       ID
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       CREATED
                     </th>
-                    <th className="px-4 py-1 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       ACTIONS
                     </th>
                   </tr>
@@ -550,7 +550,7 @@ const UmrahThanima = ({ isOpen }) => {
                   {filteredThanimas.map((thanima, index) => (
                     <React.Fragment key={thanima._id}>
                       <tr className={`hover:bg-gray-50 transition-colors ${editingId === thanima._id ? 'bg-blue-50' : ''}`}>
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           <input
                             type="checkbox"
                             checked={selectedItems.includes(thanima._id)}
@@ -558,27 +558,27 @@ const UmrahThanima = ({ isOpen }) => {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm font-medium text-gray-900">{thanima.name}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm font-medium text-gray-900 max-w-24 truncate" title={thanima.name}>{thanima.name}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">{thanima.malayalamName || '-'}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-24 truncate" title={thanima.malayalamName || '-'}>{thanima.malayalamName || '-'}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700" dir="rtl">{thanima.urduName || '-'}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-24 truncate" dir="rtl" title={thanima.urduName || '-'}>{thanima.urduName || '-'}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">{thanima.phone}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate" title={thanima.phone}>{thanima.phone}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700 font-mono">{thanima.id}</div>
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 font-mono max-w-16 truncate" title={thanima.id}>{thanima.id}</div>
                         </td>
-                        <td className="px-4 py-1">
-                          <div className="text-sm text-gray-700">
+                        <td className="px-2 py-2">
+                          <div className="text-sm text-gray-700 max-w-20 truncate">
                             {new Date(thanima.createdAt).toLocaleDateString()}
                           </div>
                         </td>
-                        <td className="px-4 py-1">
+                        <td className="px-2 py-2">
                           <div className="flex gap-2">
                             <button
                               onClick={() => startEdit(thanima)}
@@ -599,100 +599,78 @@ const UmrahThanima = ({ isOpen }) => {
                       </tr>
                       {editingId === thanima._id && (
                         <tr>
-                          <td colSpan={8} className="p-0">
-                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                              <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Edit Thanima</h3>
-                                <div className="flex gap-3">
-                                  <button
-                                    onClick={() => handleSubmit({ preventDefault: () => {} })}
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                  >
-                                    Save Changes
-                                  </button>
-                                  <button
-                                    onClick={resetForm}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
+                          <td colSpan={8} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">Edit Thanima</h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">Name *</label>
+                                  <input
+                                    type="text"
+                                    value={formData.name || ""}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="Thanima name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Malayalam Name</label>
+                                  <input
+                                    type="text"
+                                    value={formData.malayalamName || ""}
+                                    onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
+                                    placeholder="തനിമ"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Urdu Name</label>
+                                  <input
+                                    type="text"
+                                    value={formData.urduName || ""}
+                                    onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
+                                    placeholder="تھانیما"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    dir="rtl"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Phone *</label>
+                                  <input
+                                    type="tel"
+                                    value={formData.phone || ""}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    placeholder="+966501234567"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">ID *</label>
+                                  <input
+                                    type="text"
+                                    value={formData.id || ""}
+                                    onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                                    placeholder="TH001"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
                                 </div>
                               </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Basic Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Name *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.name || ""}
-                                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                      placeholder="Thanima name"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Malayalam Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.malayalamName || ""}
-                                      onChange={(e) => setFormData({ ...formData, malayalamName: e.target.value })}
-                                      placeholder="തനിമ"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Urdu Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.urduName || ""}
-                                      onChange={(e) => setFormData({ ...formData, urduName: e.target.value })}
-                                      placeholder="تھانیما"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      dir="rtl"
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Contact Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Contact Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Phone *
-                                    </label>
-                                    <input
-                                      type="tel"
-                                      value={formData.phone || ""}
-                                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                      placeholder="+966501234567"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      ID *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={formData.id || ""}
-                                      onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                                      placeholder="TH001"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                </div>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSubmit({ preventDefault: () => {} })}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={resetForm}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
                               </div>
                             </div>
                           </td>

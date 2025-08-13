@@ -54,32 +54,38 @@ const BusStation = ({ isOpen }) => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => row.name
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
     },
     {
       key: 'stationPoint',
       title: 'Station Point',
-      render: (row) => row.stationPoint
+      render: (row) => <span className="truncate" title={row.stationPoint}>{row.stationPoint}</span>
     },
     {
       key: 'link',
       title: 'Link',
-      render: (row) => row.link
+      render: (row) => <span className="truncate" title={row.link}>{row.link}</span>
     },
     {
       key: 'destinationPoint',
       title: 'Destination Point',
-      render: (row) => row.destinationPoint
+      render: (row) => <span className="truncate" title={row.destinationPoint}>{row.destinationPoint}</span>
     },
     {
       key: 'ref',
       title: 'Branch Reference',
-      render: (row) => row.ref?.name || 'N/A'
+      render: (row) => {
+        const branchName = row.ref?.name || 'N/A';
+        return <span className="truncate" title={branchName}>{branchName}</span>;
+      }
     },
     {
       key: 'locationRef',
       title: 'Location Reference',
-      render: (row) => row.locationRef?.name || 'N/A'
+      render: (row) => {
+        const locationName = row.locationRef?.name || 'N/A';
+        return <span className="truncate" title={locationName}>{locationName}</span>;
+      }
     },
     {
       key: 'actions',
@@ -719,11 +725,23 @@ const BusStation = ({ isOpen }) => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {busStationColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'name' ? 'w-24' :
+                          column.key === 'stationPoint' ? 'w-24' :
+                          column.key === 'link' ? 'w-32' :
+                          column.key === 'destinationPoint' ? 'w-24' :
+                          column.key === 'ref' ? 'w-24' :
+                          column.key === 'locationRef' ? 'w-24' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -734,7 +752,7 @@ const BusStation = ({ isOpen }) => {
                     <tr>
                       <td
                         colSpan={busStationColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No bus stations found
                       </td>
@@ -744,143 +762,130 @@ const BusStation = ({ isOpen }) => {
                       <React.Fragment key={row._id}>
                         <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
                           {busStationColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'link' ? 'max-w-32 truncate' :
+                                column.key === 'name' ? 'max-w-24 truncate' :
+                                column.key === 'stationPoint' ? 'max-w-24 truncate' :
+                                column.key === 'destinationPoint' ? 'max-w-24 truncate' :
+                                column.key === 'ref' ? 'max-w-24 truncate' :
+                                column.key === 'locationRef' ? 'max-w-24 truncate' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}
                         </tr>
-                        {editingId === row._id && (
-                          <tr>
-                            <td colSpan={busStationColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit Bus Station</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                    >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
+                                              {editingId === row._id && (
+                        <tr>
+                          <td colSpan={busStationColumns.length} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">Edit Bus Station</h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">Name *</label>
+                                  <input
+                                    type="text"
+                                    value={row.name || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "name", e.target.value)
+                                    }
+                                    placeholder="Bus station name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  {/* Basic Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Name *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.name || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "name", e.target.value)
-                                        }
-                                        placeholder="Bus station name"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Station Point
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.stationPoint || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "stationPoint", e.target.value)
-                                        }
-                                        placeholder="Station point"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Link
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.link || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "link", e.target.value)
-                                        }
-                                        placeholder="Link URL"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Additional Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Additional Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Destination Point
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.destinationPoint || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "destinationPoint", e.target.value)
-                                        }
-                                        placeholder="Destination point"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Branch Reference
-                                      </label>
-                                      <select
-                                        value={row.ref?._id || row.ref || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "ref", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Branch</option>
-                                        {branches.map(branch => (
-                                          <option key={branch._id} value={branch._id}>
-                                            {branch.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Location Reference
-                                      </label>
-                                      <select
-                                        value={row.locationRef?._id || row.locationRef || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "locationRef", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Location</option>
-                                        {locations.map(location => (
-                                          <option key={location._id} value={location._id}>
-                                            {location.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Station Point</label>
+                                  <input
+                                    type="text"
+                                    value={row.stationPoint || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "stationPoint", e.target.value)
+                                    }
+                                    placeholder="Station point"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Link</label>
+                                  <input
+                                    type="text"
+                                    value={row.link || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "link", e.target.value)
+                                    }
+                                    placeholder="Link URL"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Destination Point</label>
+                                  <input
+                                    type="text"
+                                    value={row.destinationPoint || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "destinationPoint", e.target.value)
+                                    }
+                                    placeholder="Destination point"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Branch Reference</label>
+                                  <select
+                                    value={row.ref?._id || row.ref || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "ref", e.target.value)
+                                    }
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  >
+                                    <option value="">Select Branch</option>
+                                    {branches.map(branch => (
+                                      <option key={branch._id} value={branch._id}>
+                                        {branch.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Location Reference</label>
+                                  <select
+                                    value={row.locationRef?._id || row.locationRef || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "locationRef", e.target.value)
+                                    }
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  >
+                                    <option value="">Select Location</option>
+                                    {locations.map(location => (
+                                      <option key={location._id} value={location._id}>
+                                        {location.name}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
                               </div>
-                            </td>
-                          </tr>
-                        )}
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                       </React.Fragment>
                     ))
                   )}

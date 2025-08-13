@@ -49,30 +49,22 @@ const UmrahBranch = ({ isOpen }) => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => {
-        return row.name;
-      }
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
     },
     {
       key: 'malayalamName',
       title: 'Malayalam Name',
-      render: (row) => {
-        return row.malayalamName || '-';
-      }
+      render: (row) => <span className="truncate" title={row.malayalamName || '-'}>{row.malayalamName || '-'}</span>
     },
     {
       key: 'urduName',
       title: 'Urdu Name',
-      render: (row) => {
-        return row.urduName || '-';
-      }
+      render: (row) => <span className="truncate" title={row.urduName || '-'}>{row.urduName || '-'}</span>
     },
     {
       key: 'phoneNumber',
       title: 'Phone Number',
-      render: (row) => {
-        return row.phoneNumber || 'N/A';
-      }
+      render: (row) => <span className="truncate" title={row.phoneNumber || 'N/A'}>{row.phoneNumber || 'N/A'}</span>
     },
     {
       key: 'actions',
@@ -597,13 +589,20 @@ const UmrahBranch = ({ isOpen }) => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
                   {branchColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'name' ? 'w-24' :
+                        column.key === 'malayalamName' ? 'w-24' :
+                        column.key === 'urduName' ? 'w-24' :
+                        column.key === 'phoneNumber' ? 'w-24' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
                     >
                       {column.title}
                     </th>
@@ -613,7 +612,7 @@ const UmrahBranch = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredBranchData.length === 0 ? (
                   <tr>
-                    <td colSpan={branchColumns.length} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={branchColumns.length} className="px-2 py-2 text-center text-gray-500">
                       No branches found
                     </td>
                   </tr>
@@ -622,100 +621,89 @@ const UmrahBranch = ({ isOpen }) => {
                     <React.Fragment key={row._id}>
                       <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
                         {branchColumns.map((column) => (
-                          <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td
+                            key={column.key}
+                            className={`px-2 py-2 text-sm text-gray-900 ${
+                              column.key === 'name' ? 'max-w-24 truncate' :
+                              column.key === 'malayalamName' ? 'max-w-24 truncate' :
+                              column.key === 'urduName' ? 'max-w-24 truncate' :
+                              column.key === 'phoneNumber' ? 'max-w-24 truncate' :
+                              column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                            }`}
+                          >
                             {column.render(row)}
                           </td>
                         ))}
                       </tr>
                       {editingId === row._id && (
                         <tr>
-                          <td colSpan={branchColumns.length} className="p-0">
-                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                              <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Edit Branch</h3>
-                                <div className="flex gap-3">
-                                  <button
-                                    onClick={() => handleSaveEdit(row)}
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                  >
-                                    Save Changes
-                                  </button>
-                                  <button
-                                    onClick={handleCancelEdit}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
+                          <td colSpan={branchColumns.length} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">Edit Branch</h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">Name *</label>
+                                  <input
+                                    type="text"
+                                    value={row.name || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "name", e.target.value)
+                                    }
+                                    placeholder="Branch name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Malayalam Name</label>
+                                  <input
+                                    type="text"
+                                    value={row.malayalamName || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "malayalamName", e.target.value)
+                                    }
+                                    placeholder="മലയാളം പേര്"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Urdu Name</label>
+                                  <input
+                                    type="text"
+                                    value={row.urduName || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "urduName", e.target.value)
+                                    }
+                                    placeholder="اردو نام"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">Phone Number</label>
+                                  <input
+                                    type="text"
+                                    value={row.phoneNumber || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "phoneNumber", e.target.value)
+                                    }
+                                    placeholder="Phone number"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
                                 </div>
                               </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Basic Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Name *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.name || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "name", e.target.value)
-                                      }
-                                      placeholder="Branch name"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Malayalam Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.malayalamName || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "malayalamName", e.target.value)
-                                      }
-                                      placeholder="മലയാളം പേര്"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Contact Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Contact Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Urdu Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.urduName || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "urduName", e.target.value)
-                                      }
-                                      placeholder="اردو نام"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Phone Number
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.phoneNumber || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "phoneNumber", e.target.value)
-                                      }
-                                      placeholder="Phone number"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                </div>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
                               </div>
                             </div>
                           </td>

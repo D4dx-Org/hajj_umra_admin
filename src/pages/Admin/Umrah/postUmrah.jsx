@@ -595,7 +595,7 @@ const PostUmrahManagement = () => {
   };
 
   // Table columns configuration
-  const columns = [
+  const postUmrahColumns = [
     {
       key: 'select',
       title: (
@@ -616,128 +616,95 @@ const PostUmrahManagement = () => {
       )
     },
     {
+      key: 'id',
       title: 'ID',
-      dataIndex: 'id',
-      key: 'id'
+      render: (row) => <span className="truncate" title={row.id}>{row.id}</span>
     },
     {
-      title: 'Title',
       key: 'title',
-      render: (_, record) => (
-        <div className="space-y-1">
-          <div className="font-medium">{record.title}</div>
-          {record.title_malayalam && (
-            <div className="text-sm text-gray-600">
-              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {record.title_malayalam}
-            </div>
-          )}
-          {record.title_urdu && (
-            <div className="text-sm text-gray-600">
-              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {record.title_urdu}
-            </div>
-          )}
-        </div>
-      )
+      title: 'Title',
+      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
     },
     {
-      title: 'Description',
+      key: 'title_malayalam',
+      title: 'Ml Title',
+      render: (row) => <span className="truncate" title={row.title_malayalam || '-'}>{row.title_malayalam || '-'}</span>
+    },
+    {
+      key: 'title_urdu',
+      title: 'Ur Title',
+      render: (row) => <span className="truncate" title={row.title_urdu || '-'}>{row.title_urdu || '-'}</span>
+    },
+    {
       key: 'description',
-      render: (_, record) => (
-        <div className="space-y-1">
-          <div className="text-sm">{record.description || '-'}</div>
-          {record.description_malayalam && (
-            <div className="text-xs text-gray-600">
-              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {record.description_malayalam}
-            </div>
-          )}
-          {record.description_urdu && (
-            <div className="text-xs text-gray-600">
-              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {record.description_urdu}
-            </div>
-          )}
-        </div>
-      )
+      title: 'Description',
+      render: (row) => <span className="truncate" title={row.description || '-'}>{row.description || '-'}</span>
     },
     {
-      title: 'Media',
+      key: 'description_malayalam',
+      title: 'Ml Description',
+      render: (row) => <span className="truncate" title={row.description_malayalam || '-'}>{row.description_malayalam || '-'}</span>
+    },
+    {
+      key: 'description_urdu',
+      title: 'Ur Description',
+      render: (row) => <span className="truncate" title={row.description_urdu || '-'}>{row.description_urdu || '-'}</span>
+    },
+    {
       key: 'media',
-      render: (_, record) => (
-        <Space direction="vertical" size="small">
-          {record.images && record.images.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Tag color="green" size="small">Images ({record.images.length})</Tag>
-              <div className="flex gap-1">
-                {record.images.slice(0, 3).map((img, index) => (
-                  <Image
-                    key={index}
-                    width={40}
-                    height={30}
-                    src={img}
-                    preview={{
-                      src: img,
-                      mask: index === 2 && record.images.length > 3 ? `+${record.images.length - 3}` : false
-                    }}
-                    style={{ objectFit: 'cover', borderRadius: '4px' }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          {record.video && (
-            <div className="flex items-center gap-2">
-              <Tag color="purple" size="small">Video</Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.video, '_blank')}
-                className="p-0 h-auto text-red-600"
-                title="Open video"
-              >
-                ▶ Watch
-              </Button>
-            </div>
-          )}
-        </Space>
-      )
+      title: 'Media',
+      render: (row) => {
+        const mediaItems = [];
+        if (row.images && row.images.length > 0) {
+          mediaItems.push(`Images (${row.images.length})`);
+        }
+        if (row.video) {
+          mediaItems.push('Video');
+        }
+        const mediaText = mediaItems.length > 0 ? mediaItems.join(', ') : 'N/A';
+        return <span className="truncate" title={mediaText}>{mediaText}</span>;
+      }
     },
     {
-      title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <Space>
+      title: 'Actions',
+      render: (row) => (
+        <div className="flex gap-2">
           <button
             onClick={() => {
-              setEditingId(record._id);
-              const recordImages = record.images || [];
+              setEditingId(row._id);
+              const recordImages = row.images || [];
 
               setExistingImages(recordImages);
               form.setFieldsValue({
-                id: record.id,
-                title: record.title,
-                title_malayalam: record.title_malayalam || '',
-                title_urdu: record.title_urdu || '',
-                description: record.description || '',
-                description_malayalam: record.description_malayalam || '',
-                description_urdu: record.description_urdu || '',
+                id: row.id,
+                title: row.title,
+                title_malayalam: row.title_malayalam || '',
+                title_urdu: row.title_urdu || '',
+                description: row.description || '',
+                description_malayalam: row.description_malayalam || '',
+                description_urdu: row.description_urdu || '',
                 images: recordImages,
-                video: record.video || ''
+                video: row.video || ''
               });
 
               setUploadedFiles({ images: [], video: null });
               setFileList({ images: [], video: [] });
               setModalVisible(true);
             }}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
-            <Edit size={18} className="text-blue-500" />
+            <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(record._id)}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
-            <Trash2 size={18} className="text-red-500" />
+            <Trash2 size={16} />
           </button>
-        </Space>
+        </div>
       )
     }
   ];
@@ -892,15 +859,73 @@ const PostUmrahManagement = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={filteredPostUmrahData}
-            rowKey="_id"
-            loading={loading}
-            pagination={pagination}
-          />
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {postUmrahColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'id' ? 'w-16' :
+                        column.key === 'title' ? 'w-24' :
+                        column.key === 'title_malayalam' ? 'w-20' :
+                        column.key === 'title_urdu' ? 'w-20' :
+                        column.key === 'description' ? 'w-32' :
+                        column.key === 'description_malayalam' ? 'w-28' :
+                        column.key === 'description_urdu' ? 'w-28' :
+                        column.key === 'media' ? 'w-20' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
+                    >
+                      {column.title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={postUmrahColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredPostUmrahData.length === 0 ? (
+                  <tr>
+                    <td colSpan={postUmrahColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      No post-umrah entries found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPostUmrahData.map((row) => (
+                    <tr key={row._id} className="hover:bg-gray-50">
+                      {postUmrahColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-2 py-2 text-sm text-gray-900 ${
+                            column.key === 'id' ? 'max-w-16 truncate' :
+                            column.key === 'title' ? 'max-w-24 truncate' :
+                            column.key === 'title_malayalam' ? 'max-w-20 truncate' :
+                            column.key === 'title_urdu' ? 'max-w-20 truncate' :
+                            column.key === 'description' ? 'max-w-32 truncate' :
+                            column.key === 'description_malayalam' ? 'max-w-28 truncate' :
+                            column.key === 'description_urdu' ? 'max-w-28 truncate' :
+                            column.key === 'media' ? 'max-w-20 truncate' :
+                            column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                          }`}
+                        >
+                          {column.render(row)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Create/Edit Modal */}

@@ -193,32 +193,41 @@ const Hospital = ({ isOpen }) => {
     { 
       key: 'name', 
       title: 'Name',
-      render: (row) => row.name
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
     },
     { 
       key: 'arabicName', 
       title: 'Arabic Name',
-      render: (row) => row.arabicName || 'N/A'
+      render: (row) => <span className="truncate" title={row.arabicName || 'N/A'}>{row.arabicName || 'N/A'}</span>
     },
     { 
       key: 'location', 
       title: 'Location',
-      render: (row) => row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A'
+      render: (row) => {
+        const locationText = row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
+        return <span className="truncate" title={locationText}>{locationText}</span>;
+      }
     },
     { 
       key: 'phone', 
       title: 'Phone',
-      render: (row) => row.phone || 'N/A'
+      render: (row) => <span className="truncate" title={row.phone || 'N/A'}>{row.phone || 'N/A'}</span>
     },
     {
       key: 'ref',
       title: 'Location Reference',
-      render: (row) => row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A'
+      render: (row) => {
+        const locationName = row.ref?.name || locations.find(loc => loc._id === row.ref)?.name || 'N/A';
+        return <span className="truncate" title={locationName}>{locationName}</span>;
+      }
     },
     {
       key: 'branchRef',
       title: 'Branch Reference (Optional)',
-      render: (row) => row.branchRef?.name || branches.find(branch => branch._id === row.branchRef)?.name || 'No Branch'
+      render: (row) => {
+        const branchName = row.branchRef?.name || branches.find(branch => branch._id === row.branchRef)?.name || 'No Branch';
+        return <span className="truncate" title={branchName}>{branchName}</span>;
+      }
     },
     {
       key: 'actions',
@@ -772,150 +781,171 @@ const Hospital = ({ isOpen }) => {
         ) : filteredHospitalData.length === 0 ? (
           <p className="text-center">No items found</p>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {hospitalColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {column.title}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredHospitalData.map((row) => (
-                  <React.Fragment key={row._id}>
-                    <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
-                      {hospitalColumns.map((column) => (
-                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
-                          {column.render ? column.render(row) : row[column.key]}
-                        </td>
-                      ))}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {hospitalColumns.map((column) => (
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'name' ? 'w-24' :
+                          column.key === 'arabicName' ? 'w-24' :
+                          column.key === 'location' ? 'w-28' :
+                          column.key === 'phone' ? 'w-20' :
+                          column.key === 'ref' ? 'w-24' :
+                          column.key === 'branchRef' ? 'w-24' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
+                      >
+                        {column.title}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredHospitalData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={hospitalColumns.length}
+                        className="px-2 py-2 text-center text-gray-500"
+                      >
+                        No hospitals found
+                      </td>
                     </tr>
-                    {editingId === row._id && (
-                      <tr>
-                        <td colSpan={hospitalColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit Hospital</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              {/* Basic Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-                                  <input
-                                    type="text"
-                                    value={row.name || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
-                                    placeholder="Hospital name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
+                  ) : (
+                    filteredHospitalData.map((row) => (
+                      <React.Fragment key={row._id}>
+                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                          {hospitalColumns.map((column) => (
+                            <td
+                              key={`${row._id}-${column.key}`}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'name' ? 'max-w-24 truncate' :
+                                column.key === 'arabicName' ? 'max-w-24 truncate' :
+                                column.key === 'location' ? 'max-w-28 truncate' :
+                                column.key === 'phone' ? 'max-w-20 truncate' :
+                                column.key === 'ref' ? 'max-w-24 truncate' :
+                                column.key === 'branchRef' ? 'max-w-24 truncate' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
+                            >
+                              {column.render ? column.render(row) : row[column.key]}
+                            </td>
+                          ))}
+                        </tr>
+                        {editingId === row._id && (
+                          <tr>
+                            <td colSpan={hospitalColumns.length} className="p-4">
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">Edit Hospital</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">Name *</label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'name', e.target.value)}
+                                      placeholder="Hospital name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Arabic Name</label>
+                                    <input
+                                      type="text"
+                                      value={row.arabicName || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'arabicName', e.target.value)}
+                                      placeholder="Arabic name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Phone</label>
+                                    <input
+                                      type="text"
+                                      value={row.phone || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'phone', e.target.value)}
+                                      placeholder="Phone number"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Location Reference</label>
+                                    <select
+                                      value={row.ref?._id || row.ref || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    >
+                                      <option value="">Select Location</option>
+                                      {locations.map(location => (
+                                        <option key={location._id} value={location._id}>{location.name}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Branch Reference (Optional)</label>
+                                    <select
+                                      value={row.branchRef?._id || row.branchRef || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value)}
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    >
+                                      <option value="">No Branch</option>
+                                      {branches.map(branch => (
+                                        <option key={branch._id} value={branch._id}>{branch.name}</option>
+                                      ))}
+                                    </select>
+                                  </div>
                                 </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Arabic Name</label>
-                                  <input
-                                    type="text"
-                                    value={row.arabicName || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'arabicName', e.target.value)}
-                                    placeholder="Arabic name"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">Latitude</label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lat || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
+                                      placeholder="Enter latitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Longitude</label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lng || ''}
+                                      onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
+                                      placeholder="Enter longitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
                                 </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                                  <input
-                                    type="text"
-                                    value={row.phone || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'phone', e.target.value)}
-                                    placeholder="Phone number"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Location Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Location Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Location Reference</label>
-                                  <select
-                                    value={row.ref?._id || row.ref || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'ref', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
                                   >
-                                    <option value="">Select Location</option>
-                                    {locations.map(location => (
-                                      <option key={location._id} value={location._id}>{location.name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
-                                  <input
-                                    type="number"
-                                    value={row.location?.lat || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lat: e.target.value })}
-                                    placeholder="Enter latitude"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
-                                  <input
-                                    type="number"
-                                    value={row.location?.lng || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'location', { ...row.location, lng: e.target.value })}
-                                    placeholder="Enter longitude"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Branch Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Branch Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Branch Reference (Optional)</label>
-                                  <select
-                                    value={row.branchRef?._id || row.branchRef || ''}
-                                    onChange={(e) => handleEditChange(row._id, 'branchRef', e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
                                   >
-                                    <option value="">No Branch</option>
-                                    {branches.map(branch => (
-                                      <option key={branch._id} value={branch._id}>{branch.name}</option>
-                                    ))}
-                                  </select>
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

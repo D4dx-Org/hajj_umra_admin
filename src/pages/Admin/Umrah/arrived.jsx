@@ -700,7 +700,7 @@ const ArrivedManagement = () => {
   };
 
   // Table columns configuration
-  const columns = [
+  const arrivedColumns = [
     {
       key: "select",
       title: (
@@ -721,276 +721,119 @@ const ArrivedManagement = () => {
       ),
     },
     {
-      title: "ID",
-      dataIndex: "id",
       key: "id",
+      title: "ID",
+      render: (row) => <span className="truncate" title={row.id}>{row.id}</span>
     },
     {
-      title: "Title",
-      dataIndex: "title",
       key: "title",
-      render: (text, record) => (
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900">{text}</div>
-          {record.malayalamTitle && (
-            <div
-              className="text-sm text-blue-600"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.malayalamTitle}
-            </div>
-          )}
-          {record.urduTitle && (
-            <div
-              className="text-sm text-green-600"
-              dir="rtl"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.urduTitle}
-            </div>
-          )}
-        </div>
-      ),
+      title: "Title",
+      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
     },
     {
-      title: "Description",
-      dataIndex: "description",
+      key: "malayalamTitle",
+      title: "Ml Title",
+      render: (row) => <span className="truncate" title={row.malayalamTitle || '-'}>{row.malayalamTitle || '-'}</span>
+    },
+    {
+      key: "urduTitle",
+      title: "Ur Title",
+      render: (row) => <span className="truncate" title={row.urduTitle || '-'}>{row.urduTitle || '-'}</span>
+    },
+    {
       key: "description",
-      render: (text, record) => (
-        <div className="space-y-1">
-          <div className="text-gray-900">{text || "-"}</div>
-          {record.malayalamDescription && (
-            <div
-              className="text-sm text-blue-600"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.malayalamDescription}
-            </div>
-          )}
-          {record.urduDescription && (
-            <div
-              className="text-sm text-green-600"
-              dir="rtl"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.urduDescription}
-            </div>
-          )}
-        </div>
-      ),
+      title: "Description",
+      render: (row) => <span className="truncate" title={row.description || '-'}>{row.description || '-'}</span>
     },
     {
-      title: "Transport Options",
+      key: "malayalamDescription",
+      title: "Ml Description",
+      render: (row) => <span className="truncate" title={row.malayalamDescription || '-'}>{row.malayalamDescription || '-'}</span>
+    },
+    {
+      key: "urduDescription",
+      title: "Ur Description",
+      render: (row) => <span className="truncate" title={row.urduDescription || '-'}>{row.urduDescription || '-'}</span>
+    },
+    {
       key: "transportationOptions",
-      render: (_, record) => (
-        <div className="space-y-2">
-          {record.transportationOptions?.map((option, index) => (
-            <div key={index} className="border rounded p-2 bg-blue-50">
-              <div className="font-medium text-gray-900">
-                {typeof option === "string" ? option : option.type}
-              </div>
-              {option.malayalamType && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {option.malayalamType}
-                </div>
-              )}
-              {option.urduType && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {option.urduType}
-                </div>
-              )}
-              {option.details && (
-                <div className="text-sm text-gray-600 mt-1">
-                  <strong>Details:</strong> {option.details}
-                </div>
-              )}
-              {option.malayalamDetails && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>വിശദാംശങ്ങൾ:</strong> {option.malayalamDetails}
-                </div>
-              )}
-              {option.urduDetails && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>تفصیلات:</strong> {option.urduDetails}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ),
+      title: "Transport",
+      render: (row) => {
+        const transportCount = row.transportationOptions?.length || 0;
+        const transportText = transportCount > 0 ? `${transportCount} options` : 'N/A';
+        return <span className="truncate" title={transportText}>{transportText}</span>;
+      }
     },
     {
-      title: "Emergency Contacts",
       key: "emergencyContacts",
-      render: (_, record) => (
-        <div className="space-y-2">
-          {record.emergencyContacts?.map((contact, index) => (
-            <div key={index} className="border rounded p-2 bg-red-50">
-              <div className="font-medium text-gray-900">{contact.name}</div>
-              {contact.malayalamName && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {contact.malayalamName}
-                </div>
-              )}
-              {contact.urduName && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {contact.urduName}
-                </div>
-              )}
-              <div className="text-sm text-gray-600 mt-1">
-                <strong>Phone:</strong> {contact.phone}
-              </div>
-              <div className="text-sm text-gray-600">
-                <strong>Type:</strong> {contact.type}
-              </div>
-              {contact.malayalamType && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>തരം:</strong> {contact.malayalamType}
-                </div>
-              )}
-              {contact.urduType && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>قسم:</strong> {contact.urduType}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ),
+      title: "Emergency",
+      render: (row) => {
+        const contactCount = row.emergencyContacts?.length || 0;
+        const contactText = contactCount > 0 ? `${contactCount} contacts` : 'N/A';
+        return <span className="truncate" title={contactText}>{contactText}</span>;
+      }
     },
     {
-      title: "Media",
       key: "media",
-      render: (_, record) => (
-        <Space direction="vertical" size="small">
-          {record.images && record.images.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Tag color="green" size="small">
-                Images ({record.images.length})
-              </Tag>
-              <div className="flex gap-1">
-                {record.images.slice(0, 3).map((img, index) => (
-                  <Image
-                    key={index}
-                    width={40}
-                    height={30}
-                    src={img}
-                    preview={{
-                      src: img,
-                      mask:
-                        index === 2 && record.images.length > 3
-                          ? `+${record.images.length - 3}`
-                          : false,
-                    }}
-                    style={{ objectFit: "cover", borderRadius: "4px" }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          {record.video && (
-            <div className="flex items-center gap-2">
-              <Tag color="purple" size="small">
-                Video
-              </Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.video, "_blank")}
-                className="p-0 h-auto text-red-600"
-                title="Open video"
-              >
-                ▶ Watch
-              </Button>
-            </div>
-          )}
-          {record.map && (
-            <div className="flex items-center gap-2">
-              <Tag color="orange" size="small">
-                Map
-              </Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.map, "_blank")}
-                className="p-0 h-auto"
-              >
-                View Map
-              </Button>
-            </div>
-          )}
-        </Space>
-      ),
+      title: "Media",
+      render: (row) => {
+        const mediaItems = [];
+        if (row.images && row.images.length > 0) {
+          mediaItems.push(`Images (${row.images.length})`);
+        }
+        if (row.video) {
+          mediaItems.push('Video');
+        }
+        if (row.map) {
+          mediaItems.push('Map');
+        }
+        const mediaText = mediaItems.length > 0 ? mediaItems.join(', ') : 'N/A';
+        return <span className="truncate" title={mediaText}>{mediaText}</span>;
+      }
     },
     {
-      title: "Actions",
       key: "actions",
-      render: (_, record) => (
-        <Space>
+      title: "Actions",
+      render: (row) => (
+        <div className="flex gap-2">
           <button
             onClick={() => {
-              setEditingId(record._id);
-              const recordImages = record.images || [];
+              setEditingId(row._id);
+              const recordImages = row.images || [];
 
               setExistingImages(recordImages);
               form.setFieldsValue({
-                id: record.id,
-                title: record.title,
-                malayalamTitle: record.malayalamTitle || "",
-                urduTitle: record.urduTitle || "",
-                description: record.description || "",
-                malayalamDescription: record.malayalamDescription || "",
-                urduDescription: record.urduDescription || "",
+                id: row.id,
+                title: row.title,
+                malayalamTitle: row.malayalamTitle || "",
+                urduTitle: row.urduTitle || "",
+                description: row.description || "",
+                malayalamDescription: row.malayalamDescription || "",
+                urduDescription: row.urduDescription || "",
                 images: recordImages,
-                video: record.video || "",
-                map: record.map || "",
-                transportationOptions: record.transportationOptions || [],
-                emergencyContacts: record.emergencyContacts || [],
+                video: row.video || "",
+                map: row.map || "",
+                transportationOptions: row.transportationOptions || [],
+                emergencyContacts: row.emergencyContacts || [],
               });
 
               setUploadedFiles({ images: [], video: null });
               setFileList({ images: [], video: [] });
               setModalVisible(true);
             }}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
-            <Edit size={18} className="text-blue-500" />
+            <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(record._id)}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
-            <Trash2 size={18} className="text-red-500" />
+            <Trash2 size={16} />
           </button>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -1146,15 +989,77 @@ const ArrivedManagement = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={filteredArrivedData}
-            rowKey="_id"
-            loading={loading}
-            pagination={pagination}
-          />
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {arrivedColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === 'select' ? 'w-12' :
+                        column.key === 'id' ? 'w-16' :
+                        column.key === 'title' ? 'w-24' :
+                        column.key === 'malayalamTitle' ? 'w-20' :
+                        column.key === 'urduTitle' ? 'w-20' :
+                        column.key === 'description' ? 'w-32' :
+                        column.key === 'malayalamDescription' ? 'w-28' :
+                        column.key === 'urduDescription' ? 'w-28' :
+                        column.key === 'transportationOptions' ? 'w-20' :
+                        column.key === 'emergencyContacts' ? 'w-20' :
+                        column.key === 'media' ? 'w-20' :
+                        column.key === 'actions' ? 'w-20' : ''
+                      }`}
+                    >
+                      {column.title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={arrivedColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredArrivedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={arrivedColumns.length} className="px-2 py-2 text-center text-gray-500">
+                      No arrived entries found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredArrivedData.map((row) => (
+                    <tr key={row._id} className="hover:bg-gray-50">
+                      {arrivedColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-2 py-2 text-sm text-gray-900 ${
+                            column.key === 'id' ? 'max-w-16 truncate' :
+                            column.key === 'title' ? 'max-w-24 truncate' :
+                            column.key === 'malayalamTitle' ? 'max-w-20 truncate' :
+                            column.key === 'urduTitle' ? 'max-w-20 truncate' :
+                            column.key === 'description' ? 'max-w-32 truncate' :
+                            column.key === 'malayalamDescription' ? 'max-w-28 truncate' :
+                            column.key === 'urduDescription' ? 'max-w-28 truncate' :
+                            column.key === 'transportationOptions' ? 'max-w-20 truncate' :
+                            column.key === 'emergencyContacts' ? 'max-w-20 truncate' :
+                            column.key === 'media' ? 'max-w-20 truncate' :
+                            column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                          }`}
+                        >
+                          {column.render(row)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Create/Edit Modal */}
