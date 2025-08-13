@@ -310,8 +310,8 @@ const ArrivedManagement = () => {
 
       const arrivedData = {
         id: values.id.trim(),
-        title: values.title.trim(),
-        malayalamTitle: values.malayalamTitle?.trim() || "",
+        title: values.title?.trim() || undefined,
+        malayalamTitle: values.malayalamTitle?.trim(),
         urduTitle: values.urduTitle?.trim() || "",
         description: values.description?.trim() || "",
         malayalamDescription: values.malayalamDescription?.trim() || "",
@@ -622,11 +622,11 @@ const ArrivedManagement = () => {
 
           // Check required columns
           const firstRow = data[0];
-          const hasRequiredColumns = "id" in firstRow && "title" in firstRow;
+          const hasRequiredColumns = "id" in firstRow && ("malayalam_title" in firstRow || "malayalamTitle" in firstRow);
 
           if (!hasRequiredColumns) {
             setUploadError(
-              "Excel file must have required columns: id and title"
+              "Excel file must have required columns: id and malayalam_title"
             );
             return;
           }
@@ -636,9 +636,9 @@ const ArrivedManagement = () => {
             const row = data[i];
             const rowNumber = i + 2;
 
-            if (!row.id || !row.title) {
+            if (!row.id || !(row.malayalam_title || row.malayalamTitle)) {
               setUploadError(
-                `Row ${rowNumber}: Missing required data. Each row must have id and title.`
+                `Row ${rowNumber}: Missing required data. Each row must have id and malayalam_title.`
               );
               return;
             }
@@ -1200,8 +1200,6 @@ const ArrivedManagement = () => {
                   name="title"
                   label="Title (English)"
                   rules={[
-                    { required: true, message: "Please enter title" },
-                    { min: 1, message: "Title cannot be empty" },
                     { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
@@ -1216,10 +1214,9 @@ const ArrivedManagement = () => {
                   name="malayalamTitle"
                   label="Title (Malayalam)"
                   rules={[
-                    {
-                      max: 200,
-                      message: "Malayalam title cannot exceed 200 characters",
-                    },
+                    { required: true, message: "Please enter Malayalam title" },
+                    { min: 1, message: "Malayalam title cannot be empty" },
+                    { max: 200, message: "Malayalam title cannot exceed 200 characters" },
                   ]}
                 >
                   <Input
@@ -1518,12 +1515,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "type"]}
                             label="Type (English)"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Missing transportation type",
-                              },
-                            ]}
                           >
                             <Input placeholder="Transportation type in English" />
                           </Form.Item>
@@ -1533,6 +1524,9 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamType"]}
                             label="Type (Malayalam)"
+                            rules={[
+                              { required: true, message: "Missing transportation type (Malayalam)" },
+                            ]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ ഗതാഗത തരം"
@@ -1560,9 +1554,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "details"]}
                             label="Details (English)"
-                            rules={[
-                              { required: true, message: "Missing details" },
-                            ]}
                           >
                             <Input placeholder="Details in English" />
                           </Form.Item>
@@ -1635,12 +1626,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "name"]}
                             label="Name (English)"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Missing contact name",
-                              },
-                            ]}
                           >
                             <Input placeholder="Contact name in English" />
                           </Form.Item>
@@ -1650,6 +1635,7 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamName"]}
                             label="Name (Malayalam)"
+                            rules={[{ required: true, message: "Missing contact name (Malayalam)" }]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ കോൺടാക്റ്റ് പേര്"
@@ -1692,12 +1678,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "type"]}
                             label="Type (English)"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Missing contact type",
-                              },
-                            ]}
                           >
                             <Input placeholder="Type (e.g., Police, Hospital)" />
                           </Form.Item>
@@ -1707,6 +1687,7 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamType"]}
                             label="Type (Malayalam)"
+                            rules={[{ required: true, message: "Missing contact type (Malayalam)" }]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ തരം (പോലീസ്, ആശുപത്രി)"

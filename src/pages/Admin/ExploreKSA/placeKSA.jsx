@@ -386,7 +386,7 @@ const PlaceKSA = () => {
 
       const placeData = {
         id: values.id.trim(),
-        title: values.title.trim(),
+        title: values.title?.trim() || '',
         titleMalayalam: values.titleMalayalam?.trim() || '',
         titleUrdu: values.titleUrdu?.trim() || '',
         description: values.description?.trim() || '',
@@ -984,14 +984,20 @@ const PlaceKSA = () => {
                   name="title"
                   label="Title (English)"
                   rules={[
-                    { required: true, message: "Please enter title" },
-                    { min: 1, message: "Title cannot be empty" },
                     { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
-                  <Input placeholder="Enter place title in English" />
+                  <Input placeholder="Enter place title in English (optional)" />
                 </Form.Item>
-                <Form.Item name="titleMalayalam" label="Title (Malayalam)">
+                <Form.Item 
+                  name="titleMalayalam" 
+                  label="Title (Malayalam) *"
+                  rules={[
+                    { required: true, message: "Please enter Malayalam title" },
+                    { min: 1, message: "Malayalam title cannot be empty" },
+                    { max: 200, message: "Malayalam title cannot exceed 200 characters" }
+                  ]}
+                >
                   <Input placeholder="Enter place title in Malayalam" />
                 </Form.Item>
                 <Form.Item name="titleUrdu" label="Title (Urdu)">
@@ -1008,8 +1014,15 @@ const PlaceKSA = () => {
                 showCount
               />
             </Form.Item>
-            <Form.Item name="descriptionMalayalam" label="Description (Malayalam)">
-              <TextArea rows={2} placeholder="Enter description in Malayalam..."  />
+            <Form.Item 
+              name="descriptionMalayalam" 
+              label="Description (Malayalam) *"
+              rules={[
+                { required: true, message: "Please enter Malayalam description" },
+                { min: 1, message: "Malayalam description cannot be empty" }
+              ]}
+            >
+              <TextArea rows={2} placeholder="Enter description in Malayalam..." />
             </Form.Item>
             <Form.Item name="descriptionUrdu" label="Description (Urdu)">
               <TextArea rows={2} placeholder="Enter description in Urdu..."  />

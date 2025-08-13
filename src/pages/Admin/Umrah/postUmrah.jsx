@@ -285,7 +285,7 @@ const PostUmrahManagement = () => {
 
       const postUmrahData = {
         id: values.id.trim(),
-        title: values.title.trim(),
+        title: values.title?.trim() || '',
         title_malayalam: values.title_malayalam?.trim() || '',
         title_urdu: values.title_urdu?.trim() || '',
         description: values.description?.trim() || '',
@@ -449,12 +449,12 @@ const PostUmrahManagement = () => {
       const sampleData = [
         {
           id: 'sample_post_umrah_001',
-          title: 'Sample Post-Umrah Entry (Required)',
-          title_malayalam: 'സാമ്പിൾ പോസ്റ്റ്-ഉംറ എൻട്രി',
-          title_urdu: 'نمونہ پوسٹ عمرہ انٹری',
-          description: 'Sample description for post-umrah content',
-          description_malayalam: 'പോസ്റ്റ്-ഉംറ ഉള്ളടക്കത്തിനുള്ള സാമ്പിൾ വിവരണം',
-          description_urdu: 'پوسٹ عمرہ مواد کے لیے نمونہ تفصیل',
+          title: 'Sample Post-Umrah Entry (Optional)',
+          title_malayalam: 'സാമ്പിൾ പോസ്റ്റ്-ഉംറ എൻട്രി (Required)',
+          title_urdu: 'نمونہ پوسٹ عمرہ انٹری (Optional)',
+          description: 'Sample description for post-umrah content (Optional)',
+          description_malayalam: 'പോസ്റ്റ്-ഉംറ ഉള്ളടക്കത്തിനുള്ള സാമ്പിൾ വിവരണം (Required)',
+          description_urdu: 'پوسٹ عمرہ مواد کے لیے نمونہ تفصیل (Optional)',
           video: 'https://www.youtube.com/watch?v=sample_video_id'
         }
       ];
@@ -537,10 +537,10 @@ const PostUmrahManagement = () => {
 
           // Check required columns
           const firstRow = data[0];
-          const hasRequiredColumns = 'id' in firstRow && 'title' in firstRow;
+          const hasRequiredColumns = 'id' in firstRow && 'title_malayalam' in firstRow && 'description_malayalam' in firstRow;
 
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have required columns: id and title');
+            setUploadError('Excel file must have required columns: id, title_malayalam, and description_malayalam');
             return;
           }
 
@@ -549,8 +549,8 @@ const PostUmrahManagement = () => {
             const row = data[i];
             const rowNumber = i + 2;
 
-            if (!row.id || !row.title) {
-              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have id and title.`);
+            if (!row.id || !row.title_malayalam || !row.description_malayalam) {
+              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have id, title_malayalam, and description_malayalam.`);
               return;
             }
           }
@@ -941,12 +941,10 @@ const PostUmrahManagement = () => {
                   name="title"
                   label="Title"
                   rules={[
-                    { required: true, message: 'Please enter title' },
-                    { min: 1, message: 'Title cannot be empty' },
                     { max: 200, message: 'Title cannot exceed 200 characters' }
                   ]}
                 >
-                  <Input placeholder="Enter entry title" />
+                  <Input placeholder="Enter entry title (optional)" />
                 </Form.Item>
               </Col>
             </Row>
@@ -968,7 +966,12 @@ const PostUmrahManagement = () => {
               <Col span={12}>
                 <Form.Item
                   name="title_malayalam"
-                  label="Title (Malayalam)"
+                  label="Title (Malayalam) *"
+                  rules={[
+                    { required: true, message: 'Please enter Malayalam title' },
+                    { min: 1, message: 'Malayalam title cannot be empty' },
+                    { max: 200, message: 'Malayalam title cannot exceed 200 characters' }
+                  ]}
                 >
                   <Input placeholder="Enter title in Malayalam" />
                 </Form.Item>
@@ -987,12 +990,15 @@ const PostUmrahManagement = () => {
               <Col span={12}>
                 <Form.Item
                   name="description_malayalam"
-                  label="Description (Malayalam)"
+                  label="Description (Malayalam) *"
+                  rules={[
+                    { required: true, message: 'Please enter Malayalam description' },
+                    { min: 1, message: 'Malayalam description cannot be empty' }
+                  ]}
                 >
                   <TextArea
                     rows={3}
                     placeholder="Enter description in Malayalam..."
-                  
                     showCount
                   />
                 </Form.Item>
