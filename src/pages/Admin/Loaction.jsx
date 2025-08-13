@@ -15,6 +15,8 @@ const Location = ({ isOpen }) => {
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [selectedRows, setSelectedRows] = useState([]);
+const [selectedLocation, setSelectedLocation] = useState(null);
+const [showDetails, setShowDetails] = useState(false);
 
   // Define the table columns
   const locationColumns = [
@@ -33,6 +35,7 @@ const Location = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
@@ -51,7 +54,7 @@ const Location = ({ isOpen }) => {
       key: 'actions',
       title: 'Actions',
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -237,6 +240,18 @@ const Location = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (location) => {
+    setSelectedLocation(location);
+    setShowDetails(true);
+  };
+
+  // Handle close details
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedLocation(null);
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -350,7 +365,10 @@ const Location = ({ isOpen }) => {
                   ) : (
                     filteredLocationData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr 
+                          className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                          onClick={() => handleRowClick(row)}
+                        >
                           {locationColumns.map((column) => (
                             <td
                               key={column.key}
@@ -407,6 +425,57 @@ const Location = ({ isOpen }) => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Location Details Modal */}
+        {showDetails && selectedLocation && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Location Details</h3>
+                <button
+                  onClick={handleCloseDetails}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">ID:</label>
+                  <p className="text-sm text-gray-900">{selectedLocation.id || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name:</label>
+                  <p className="text-sm text-gray-900">{selectedLocation.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description:</label>
+                  <p className="text-sm text-gray-900">{selectedLocation.description || 'No description available'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Created:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedLocation.createdAt ? new Date(selectedLocation.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Last Updated:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedLocation.updatedAt ? new Date(selectedLocation.updatedAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={handleCloseDetails}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}

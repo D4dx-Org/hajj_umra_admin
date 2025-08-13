@@ -69,6 +69,21 @@ const ArrivedManagement = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [selectedArrived, setSelectedArrived] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Handle row click to show details
+  const handleRowClick = (arrived, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (
+      event.target.closest("button") ||
+      event.target.closest('input[type="checkbox"]')
+    ) {
+      return;
+    }
+    setSelectedArrived(arrived);
+    setShowDetailModal(true);
+  };
 
   // Fetch arrived data
   const fetchData = async (page = 1, pageSize = 10) => {
@@ -622,7 +637,9 @@ const ArrivedManagement = () => {
 
           // Check required columns
           const firstRow = data[0];
-          const hasRequiredColumns = "id" in firstRow && ("malayalam_title" in firstRow || "malayalamTitle" in firstRow);
+          const hasRequiredColumns =
+            "id" in firstRow &&
+            ("malayalam_title" in firstRow || "malayalamTitle" in firstRow);
 
           if (!hasRequiredColumns) {
             setUploadError(
@@ -723,55 +740,93 @@ const ArrivedManagement = () => {
     {
       key: "id",
       title: "ID",
-      render: (row) => <span className="truncate" title={row.id}>{row.id}</span>
+      render: (row) => (
+        <span className="truncate" title={row.id}>
+          {row.id}
+        </span>
+      ),
     },
     {
       key: "title",
       title: "Title",
-      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
+      render: (row) => (
+        <span className="truncate" title={row.title}>
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "malayalamTitle",
       title: "Ml Title",
-      render: (row) => <span className="truncate" title={row.malayalamTitle || '-'}>{row.malayalamTitle || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.malayalamTitle || "-"}>
+          {row.malayalamTitle || "-"}
+        </span>
+      ),
     },
     {
       key: "urduTitle",
       title: "Ur Title",
-      render: (row) => <span className="truncate" title={row.urduTitle || '-'}>{row.urduTitle || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.urduTitle || "-"}>
+          {row.urduTitle || "-"}
+        </span>
+      ),
     },
     {
       key: "description",
       title: "Description",
-      render: (row) => <span className="truncate" title={row.description || '-'}>{row.description || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.description || "-"}>
+          {row.description || "-"}
+        </span>
+      ),
     },
     {
       key: "malayalamDescription",
       title: "Ml Description",
-      render: (row) => <span className="truncate" title={row.malayalamDescription || '-'}>{row.malayalamDescription || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.malayalamDescription || "-"}>
+          {row.malayalamDescription || "-"}
+        </span>
+      ),
     },
     {
       key: "urduDescription",
       title: "Ur Description",
-      render: (row) => <span className="truncate" title={row.urduDescription || '-'}>{row.urduDescription || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.urduDescription || "-"}>
+          {row.urduDescription || "-"}
+        </span>
+      ),
     },
     {
       key: "transportationOptions",
       title: "Transport",
       render: (row) => {
         const transportCount = row.transportationOptions?.length || 0;
-        const transportText = transportCount > 0 ? `${transportCount} options` : 'N/A';
-        return <span className="truncate" title={transportText}>{transportText}</span>;
-      }
+        const transportText =
+          transportCount > 0 ? `${transportCount} options` : "N/A";
+        return (
+          <span className="truncate" title={transportText}>
+            {transportText}
+          </span>
+        );
+      },
     },
     {
       key: "emergencyContacts",
       title: "Emergency",
       render: (row) => {
         const contactCount = row.emergencyContacts?.length || 0;
-        const contactText = contactCount > 0 ? `${contactCount} contacts` : 'N/A';
-        return <span className="truncate" title={contactText}>{contactText}</span>;
-      }
+        const contactText =
+          contactCount > 0 ? `${contactCount} contacts` : "N/A";
+        return (
+          <span className="truncate" title={contactText}>
+            {contactText}
+          </span>
+        );
+      },
     },
     {
       key: "media",
@@ -782,14 +837,18 @@ const ArrivedManagement = () => {
           mediaItems.push(`Images (${row.images.length})`);
         }
         if (row.video) {
-          mediaItems.push('Video');
+          mediaItems.push("Video");
         }
         if (row.map) {
-          mediaItems.push('Map');
+          mediaItems.push("Map");
         }
-        const mediaText = mediaItems.length > 0 ? mediaItems.join(', ') : 'N/A';
-        return <span className="truncate" title={mediaText}>{mediaText}</span>;
-      }
+        const mediaText = mediaItems.length > 0 ? mediaItems.join(", ") : "N/A";
+        return (
+          <span className="truncate" title={mediaText}>
+            {mediaText}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -999,18 +1058,31 @@ const ArrivedManagement = () => {
                     <th
                       key={column.key}
                       className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        column.key === 'select' ? 'w-12' :
-                        column.key === 'id' ? 'w-16' :
-                        column.key === 'title' ? 'w-24' :
-                        column.key === 'malayalamTitle' ? 'w-20' :
-                        column.key === 'urduTitle' ? 'w-20' :
-                        column.key === 'description' ? 'w-32' :
-                        column.key === 'malayalamDescription' ? 'w-28' :
-                        column.key === 'urduDescription' ? 'w-28' :
-                        column.key === 'transportationOptions' ? 'w-20' :
-                        column.key === 'emergencyContacts' ? 'w-20' :
-                        column.key === 'media' ? 'w-20' :
-                        column.key === 'actions' ? 'w-20' : ''
+                        column.key === "select"
+                          ? "w-12"
+                          : column.key === "id"
+                          ? "w-16"
+                          : column.key === "title"
+                          ? "w-24"
+                          : column.key === "malayalamTitle"
+                          ? "w-20"
+                          : column.key === "urduTitle"
+                          ? "w-20"
+                          : column.key === "description"
+                          ? "w-32"
+                          : column.key === "malayalamDescription"
+                          ? "w-28"
+                          : column.key === "urduDescription"
+                          ? "w-28"
+                          : column.key === "transportationOptions"
+                          ? "w-20"
+                          : column.key === "emergencyContacts"
+                          ? "w-20"
+                          : column.key === "media"
+                          ? "w-20"
+                          : column.key === "actions"
+                          ? "w-20"
+                          : ""
                       }`}
                     >
                       {column.title}
@@ -1021,34 +1093,56 @@ const ArrivedManagement = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={arrivedColumns.length} className="px-2 py-2 text-center text-gray-500">
+                    <td
+                      colSpan={arrivedColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
                       Loading...
                     </td>
                   </tr>
                 ) : filteredArrivedData.length === 0 ? (
                   <tr>
-                    <td colSpan={arrivedColumns.length} className="px-2 py-2 text-center text-gray-500">
+                    <td
+                      colSpan={arrivedColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
                       No arrived entries found
                     </td>
                   </tr>
                 ) : (
                   filteredArrivedData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
+                    <tr
+                      key={row._id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {arrivedColumns.map((column) => (
                         <td
                           key={column.key}
                           className={`px-2 py-2 text-sm text-gray-900 ${
-                            column.key === 'id' ? 'max-w-16 truncate' :
-                            column.key === 'title' ? 'max-w-24 truncate' :
-                            column.key === 'malayalamTitle' ? 'max-w-20 truncate' :
-                            column.key === 'urduTitle' ? 'max-w-20 truncate' :
-                            column.key === 'description' ? 'max-w-32 truncate' :
-                            column.key === 'malayalamDescription' ? 'max-w-28 truncate' :
-                            column.key === 'urduDescription' ? 'max-w-28 truncate' :
-                            column.key === 'transportationOptions' ? 'max-w-20 truncate' :
-                            column.key === 'emergencyContacts' ? 'max-w-20 truncate' :
-                            column.key === 'media' ? 'max-w-20 truncate' :
-                            column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                            column.key === "id"
+                              ? "max-w-16 truncate"
+                              : column.key === "title"
+                              ? "max-w-24 truncate"
+                              : column.key === "malayalamTitle"
+                              ? "max-w-20 truncate"
+                              : column.key === "urduTitle"
+                              ? "max-w-20 truncate"
+                              : column.key === "description"
+                              ? "max-w-32 truncate"
+                              : column.key === "malayalamDescription"
+                              ? "max-w-28 truncate"
+                              : column.key === "urduDescription"
+                              ? "max-w-28 truncate"
+                              : column.key === "transportationOptions"
+                              ? "max-w-20 truncate"
+                              : column.key === "emergencyContacts"
+                              ? "max-w-20 truncate"
+                              : column.key === "media"
+                              ? "max-w-20 truncate"
+                              : column.key === "actions"
+                              ? "whitespace-nowrap"
+                              : "whitespace-nowrap"
                           }`}
                         >
                           {column.render(row)}
@@ -1061,6 +1155,373 @@ const ArrivedManagement = () => {
             </table>
           </div>
         </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedArrived && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Arrived Details
+                  </h2>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Basic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          ID
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedArrived.id}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Title (English)
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedArrived.title || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Multilingual Titles */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Multilingual Titles
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Malayalam Title
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedArrived.malayalamTitle || "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Urdu Title
+                        </label>
+                        <p className="text-gray-900" dir="rtl">
+                          {selectedArrived.urduTitle || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Descriptions
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          English Description
+                        </label>
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {selectedArrived.description || "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Malayalam Description
+                        </label>
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {selectedArrived.malayalamDescription ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Urdu Description
+                        </label>
+                        <p
+                          className="text-gray-900 whitespace-pre-wrap"
+                          dir="rtl"
+                        >
+                          {selectedArrived.urduDescription || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transportation Options */}
+                  {selectedArrived.transportationOptions &&
+                    selectedArrived.transportationOptions.length > 0 && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                          Transportation Options
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedArrived.transportationOptions.map(
+                            (option, index) => (
+                              <div
+                                key={index}
+                                className="border-l-4 border-blue-500 pl-4"
+                              >
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      English
+                                    </label>
+                                    <p className="text-sm text-gray-900">
+                                      {option.type || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {option.details || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Malayalam
+                                    </label>
+                                    <p className="text-sm text-gray-900">
+                                      {option.malayalamType || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {option.malayalamDetails || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Urdu
+                                    </label>
+                                    <p
+                                      className="text-sm text-gray-900"
+                                      dir="rtl"
+                                    >
+                                      {option.urduType || "Not provided"}
+                                    </p>
+                                    <p
+                                      className="text-xs text-gray-600"
+                                      dir="rtl"
+                                    >
+                                      {option.urduDetails || ""}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Emergency Contacts */}
+                  {selectedArrived.emergencyContacts &&
+                    selectedArrived.emergencyContacts.length > 0 && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                          Emergency Contacts
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedArrived.emergencyContacts.map(
+                            (contact, index) => (
+                              <div
+                                key={index}
+                                className="border-l-4 border-red-500 pl-4"
+                              >
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      English
+                                    </label>
+                                    <p className="text-sm text-gray-900 font-medium">
+                                      {contact.name || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {contact.type || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Malayalam
+                                    </label>
+                                    <p className="text-sm text-gray-900 font-medium">
+                                      {contact.malayalamName || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {contact.malayalamType || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Urdu
+                                    </label>
+                                    <p
+                                      className="text-sm text-gray-900 font-medium"
+                                      dir="rtl"
+                                    >
+                                      {contact.urduName || "Not provided"}
+                                    </p>
+                                    <p
+                                      className="text-xs text-gray-600"
+                                      dir="rtl"
+                                    >
+                                      {contact.urduType || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Phone
+                                    </label>
+                                    <a
+                                      href={`tel:${contact.phone}`}
+                                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                    >
+                                      {contact.phone}
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Media Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Media & Resources
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Images
+                        </label>
+                        {selectedArrived.images &&
+                        selectedArrived.images.length > 0 ? (
+                          <div className="grid grid-cols-4 gap-2 mt-2">
+                            {selectedArrived.images.map((imageUrl, index) => (
+                              <div key={index} className="relative">
+                                <img
+                                  src={imageUrl}
+                                  alt={`Image ${index + 1}`}
+                                  className="w-full h-20 object-cover rounded border"
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                    e.target.nextSibling.style.display = "flex";
+                                  }}
+                                />
+                                <div className="w-full h-20 hidden items-center justify-center text-xs text-gray-500 bg-gray-100 rounded border">
+                                  IMG {index + 1}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">No images available</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Video
+                        </label>
+                        {selectedArrived.video ? (
+                          <a
+                            href={selectedArrived.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                          >
+                            🎥 View Video
+                          </a>
+                        ) : (
+                          <p className="text-gray-500">No video available</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Map
+                        </label>
+                        {selectedArrived.map ? (
+                          <a
+                            href={selectedArrived.map}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                          >
+                            🗺 View Map
+                          </a>
+                        ) : (
+                          <p className="text-gray-500">No map available</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Metadata
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Created At
+                        </label>
+                        <p className="text-gray-900 text-sm">
+                          {selectedArrived.createdAt
+                            ? new Date(
+                                selectedArrived.createdAt
+                              ).toLocaleString()
+                            : "Not available"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Updated At
+                        </label>
+                        <p className="text-gray-900 text-sm">
+                          {selectedArrived.updatedAt
+                            ? new Date(
+                                selectedArrived.updatedAt
+                              ).toLocaleString()
+                            : "Not available"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Database ID
+                        </label>
+                        <p className="text-gray-900 text-sm font-mono">
+                          {selectedArrived._id}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Create/Edit Modal */}
         <Modal
@@ -1121,7 +1582,10 @@ const ArrivedManagement = () => {
                   rules={[
                     { required: true, message: "Please enter Malayalam title" },
                     { min: 1, message: "Malayalam title cannot be empty" },
-                    { max: 200, message: "Malayalam title cannot exceed 200 characters" },
+                    {
+                      max: 200,
+                      message: "Malayalam title cannot exceed 200 characters",
+                    },
                   ]}
                 >
                   <Input
@@ -1154,7 +1618,6 @@ const ArrivedManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description in English..."
-                
                 showCount
               />
             </Form.Item>
@@ -1168,7 +1631,6 @@ const ArrivedManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
-                    
                     showCount
                     style={{ fontFamily: "Arial, sans-serif" }}
                   />
@@ -1179,7 +1641,6 @@ const ArrivedManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="اردو میں تفصیلی تفصیل درج کریں..."
-                    
                     showCount
                     dir="rtl"
                     style={{ fontFamily: "Arial, sans-serif" }}
@@ -1430,7 +1891,11 @@ const ArrivedManagement = () => {
                             name={[name, "malayalamType"]}
                             label="Type (Malayalam)"
                             rules={[
-                              { required: true, message: "Missing transportation type (Malayalam)" },
+                              {
+                                required: true,
+                                message:
+                                  "Missing transportation type (Malayalam)",
+                              },
                             ]}
                           >
                             <Input
@@ -1540,7 +2005,12 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamName"]}
                             label="Name (Malayalam)"
-                            rules={[{ required: true, message: "Missing contact name (Malayalam)" }]}
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing contact name (Malayalam)",
+                              },
+                            ]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ കോൺടാക്റ്റ് പേര്"
@@ -1592,7 +2062,12 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamType"]}
                             label="Type (Malayalam)"
-                            rules={[{ required: true, message: "Missing contact type (Malayalam)" }]}
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing contact type (Malayalam)",
+                              },
+                            ]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ തരം (പോലീസ്, ആശുപത്രി)"

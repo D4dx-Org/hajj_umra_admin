@@ -1,50 +1,75 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Edit, Trash2 } from 'lucide-react';
-import Sidebar from '../../../components/Sidebar';
-import Navbar from '../../../components/Navbar';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Search,
+  AlertTriangle,
+  Edit,
+  Trash2,
+  X,
+  CheckCircle,
+} from "lucide-react";
+import Sidebar from "../../../components/Sidebar";
+import Navbar from "../../../components/Navbar";
+import axios from "axios";
 
 const LocationKSA = ({ isOpen }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [locationData, setLocationData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newLocation, setNewLocation] = useState({ id: '', title: '', title_malayalam: '', title_urdu: '' });
+  const [newLocation, setNewLocation] = useState({
+    id: "",
+    title: "",
+    title_malayalam: "",
+    title_urdu: "",
+  });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Define the table columns
-  const locationColumns = [    { 
-      key: 'id', 
-      title: 'ID',
-      render: (row) => <span className="truncate" title={row.id || '-'}>{row.id || '-'}</span>
+  const locationColumns = [
+    {
+      key: "id",
+      title: "ID",
+      render: (row) => (
+        <span className="truncate" title={row.id || "-"}>
+          {row.id || "-"}
+        </span>
+      ),
     },
     {
-      key: 'title',
-      title: 'Title',
+      key: "title",
+      title: "Location",
       render: (row) => {
         return (
           <div className="space-y-1">
             <div className="font-medium">{row.title}</div>
             {row.title_malayalam && (
               <div className="text-sm text-gray-600">
-                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.title_malayalam}
+                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
+                  ML:
+                </span>{" "}
+                {row.title_malayalam}
               </div>
             )}
             {row.title_urdu && (
               <div className="text-sm text-gray-600">
-                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.title_urdu}
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">
+                  UR:
+                </span>{" "}
+                {row.title_urdu}
               </div>
             )}
           </div>
         );
-      }
+      },
     },
     {
-      key: 'actions',
-      title: 'Actions',
+      key: "actions",
+      title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
           <button
@@ -62,29 +87,27 @@ const LocationKSA = ({ isOpen }) => {
             <Trash2 size={16} />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // Fetch data from API using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/locations`
+        );
         setLocationData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching location data:', error);
+        console.error("Error fetching location data:", error);
         setLoading(false);
       }
     };
 
     fetchData();
   }, []);
-
-
-
-  
 
   // Filter data based on search input
   const filteredLocationData = useMemo(() => {
@@ -103,9 +126,11 @@ const LocationKSA = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setLocationData(locationData.map(item =>
-      item._id === id ? { ...item, [field]: value } : item
-    ));
+    setLocationData(
+      locationData.map((item) =>
+        item._id === id ? { ...item, [field]: value } : item
+      )
+    );
   };
 
   // Handle Save Edit
@@ -119,11 +144,11 @@ const LocationKSA = ({ isOpen }) => {
 
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL_V2}/locations/${row._id}`,
-        { 
-          id: row.id, 
+        {
+          id: row.id,
           title: row.title,
-          title_malayalam: row.title_malayalam || '',
-          title_urdu: row.title_urdu || ''
+          title_malayalam: row.title_malayalam || "",
+          title_urdu: row.title_urdu || "",
         },
         {
           headers: {
@@ -132,9 +157,11 @@ const LocationKSA = ({ isOpen }) => {
         }
       );
 
-      setLocationData(locationData.map(item =>
-        item._id === row._id ? { ...item, ...response.data } : item
-      ));
+      setLocationData(
+        locationData.map((item) =>
+          item._id === row._id ? { ...item, ...response.data } : item
+        )
+      );
       setEditingId(null);
     } catch (error) {
       console.error("Error updating location data:", error);
@@ -161,18 +188,21 @@ const LocationKSA = ({ isOpen }) => {
         return;
       }
 
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/locations/${mongoId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL_V2}/locations/${mongoId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      setLocationData(locationData.filter(item => item._id !== mongoId));
+      setLocationData(locationData.filter((item) => item._id !== mongoId));
       setDeleteConfirm({ show: false, id: null, customId: null });
-      console.log('Location deleted successfully');
+      console.log("Location deleted successfully");
     } catch (error) {
-      console.error('Error deleting location data:', error);
-      alert('Failed to delete location. Please try again.');
+      console.error("Error deleting location data:", error);
+      alert("Failed to delete location. Please try again.");
     }
   };
 
@@ -201,9 +231,16 @@ const LocationKSA = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
+        const updatedResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/locations`
+        );
         setLocationData(updatedResponse.data);
-        setNewLocation({ id: '', title: '', title_malayalam: '', title_urdu: '' });
+        setNewLocation({
+          id: "",
+          title: "",
+          title_malayalam: "",
+          title_urdu: "",
+        });
         setShowAddForm(false);
       }
     } catch (error) {
@@ -220,11 +257,24 @@ const LocationKSA = ({ isOpen }) => {
   // Modify the cancel button click handler
   const handleCancelEdit = () => {
     // Restore original data
-    setLocationData(locationData.map(item =>
-      item._id === editingId ? originalData : item
-    ));
+    setLocationData(
+      locationData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
+  };
+
+  // Handle row click to show details
+  const handleRowClick = (location, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (
+      event.target.closest("button") ||
+      event.target.closest('input[type="checkbox"]')
+    ) {
+      return;
+    }
+    setSelectedLocation(location);
+    setShowDetailModal(true);
   };
 
   return (
@@ -236,14 +286,14 @@ const LocationKSA = ({ isOpen }) => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <h1 className="text-2xl font-bold">Location Management</h1>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md"
           >
-            {showAddForm ? 'Cancel' : 'Add More'}
+            {showAddForm ? "Cancel" : "Add More"}
           </button>
         </div>
 
@@ -257,37 +307,57 @@ const LocationKSA = ({ isOpen }) => {
                 <input
                   type="text"
                   value={newLocation.id}
-                  onChange={(e) => setNewLocation({ ...newLocation, id: e.target.value })}
+                  onChange={(e) =>
+                    setNewLocation({ ...newLocation, id: e.target.value })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Enter unique ID"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium">Title (English)</label>
+                <label className="block text-sm font-medium">
+                  Title (English)
+                </label>
                 <input
                   type="text"
                   value={newLocation.title}
-                  onChange={(e) => setNewLocation({ ...newLocation, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewLocation({ ...newLocation, title: e.target.value })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Enter title in English"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium">Title (Malayalam)</label>
+                <label className="block text-sm font-medium">
+                  Title (Malayalam)
+                </label>
                 <input
                   type="text"
                   value={newLocation.title_malayalam}
-                  onChange={(e) => setNewLocation({ ...newLocation, title_malayalam: e.target.value })}
+                  onChange={(e) =>
+                    setNewLocation({
+                      ...newLocation,
+                      title_malayalam: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Enter title in Malayalam"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium">Title (Urdu)</label>
+                <label className="block text-sm font-medium">
+                  Title (Urdu)
+                </label>
                 <input
                   type="text"
                   value={newLocation.title_urdu}
-                  onChange={(e) => setNewLocation({ ...newLocation, title_urdu: e.target.value })}
+                  onChange={(e) =>
+                    setNewLocation({
+                      ...newLocation,
+                      title_urdu: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Enter title in Urdu"
                 />
@@ -312,7 +382,10 @@ const LocationKSA = ({ isOpen }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
             />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            <Search
+              size={20}
+              className="absolute left-3 top-3.5 text-gray-400"
+            />
           </div>
         </div>
 
@@ -327,7 +400,10 @@ const LocationKSA = ({ isOpen }) => {
               <thead className="bg-gray-50">
                 <tr>
                   {locationColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      key={column.key}
+                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       {column.title}
                     </th>
                   ))}
@@ -336,9 +412,17 @@ const LocationKSA = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredLocationData.map((row) => (
                   <React.Fragment key={row._id}>
-                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                    <tr
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        editingId === row._id ? "bg-blue-50" : ""
+                      }`}
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {locationColumns.map((column) => (
-                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                        <td
+                          key={`${row._id}-${column.key}`}
+                          className="px-4 py-1 whitespace-nowrap"
+                        >
                           {column.render ? column.render(row) : row[column.key]}
                         </td>
                       ))}
@@ -347,46 +431,80 @@ const LocationKSA = ({ isOpen }) => {
                       <tr>
                         <td colSpan={locationColumns.length} className="p-4">
                           <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
-                            <h2 className="text-lg font-bold mb-4">Edit Location</h2>
+                            <h2 className="text-lg font-bold mb-4">
+                              Edit Location
+                            </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                               <div>
-                                <label className="block text-sm font-medium">ID *</label>
+                                <label className="block text-sm font-medium">
+                                  ID *
+                                </label>
                                 <input
                                   type="text"
                                   value={row.id || ""}
-                                  onChange={(e) => handleEditChange(row._id, 'id', e.target.value)}
+                                  onChange={(e) =>
+                                    handleEditChange(
+                                      row._id,
+                                      "id",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="Enter unique ID"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   required
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium">Title (English) *</label>
+                                <label className="block text-sm font-medium">
+                                  Title (English) *
+                                </label>
                                 <input
                                   type="text"
                                   value={row.title || ""}
-                                  onChange={(e) => handleEditChange(row._id, 'title', e.target.value)}
+                                  onChange={(e) =>
+                                    handleEditChange(
+                                      row._id,
+                                      "title",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="Enter title in English"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   required
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium">Title (Malayalam)</label>
+                                <label className="block text-sm font-medium">
+                                  Title (Malayalam)
+                                </label>
                                 <input
                                   type="text"
                                   value={row.title_malayalam || ""}
-                                  onChange={(e) => handleEditChange(row._id, 'title_malayalam', e.target.value)}
+                                  onChange={(e) =>
+                                    handleEditChange(
+                                      row._id,
+                                      "title_malayalam",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="Enter title in Malayalam"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium">Title (Urdu)</label>
+                                <label className="block text-sm font-medium">
+                                  Title (Urdu)
+                                </label>
                                 <input
                                   type="text"
                                   value={row.title_urdu || ""}
-                                  onChange={(e) => handleEditChange(row._id, 'title_urdu', e.target.value)}
+                                  onChange={(e) =>
+                                    handleEditChange(
+                                      row._id,
+                                      "title_urdu",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="Enter title in Urdu"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   dir="rtl"
@@ -427,7 +545,8 @@ const LocationKSA = ({ isOpen }) => {
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
               </div>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this location? This action cannot be undone.
+                Are you sure you want to delete this location? This action
+                cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
                 <button
@@ -442,6 +561,137 @@ const LocationKSA = ({ isOpen }) => {
                 >
                   Delete
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedLocation && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-300 mx-4">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <CheckCircle size={20} />
+                  Location Details
+                </h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Basic Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">
+                    Basic Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Location ID
+                      </label>
+                      <p className="text-gray-900 bg-white p-2 rounded border">
+                        {selectedLocation.id}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Created Date
+                      </label>
+                      <p className="text-gray-900 bg-white p-2 rounded border">
+                        {selectedLocation.createdAt
+                          ? new Date(
+                              selectedLocation.createdAt
+                            ).toLocaleString()
+                          : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Multilingual Content */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">
+                    Location Names
+                  </h3>
+                  <div className="space-y-4">
+                    {/* English Content */}
+                    <div className="bg-white p-4 rounded border">
+                      <h4 className="font-medium text-gray-700 mb-2">
+                        English
+                      </h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Title
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedLocation.title || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Malayalam Content */}
+                    <div className="bg-white p-4 rounded border">
+                      <h4 className="font-medium text-gray-700 mb-2">
+                        Malayalam
+                      </h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Title
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedLocation.title_malayalam || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Urdu Content */}
+                    <div className="bg-white p-4 rounded border">
+                      <h4 className="font-medium text-gray-700 mb-2">Urdu</h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Title
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedLocation.title_urdu || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">
+                    Metadata
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Last Updated
+                      </label>
+                      <p className="text-gray-900 bg-white p-2 rounded border">
+                        {selectedLocation.updatedAt
+                          ? new Date(
+                              selectedLocation.updatedAt
+                            ).toLocaleString()
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Database ID
+                      </label>
+                      <p className="text-gray-900 bg-white p-2 rounded border font-mono text-sm">
+                        {selectedLocation._id}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

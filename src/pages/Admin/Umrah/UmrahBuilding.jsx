@@ -27,6 +27,8 @@ const UmrahBuilding = ({ isOpen }) => {
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
+const [selectedBuilding, setSelectedBuilding] = useState(null);
+const [showDetails, setShowDetails] = useState(false);
 
   // Define the table columns
   const buildingColumns = [
@@ -45,6 +47,7 @@ const UmrahBuilding = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={() => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
@@ -89,7 +92,7 @@ const UmrahBuilding = ({ isOpen }) => {
       key: 'actions',
       title: 'Actions',
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -483,6 +486,18 @@ const UmrahBuilding = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (building) => {
+    setSelectedBuilding(building);
+    setShowDetails(true);
+  };
+
+  // Handle close details
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedBuilding(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -719,7 +734,10 @@ const UmrahBuilding = ({ isOpen }) => {
                 ) : (
                   filteredBuildingData.map((row) => (
                     <React.Fragment key={row._id}>
-                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      <tr 
+                        className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                        onClick={() => handleRowClick(row)}
+                      >
                         {buildingColumns.map((column) => (
                           <td
                             key={column.key}
@@ -866,6 +884,74 @@ const UmrahBuilding = ({ isOpen }) => {
             </table>
           </div>
         </div>
+
+        {/* Building Details Modal */}
+        {showDetails && selectedBuilding && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Building Details</h3>
+                <button
+                  onClick={handleCloseDetails}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name:</label>
+                  <p className="text-sm text-gray-900">{selectedBuilding.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Malayalam Name:</label>
+                  <p className="text-sm text-gray-900">{selectedBuilding.malayalamName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Urdu Name:</label>
+                  <p className="text-sm text-gray-900">{selectedBuilding.urduName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone:</label>
+                  <p className="text-sm text-gray-900">{selectedBuilding.phone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Location:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBuilding.location && selectedBuilding.location.lat && selectedBuilding.location.lng ? 
+                      `Lat: ${selectedBuilding.location.lat}, Lng: ${selectedBuilding.location.lng}` : 
+                      'N/A'
+                    }
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Branch:</label>
+                  <p className="text-sm text-gray-900">{selectedBuilding.branchRef?.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Created:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBuilding.createdAt ? new Date(selectedBuilding.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Last Updated:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBuilding.updatedAt ? new Date(selectedBuilding.updatedAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={handleCloseDetails}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2, X, CheckCircle } from 'lucide-react';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 import axios from 'axios';
@@ -34,6 +34,8 @@ const AmbulanceKSA = ({ isOpen }) => {
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [sortConfig, setSortConfig] = useState({ field: 'category', direction: 'asc', type: 'alpha' });
+  const [selectedAmbulance, setSelectedAmbulance] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Custom styles for react-select
   const customStyles = {
@@ -645,6 +647,16 @@ const AmbulanceKSA = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (ambulance, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (event.target.closest('button') || event.target.closest('input[type="checkbox"]')) {
+      return;
+    }
+    setSelectedAmbulance(ambulance);
+    setShowDetailModal(true);
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -947,7 +959,10 @@ const AmbulanceKSA = ({ isOpen }) => {
                 ) : (
                   filteredAmbulanceData.map((row) => (
                     <React.Fragment key={row._id}>
-                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      <tr 
+                        className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                        onClick={(e) => handleRowClick(row, e)}
+                      >
                         {ambulanceColumns.map((column) => (
                           <td
                             key={`${row._id}-${column.key}`}
@@ -1168,6 +1183,161 @@ const AmbulanceKSA = ({ isOpen }) => {
               >
                 Delete
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedAmbulance && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-300 mx-4">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <CheckCircle size={20} />
+                Ambulance Details
+              </h2>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-medium mb-4 text-gray-800">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Category</label>
+                    <p className="text-gray-900 bg-white p-2 rounded border">
+                      {ambulanceCategories.categories.find(cat => cat.value === selectedAmbulance.category)?.label || selectedAmbulance.category}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Location Reference</label>
+                    <p className="text-gray-900 bg-white p-2 rounded border">
+                      {selectedAmbulance.locationRef?.title || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Multilingual Content */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-medium mb-4 text-gray-800">Category Information</h3>
+                <div className="space-y-4">
+                  {/* English Content */}
+                  <div className="bg-white p-4 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-2">English</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Category</label>
+                        <p className="text-gray-900">{selectedAmbulance.category || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Center</label>
+                        <p className="text-gray-900">{selectedAmbulance.center || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Poll</label>
+                        <p className="text-gray-900">{selectedAmbulance.poll || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Malayalam Content */}
+                  <div className="bg-white p-4 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-2">Malayalam</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Category</label>
+                        <p className="text-gray-900">{selectedAmbulance.category_malayalam || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Center</label>
+                        <p className="text-gray-900">{selectedAmbulance.center_malayalam || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Poll</label>
+                        <p className="text-gray-900">{selectedAmbulance.poll_malayalam || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Urdu Content */}
+                  <div className="bg-white p-4 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-2">Urdu</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Category</label>
+                        <p className="text-gray-900">{selectedAmbulance.category_urdu || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Center</label>
+                        <p className="text-gray-900">{selectedAmbulance.center_urdu || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Poll</label>
+                        <p className="text-gray-900">{selectedAmbulance.poll_urdu || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-medium mb-4 text-gray-800">Location Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Coordinates</label>
+                    <p className="text-gray-900 bg-white p-2 rounded border">
+                      {selectedAmbulance.location ? 
+                        `${selectedAmbulance.location.lat}, ${selectedAmbulance.location.lng}` : 
+                        'Not provided'
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Location Reference Details</label>
+                    <div className="bg-white p-2 rounded border">
+                      {selectedAmbulance.locationRef ? (
+                        <div className="space-y-1">
+                          <p className="text-gray-900">{selectedAmbulance.locationRef.title}</p>
+                          {selectedAmbulance.locationRef.title_malayalam && (
+                            <p className="text-sm text-gray-600">ML: {selectedAmbulance.locationRef.title_malayalam}</p>
+                          )}
+                          {selectedAmbulance.locationRef.title_urdu && (
+                            <p className="text-sm text-gray-600">UR: {selectedAmbulance.locationRef.title_urdu}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">Not provided</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metadata */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-medium mb-4 text-gray-800">Metadata</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Created Date</label>
+                    <p className="text-gray-900 bg-white p-2 rounded border">
+                      {selectedAmbulance.createdAt ? new Date(selectedAmbulance.createdAt).toLocaleString() : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Database ID</label>
+                    <p className="text-gray-900 bg-white p-2 rounded border font-mono text-sm">{selectedAmbulance._id}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -34,6 +34,7 @@ const Countries = () => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
   const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
 
   // Custom styles for react-select
@@ -199,6 +200,7 @@ const Countries = () => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
@@ -226,14 +228,20 @@ const Countries = () => {
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
@@ -505,6 +513,16 @@ const Countries = () => {
     });
   };
 
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -686,6 +704,79 @@ const Countries = () => {
           </div>
         )}
 
+        {/* View Modal */}
+        {viewModal.show && viewModal.data && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Country Details</h3>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.name || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Arabic Name</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.arabicName || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.category || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Flag</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.flag ? (
+                        <img 
+                          src={viewModal.data.flag} 
+                          alt={`${viewModal.data.name} flag`} 
+                          className="w-16 h-12 object-cover rounded border"
+                        />
+                      ) : 'No flag available'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
+                    <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                      {viewModal.data._id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
@@ -726,7 +817,10 @@ const Countries = () => {
                   ) : (
                     filteredCountryData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr 
+                          className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {countryColumns.map((column) => (
                             <td
                               key={column.key}

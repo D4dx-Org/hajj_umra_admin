@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from "lucide-react";
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2, X, CheckCircle } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
@@ -30,7 +30,10 @@ const Camp = ({ isOpen }) => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
   const [countries, setCountries] = useState([]); // Add state for countries
+  const [selectedCamp, setSelectedCamp] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     field: "maktab",
     direction: "asc",
@@ -242,6 +245,7 @@ const Camp = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -333,14 +337,20 @@ const Camp = ({ isOpen }) => {
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
@@ -792,6 +802,26 @@ const Camp = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (camp, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (event.target.closest('button') || event.target.closest('input[type="checkbox"]')) {
+      return;
+    }
+    setSelectedCamp(camp);
+    setShowDetailModal(true);
+  };
+
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -1101,7 +1131,10 @@ const Camp = ({ isOpen }) => {
                   ) : (
                     filteredCampData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr 
+                          className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {campColumns.map((column) => (
                             <td
                               key={column.key}
@@ -1314,6 +1347,112 @@ const Camp = ({ isOpen }) => {
                   className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Modal */}
+        {viewModal.show && viewModal.data && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Camp Details</h3>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Maktab</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.maktab || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.zone || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.otherCountry ? (
+                        <span>{viewModal.data.otherCountry} (Other)</span>
+                      ) : viewModal.data.country ? (
+                        <span>
+                          {viewModal.data.country.name}
+                          {viewModal.data.country.arabicName && (
+                            <span className="text-gray-500"> ({viewModal.data.country.arabicName})</span>
+                          )}
+                        </span>
+                      ) : 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Poll</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.poll || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Road</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.road || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tent</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.tent || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location Reference</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.ref?.name || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Coordinates</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.location?.lat && viewModal.data.location?.lng
+                        ? `${viewModal.data.location.lat}, ${viewModal.data.location.lng}`
+                        : 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
+                    <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                      {viewModal.data._id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

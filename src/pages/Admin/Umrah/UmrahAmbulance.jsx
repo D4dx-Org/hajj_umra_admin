@@ -36,6 +36,8 @@ const UmrahAmbulance = ({ isOpen }) => {
     direction: "asc",
     type: "alpha",
   });
+  const [selectedAmbulance, setSelectedAmbulance] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Custom styles for react-select
   const customStyles = {
@@ -79,6 +81,7 @@ const UmrahAmbulance = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={() => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -95,14 +98,44 @@ const UmrahAmbulance = ({ isOpen }) => {
       },
     },
     {
+      key: "categoryMalayalam",
+      title: "Category (Malayalam)",
+      render: (row) => <span className="truncate" title={row.categoryMalayalam || 'N/A'}>{row.categoryMalayalam || 'N/A'}</span>,
+    },
+    {
+      key: "categoryUrdu",
+      title: "Category (Urdu)",
+      render: (row) => <span className="truncate" title={row.categoryUrdu || 'N/A'}>{row.categoryUrdu || 'N/A'}</span>,
+    },
+    {
       key: "center",
       title: "Center",
       render: (row) => <span className="truncate" title={row.center}>{row.center}</span>,
     },
     {
+      key: "centerMalayalam",
+      title: "Center (Malayalam)",
+      render: (row) => <span className="truncate" title={row.centerMalayalam || 'N/A'}>{row.centerMalayalam || 'N/A'}</span>,
+    },
+    {
+      key: "centerUrdu",
+      title: "Center (Urdu)",
+      render: (row) => <span className="truncate" title={row.centerUrdu || 'N/A'}>{row.centerUrdu || 'N/A'}</span>,
+    },
+    {
       key: "poll",
       title: "Poll",
       render: (row) => <span className="truncate" title={row.poll}>{row.poll}</span>,
+    },
+    {
+      key: "pollMalayalam",
+      title: "Poll (Malayalam)",
+      render: (row) => <span className="truncate" title={row.pollMalayalam || 'N/A'}>{row.pollMalayalam || 'N/A'}</span>,
+    },
+    {
+      key: "pollUrdu",
+      title: "Poll (Urdu)",
+      render: (row) => <span className="truncate" title={row.pollUrdu || 'N/A'}>{row.pollUrdu || 'N/A'}</span>,
     },
     {
       key: "location",
@@ -118,7 +151,7 @@ const UmrahAmbulance = ({ isOpen }) => {
       key: "actions",
       title: "Actions",
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -570,6 +603,18 @@ const UmrahAmbulance = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (ambulance) => {
+    setSelectedAmbulance(ambulance);
+    setShowDetails(true);
+  };
+
+  // Handle close details
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedAmbulance(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -869,8 +914,14 @@ const UmrahAmbulance = ({ isOpen }) => {
                       className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
                         column.key === 'select' ? 'w-12' :
                         column.key === 'category' ? 'w-24' :
+                        column.key === 'categoryMalayalam' ? 'w-32' :
+                        column.key === 'categoryUrdu' ? 'w-32' :
                         column.key === 'center' ? 'w-24' :
+                        column.key === 'centerMalayalam' ? 'w-32' :
+                        column.key === 'centerUrdu' ? 'w-32' :
                         column.key === 'poll' ? 'w-20' :
+                        column.key === 'pollMalayalam' ? 'w-28' :
+                        column.key === 'pollUrdu' ? 'w-28' :
                         column.key === 'location' ? 'w-28' :
                         column.key === 'actions' ? 'w-20' : ''
                       }`}
@@ -893,14 +944,23 @@ const UmrahAmbulance = ({ isOpen }) => {
                 ) : (
                   filteredAmbulanceData.map((row) => (
                     <React.Fragment key={row._id}>
-                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      <tr 
+                        className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                        onClick={() => handleRowClick(row)}
+                      >
                         {ambulanceColumns.map((column) => (
                           <td
                             key={column.key}
                             className={`px-2 py-2 text-sm text-gray-900 ${
                               column.key === 'category' ? 'max-w-24 truncate' :
+                              column.key === 'categoryMalayalam' ? 'max-w-32 truncate' :
+                              column.key === 'categoryUrdu' ? 'max-w-32 truncate' :
                               column.key === 'center' ? 'max-w-24 truncate' :
+                              column.key === 'centerMalayalam' ? 'max-w-32 truncate' :
+                              column.key === 'centerUrdu' ? 'max-w-32 truncate' :
                               column.key === 'poll' ? 'max-w-20 truncate' :
+                              column.key === 'pollMalayalam' ? 'max-w-28 truncate' :
+                              column.key === 'pollUrdu' ? 'max-w-28 truncate' :
                               column.key === 'location' ? 'max-w-28 truncate' :
                               column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
                             }`}
@@ -1087,6 +1147,90 @@ const UmrahAmbulance = ({ isOpen }) => {
             </table>
           </div>
         </div>
+
+        {/* Ambulance Details Modal */}
+        {showDetails && selectedAmbulance && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Ambulance Details</h3>
+                <button
+                  onClick={handleCloseDetails}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Category:</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.category}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Category (Malayalam):</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.categoryMalayalam || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Category (Urdu):</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.categoryUrdu || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Center:</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.center}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Center (Malayalam):</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.centerMalayalam || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Center (Urdu):</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.centerUrdu || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Poll:</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.poll}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Poll (Malayalam):</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.pollMalayalam || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Poll (Urdu):</label>
+                  <p className="text-sm text-gray-900">{selectedAmbulance.pollUrdu || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Location:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAmbulance.location && selectedAmbulance.location.lat && selectedAmbulance.location.lng ? 
+                      `Lat: ${selectedAmbulance.location.lat}, Lng: ${selectedAmbulance.location.lng}` : 
+                      'N/A'
+                    }
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Created:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAmbulance.createdAt ? new Date(selectedAmbulance.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Last Updated:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAmbulance.updatedAt ? new Date(selectedAmbulance.updatedAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={handleCloseDetails}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (

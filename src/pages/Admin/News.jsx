@@ -1,29 +1,31 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Edit, Trash2 } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+import axios from "axios";
 
 const News = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [newNews, setNewNews] = useState({ 
-    title: '', 
-    link: '',
-    description: ''
+  const [newNews, setNewNews] = useState({
+    title: "",
+    link: "",
+    description: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(newsData.map(row => row._id));
+      setSelectedRows(newsData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -31,9 +33,9 @@ const News = () => {
 
   // Handle select single row
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -43,17 +45,17 @@ const News = () => {
   // Handle bulk delete
   const handleBulkDelete = () => {
     if (selectedRows.length === 0) return;
-    setDeleteConfirm({ 
-      show: true, 
+    setDeleteConfirm({
+      show: true,
       id: selectedRows,
-      isBulk: true 
+      isBulk: true,
     });
   };
 
   // Define the table columns
   const newsColumns = [
     {
-      key: 'select',
+      key: "select",
       title: (
         <input
           type="checkbox"
@@ -67,25 +69,56 @@ const News = () => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-      )
+      ),
     },
     {
-      key: 'title',
-      title: 'Title',
-      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
-    },
-    {
-      key: 'content',
-      title: 'Content',
-      render: (row) => <span className="truncate" title={row.content || 'N/A'}>{row.content || 'N/A'}</span>
-    },
-    {
-      key: 'actions',
-      title: 'Actions',
+      key: "title",
+      title: "Title",
       render: (row) => (
-        <div className="flex gap-2">
+        <span className="truncate" title={row.title}>
+          {row.title}
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      title: "Description",
+      render: (row) => (
+        <span className="truncate" title={row.description || "N/A"}>
+          {row.description || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "link",
+      title: "Link",
+      render: (row) => (
+        <span className="truncate" title={row.link || "N/A"}>
+          {row.link ? (
+            <a
+              href={row.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {row.link.length > 30
+                ? `${row.link.substring(0, 30)}...`
+                : row.link}
+            </a>
+          ) : (
+            "N/A"
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Actions",
+      render: (row) => (
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -101,19 +134,21 @@ const News = () => {
             <Trash2 size={16} />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // Fetch news data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/news`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/news`
+        );
         setNewsData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching News data:', error);
+        console.error("Error fetching News data:", error);
         setLoading(false);
       }
     };
@@ -123,21 +158,26 @@ const News = () => {
 
   // Filter data based on search
   const filteredNewsData = useMemo(() => {
-    return newsData.filter(item => 
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.link || '').toLowerCase().includes(searchTerm.toLowerCase())
+    return newsData.filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.description || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.link || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [newsData, searchTerm]);
 
   // Handle edit change
   const handleEditChange = (id, field, value) => {
-    setNewsData(newsData.map(item => {
-      if (item._id === id) {
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+    setNewsData(
+      newsData.map((item) => {
+        if (item._id === id) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      })
+    );
   };
 
   // Handle save edit
@@ -154,7 +194,7 @@ const News = () => {
         {
           title: row.title,
           link: row.link,
-          description: row.description
+          description: row.description,
         },
         {
           headers: {
@@ -163,9 +203,9 @@ const News = () => {
         }
       );
 
-      setNewsData(newsData.map(item => 
-        item._id === row._id ? response.data : item
-      ));
+      setNewsData(
+        newsData.map((item) => (item._id === row._id ? response.data : item))
+      );
       setEditingId(null);
     } catch (error) {
       console.error("Error updating news data:", error);
@@ -186,21 +226,25 @@ const News = () => {
         return;
       }
 
-      const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-      
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/news/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      ));
+      const ids = Array.isArray(deleteConfirm.id)
+        ? deleteConfirm.id
+        : [deleteConfirm.id];
 
-      setNewsData(newsData.filter(item => !ids.includes(item._id)));
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(`${import.meta.env.VITE_BACKEND_URL}/news/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
+
+      setNewsData(newsData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting news data:', error);
+      console.error("Error deleting news data:", error);
     }
   };
 
@@ -229,7 +273,7 @@ const News = () => {
       );
 
       setNewsData([...newsData, response.data]);
-      setNewNews({ title: '', link: '', description: '' });
+      setNewNews({ title: "", link: "", description: "" });
       setShowAddForm(false);
     } catch (error) {
       console.error("Error adding news data:", error);
@@ -244,11 +288,23 @@ const News = () => {
 
   // Handle cancel edit
   const handleCancelEdit = () => {
-    setNewsData(newsData.map(item => 
-      item._id === editingId ? originalData : item
-    ));
+    setNewsData(
+      newsData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
+  };
+
+  // Handle row click to show details
+  const handleRowClick = (news) => {
+    setSelectedNews(news);
+    setShowDetails(true);
+  };
+
+  // Handle close details
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedNews(null);
   };
 
   return (
@@ -259,7 +315,7 @@ const News = () => {
         isOpen={sidebarOpen}
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">News Management</h1>
@@ -276,11 +332,11 @@ const News = () => {
                 Delete Selected ({selectedRows.length})
               </button>
             )}
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add New'}
+              {showAddForm ? "Cancel" : "Add New"}
             </button>
           </div>
         </div>
@@ -294,7 +350,9 @@ const News = () => {
                 <input
                   type="text"
                   value={newNews.title}
-                  onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewNews({ ...newNews, title: e.target.value })
+                  }
                   className="w-full p-2 border rounded"
                 />
               </div>
@@ -303,15 +361,21 @@ const News = () => {
                 <input
                   type="text"
                   value={newNews.link}
-                  onChange={(e) => setNewNews({ ...newNews, link: e.target.value })}
+                  onChange={(e) =>
+                    setNewNews({ ...newNews, link: e.target.value })
+                  }
                   className="w-full p-2 border rounded"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
+                <label className="block text-sm font-medium mb-1">
+                  Description
+                </label>
                 <textarea
                   value={newNews.description}
-                  onChange={(e) => setNewNews({ ...newNews, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewNews({ ...newNews, description: e.target.value })
+                  }
                   className="w-full p-2 border rounded"
                   rows="3"
                 />
@@ -335,7 +399,10 @@ const News = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
             />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            <Search
+              size={20}
+              className="absolute left-3 top-3.5 text-gray-400"
+            />
           </div>
         </div>
 
@@ -354,10 +421,17 @@ const News = () => {
                       <th
                         key={column.key}
                         className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                          column.key === 'select' ? 'w-12' :
-                          column.key === 'title' ? 'w-32' :
-                          column.key === 'content' ? 'w-48' :
-                          column.key === 'actions' ? 'w-20' : ''
+                          column.key === "select"
+                            ? "w-12"
+                            : column.key === "title"
+                            ? "w-32"
+                            : column.key === "description"
+                            ? "w-40"
+                            : column.key === "link"
+                            ? "w-40"
+                            : column.key === "actions"
+                            ? "w-20"
+                            : ""
                         }`}
                       >
                         {column.title}
@@ -378,14 +452,25 @@ const News = () => {
                   ) : (
                     filteredNewsData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            editingId === row._id ? "bg-blue-50" : ""
+                          }`}
+                          onClick={() => handleRowClick(row)}
+                        >
                           {newsColumns.map((column) => (
                             <td
                               key={column.key}
                               className={`px-2 py-2 text-sm text-gray-900 ${
-                                column.key === 'title' ? 'max-w-32 truncate' :
-                                column.key === 'content' ? 'max-w-48 truncate' :
-                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                                column.key === "title"
+                                  ? "max-w-32 truncate"
+                                  : column.key === "description"
+                                  ? "max-w-40 truncate"
+                                  : column.key === "link"
+                                  ? "max-w-40 truncate"
+                                  : column.key === "actions"
+                                  ? "whitespace-nowrap"
+                                  : "whitespace-nowrap"
                               }`}
                             >
                               {column.render(row)}
@@ -396,15 +481,23 @@ const News = () => {
                           <tr>
                             <td colSpan={newsColumns.length} className="p-4">
                               <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
-                                <h2 className="text-lg font-bold mb-4">Edit News</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <h2 className="text-lg font-bold mb-4">
+                                  Edit News
+                                </h2>
+                                <div className="grid grid-cols-1 gap-4 mb-4">
                                   <div>
-                                    <label className="block text-sm font-medium">Title *</label>
+                                    <label className="block text-sm font-medium">
+                                      Title *
+                                    </label>
                                     <input
                                       type="text"
                                       value={row.title || ""}
                                       onChange={(e) =>
-                                        handleEditChange(row._id, "title", e.target.value)
+                                        handleEditChange(
+                                          row._id,
+                                          "title",
+                                          e.target.value
+                                        )
                                       }
                                       placeholder="News title"
                                       className="mt-1 block w-full border border-gray-300 rounded-md p-2"
@@ -412,16 +505,39 @@ const News = () => {
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-medium">Content *</label>
-                                    <textarea
-                                      value={row.content || ""}
+                                    <label className="block text-sm font-medium">
+                                      Link
+                                    </label>
+                                    <input
+                                      type="url"
+                                      value={row.link || ""}
                                       onChange={(e) =>
-                                        handleEditChange(row._id, "content", e.target.value)
+                                        handleEditChange(
+                                          row._id,
+                                          "link",
+                                          e.target.value
+                                        )
                                       }
-                                      placeholder="News content"
+                                      placeholder="News link (optional)"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Description
+                                    </label>
+                                    <textarea
+                                      value={row.description || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "description",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="News description (optional)"
                                       rows="4"
                                       className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                      required
                                     />
                                   </div>
                                 </div>
@@ -453,6 +569,86 @@ const News = () => {
         )}
       </div>
 
+      {/* News Details Modal */}
+      {showDetails && selectedNews && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">News Details</h3>
+              <button
+                onClick={handleCloseDetails}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Title:
+                </label>
+                <p className="text-sm text-gray-900">{selectedNews.title}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Description:
+                </label>
+                <p className="text-sm text-gray-900">
+                  {selectedNews.description || "No description available"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Link:
+                </label>
+                <p className="text-sm text-gray-900">
+                  {selectedNews.link ? (
+                    <a
+                      href={selectedNews.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {selectedNews.link}
+                    </a>
+                  ) : (
+                    "No link available"
+                  )}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Created:
+                </label>
+                <p className="text-sm text-gray-900">
+                  {selectedNews.createdAt
+                    ? new Date(selectedNews.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Last Updated:
+                </label>
+                <p className="text-sm text-gray-900">
+                  {selectedNews.updatedAt
+                    ? new Date(selectedNews.updatedAt).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={handleCloseDetails}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {deleteConfirm.show && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
@@ -462,9 +658,9 @@ const News = () => {
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              {Array.isArray(deleteConfirm.id) 
+              {Array.isArray(deleteConfirm.id)
                 ? `Are you sure you want to delete ${deleteConfirm.id.length} selected news items?`
-                : 'Are you sure you want to delete this news item?'}
+                : "Are you sure you want to delete this news item?"}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -487,4 +683,4 @@ const News = () => {
   );
 };
 
-export default News; 
+export default News;

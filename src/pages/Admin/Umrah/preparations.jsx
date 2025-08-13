@@ -70,6 +70,18 @@ const PreparationManagement = () => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [selectedPreparation, setSelectedPreparation] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Handle row click to show details
+  const handleRowClick = (preparation, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (event.target.closest('button') || event.target.closest('input[type="checkbox"]')) {
+      return;
+    }
+    setSelectedPreparation(preparation);
+    setShowDetailModal(true);
+  };
 
   // Toggle description expansion
   const toggleDescription = (recordId) => {
@@ -80,7 +92,7 @@ const PreparationManagement = () => {
   };
 
   // Render description with read more functionality
-  const renderDescription = (text, record, language = 'english') => {
+  const renderDescription = (text, record, language = "english") => {
     if (!text) return "-";
 
     const maxLength = 150;
@@ -98,10 +110,12 @@ const PreparationManagement = () => {
           {isExpanded ? text : `${text.substring(0, maxLength)}...`}
         </span>
         <button
-          onClick={() => setExpandedDescriptions(prev => ({
-            ...prev,
-            [expandKey]: !prev[expandKey]
-          }))}
+          onClick={() =>
+            setExpandedDescriptions((prev) => ({
+              ...prev,
+              [expandKey]: !prev[expandKey],
+            }))
+          }
           className="ml-2 text-blue-500 hover:text-blue-700 text-sm font-medium underline"
         >
           {isExpanded ? "Read Less" : "Read More"}
@@ -560,7 +574,8 @@ const PreparationManagement = () => {
           malayalam_title: "സാമ്പിൾ തയ്യാറെടുപ്പ് എൻട്രി",
           urdu_title: "نمونہ تیاری انٹری",
           description: "Sample description for preparation content",
-          malayalam_description: "തയ്യാറെടുപ്പ് ഉള്ളടക്കത്തിനുള്ള സാമ്പിൾ വിവരണം",
+          malayalam_description:
+            "തയ്യാറെടുപ്പ് ഉള്ളടക്കത്തിനുള്ള സാമ്പിൾ വിവരണം",
           urdu_description: "تیاری کے مواد کے لیے نمونہ تفصیل",
           video: "https://www.youtube.com/watch?v=sample_video_id",
           map: "https://maps.google.com/sample_map_link",
@@ -572,7 +587,19 @@ const PreparationManagement = () => {
       // Add headers
       utils.sheet_add_aoa(
         ws,
-        [["id", "title", "malayalam_title", "urdu_title", "description", "malayalam_description", "urdu_description", "video", "map"]],
+        [
+          [
+            "id",
+            "title",
+            "malayalam_title",
+            "urdu_title",
+            "description",
+            "malayalam_description",
+            "urdu_description",
+            "video",
+            "map",
+          ],
+        ],
         { origin: "A1" }
       );
 
@@ -641,7 +668,9 @@ const PreparationManagement = () => {
 
           // Check required columns
           const firstRow = data[0];
-          const hasRequiredColumns = "id" in firstRow && ("malayalam_title" in firstRow || "malayalamTitle" in firstRow);
+          const hasRequiredColumns =
+            "id" in firstRow &&
+            ("malayalam_title" in firstRow || "malayalamTitle" in firstRow);
 
           if (!hasRequiredColumns) {
             setUploadError(
@@ -732,37 +761,65 @@ const PreparationManagement = () => {
     {
       key: "id",
       title: "ID",
-      render: (row) => <span className="truncate" title={row.id}>{row.id}</span>
+      render: (row) => (
+        <span className="truncate" title={row.id}>
+          {row.id}
+        </span>
+      ),
     },
     {
       key: "title",
       title: "Title",
-      render: (row) => <span className="truncate" title={row.title}>{row.title}</span>
+      render: (row) => (
+        <span className="truncate" title={row.title}>
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "malayalamTitle",
       title: "Ml Title",
-      render: (row) => <span className="truncate" title={row.malayalamTitle || '-'}>{row.malayalamTitle || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.malayalamTitle || "-"}>
+          {row.malayalamTitle || "-"}
+        </span>
+      ),
     },
     {
       key: "urduTitle",
       title: "Ur Title",
-      render: (row) => <span className="truncate" title={row.urduTitle || '-'}>{row.urduTitle || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.urduTitle || "-"}>
+          {row.urduTitle || "-"}
+        </span>
+      ),
     },
     {
       key: "description",
       title: "Description",
-      render: (row) => <span className="truncate" title={row.description || '-'}>{row.description || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.description || "-"}>
+          {row.description || "-"}
+        </span>
+      ),
     },
     {
       key: "malayalamDescription",
       title: "Ml Description",
-      render: (row) => <span className="truncate" title={row.malayalamDescription || '-'}>{row.malayalamDescription || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.malayalamDescription || "-"}>
+          {row.malayalamDescription || "-"}
+        </span>
+      ),
     },
     {
       key: "urduDescription",
       title: "Ur Description",
-      render: (row) => <span className="truncate" title={row.urduDescription || '-'}>{row.urduDescription || '-'}</span>
+      render: (row) => (
+        <span className="truncate" title={row.urduDescription || "-"}>
+          {row.urduDescription || "-"}
+        </span>
+      ),
     },
     {
       key: "media",
@@ -773,14 +830,18 @@ const PreparationManagement = () => {
           mediaItems.push(`Images (${row.images.length})`);
         }
         if (row.video) {
-          mediaItems.push('Video');
+          mediaItems.push("Video");
         }
         if (row.map) {
-          mediaItems.push('Map');
+          mediaItems.push("Map");
         }
-        const mediaText = mediaItems.length > 0 ? mediaItems.join(', ') : 'N/A';
-        return <span className="truncate" title={mediaText}>{mediaText}</span>;
-      }
+        const mediaText = mediaItems.length > 0 ? mediaItems.join(", ") : "N/A";
+        return (
+          <span className="truncate" title={mediaText}>
+            {mediaText}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -990,16 +1051,27 @@ const PreparationManagement = () => {
                     <th
                       key={column.key}
                       className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        column.key === 'select' ? 'w-12' :
-                        column.key === 'id' ? 'w-16' :
-                        column.key === 'title' ? 'w-24' :
-                        column.key === 'malayalamTitle' ? 'w-20' :
-                        column.key === 'urduTitle' ? 'w-20' :
-                        column.key === 'description' ? 'w-32' :
-                        column.key === 'malayalamDescription' ? 'w-28' :
-                        column.key === 'urduDescription' ? 'w-28' :
-                        column.key === 'media' ? 'w-20' :
-                        column.key === 'actions' ? 'w-20' : ''
+                        column.key === "select"
+                          ? "w-12"
+                          : column.key === "id"
+                          ? "w-16"
+                          : column.key === "title"
+                          ? "w-24"
+                          : column.key === "malayalamTitle"
+                          ? "w-20"
+                          : column.key === "urduTitle"
+                          ? "w-20"
+                          : column.key === "description"
+                          ? "w-32"
+                          : column.key === "malayalamDescription"
+                          ? "w-28"
+                          : column.key === "urduDescription"
+                          ? "w-28"
+                          : column.key === "media"
+                          ? "w-20"
+                          : column.key === "actions"
+                          ? "w-20"
+                          : ""
                       }`}
                     >
                       {column.title}
@@ -1010,32 +1082,52 @@ const PreparationManagement = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={preparationColumns.length} className="px-2 py-2 text-center text-gray-500">
+                    <td
+                      colSpan={preparationColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
                       Loading...
                     </td>
                   </tr>
                 ) : filteredPreparationData.length === 0 ? (
                   <tr>
-                    <td colSpan={preparationColumns.length} className="px-2 py-2 text-center text-gray-500">
+                    <td
+                      colSpan={preparationColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
                       No preparation entries found
                     </td>
                   </tr>
                 ) : (
                   filteredPreparationData.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
+                    <tr 
+                      key={row._id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {preparationColumns.map((column) => (
                         <td
                           key={column.key}
                           className={`px-2 py-2 text-sm text-gray-900 ${
-                            column.key === 'id' ? 'max-w-16 truncate' :
-                            column.key === 'title' ? 'max-w-24 truncate' :
-                            column.key === 'malayalamTitle' ? 'max-w-20 truncate' :
-                            column.key === 'urduTitle' ? 'max-w-20 truncate' :
-                            column.key === 'description' ? 'max-w-32 truncate' :
-                            column.key === 'malayalamDescription' ? 'max-w-28 truncate' :
-                            column.key === 'urduDescription' ? 'max-w-28 truncate' :
-                            column.key === 'media' ? 'max-w-20 truncate' :
-                            column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                            column.key === "id"
+                              ? "max-w-16 truncate"
+                              : column.key === "title"
+                              ? "max-w-24 truncate"
+                              : column.key === "malayalamTitle"
+                              ? "max-w-20 truncate"
+                              : column.key === "urduTitle"
+                              ? "max-w-20 truncate"
+                              : column.key === "description"
+                              ? "max-w-32 truncate"
+                              : column.key === "malayalamDescription"
+                              ? "max-w-28 truncate"
+                              : column.key === "urduDescription"
+                              ? "max-w-28 truncate"
+                              : column.key === "media"
+                              ? "max-w-20 truncate"
+                              : column.key === "actions"
+                              ? "whitespace-nowrap"
+                              : "whitespace-nowrap"
                           }`}
                         >
                           {column.render(row)}
@@ -1048,6 +1140,171 @@ const PreparationManagement = () => {
             </table>
           </div>
         </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedPreparation && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Preparation Details</h2>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Basic Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">ID</label>
+                        <p className="text-gray-900 font-medium">{selectedPreparation.id}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Title (English)</label>
+                        <p className="text-gray-900 font-medium">{selectedPreparation.title || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Multilingual Titles */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Multilingual Titles</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Malayalam Title</label>
+                        <p className="text-gray-900">{selectedPreparation.malayalamTitle || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Urdu Title</label>
+                        <p className="text-gray-900" dir="rtl">{selectedPreparation.urduTitle || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Descriptions</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">English Description</label>
+                        <p className="text-gray-900 whitespace-pre-wrap">{selectedPreparation.description || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Malayalam Description</label>
+                        <p className="text-gray-900 whitespace-pre-wrap">{selectedPreparation.malayalamDescription || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Urdu Description</label>
+                        <p className="text-gray-900 whitespace-pre-wrap" dir="rtl">{selectedPreparation.urduDescription || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Media Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Media & Resources</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Images</label>
+                        {selectedPreparation.images && selectedPreparation.images.length > 0 ? (
+                          <div className="grid grid-cols-4 gap-2 mt-2">
+                            {selectedPreparation.images.map((imageUrl, index) => (
+                              <div key={index} className="relative">
+                                <img
+                                  src={imageUrl}
+                                  alt={`Image ${index + 1}`}
+                                  className="w-full h-20 object-cover rounded border"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <div className="w-full h-20 hidden items-center justify-center text-xs text-gray-500 bg-gray-100 rounded border">
+                                  IMG {index + 1}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">No images available</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Video</label>
+                        {selectedPreparation.video ? (
+                          <a
+                            href={selectedPreparation.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                          >
+                            🎥 View Video
+                          </a>
+                        ) : (
+                          <p className="text-gray-500">No video available</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Map</label>
+                        {selectedPreparation.map ? (
+                          <a
+                            href={selectedPreparation.map}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                          >
+                            🗺 View Map
+                          </a>
+                        ) : (
+                          <p className="text-gray-500">No map available</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Metadata</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Created At</label>
+                        <p className="text-gray-900 text-sm">
+                          {selectedPreparation.createdAt ? new Date(selectedPreparation.createdAt).toLocaleString() : 'Not available'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Updated At</label>
+                        <p className="text-gray-900 text-sm">
+                          {selectedPreparation.updatedAt ? new Date(selectedPreparation.updatedAt).toLocaleString() : 'Not available'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Database ID</label>
+                        <p className="text-gray-900 text-sm font-mono">{selectedPreparation._id}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Create/Edit Modal */}
         <Modal
@@ -1110,12 +1367,15 @@ const PreparationManagement = () => {
                   rules={[
                     { required: true, message: "Please enter Malayalam title" },
                     { min: 1, message: "Malayalam title cannot be empty" },
-                    { max: 200, message: "Malayalam title cannot exceed 200 characters" },
+                    {
+                      max: 200,
+                      message: "Malayalam title cannot exceed 200 characters",
+                    },
                   ]}
                 >
-                  <Input 
-                    placeholder="മലയാളത്തിൽ ശീർഷകം നൽകുക" 
-                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  <Input
+                    placeholder="മലയാളത്തിൽ ശീർഷകം നൽകുക"
+                    style={{ fontFamily: "Arial, sans-serif" }}
                   />
                 </Form.Item>
               </Col>
@@ -1124,13 +1384,16 @@ const PreparationManagement = () => {
                   name="urduTitle"
                   label="Title (Urdu)"
                   rules={[
-                    { max: 200, message: "Urdu title cannot exceed 200 characters" },
+                    {
+                      max: 200,
+                      message: "Urdu title cannot exceed 200 characters",
+                    },
                   ]}
                 >
-                  <Input 
-                    placeholder="اردو میں عنوان درج کریں" 
+                  <Input
+                    placeholder="اردو میں عنوان درج کریں"
                     dir="rtl"
-                    style={{ fontFamily: 'Arial, sans-serif' }}
+                    style={{ fontFamily: "Arial, sans-serif" }}
                   />
                 </Form.Item>
               </Col>
@@ -1140,20 +1403,21 @@ const PreparationManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description in English..."
-
                 showCount
               />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="malayalamDescription" label="Description (Malayalam)">
+                <Form.Item
+                  name="malayalamDescription"
+                  label="Description (Malayalam)"
+                >
                   <TextArea
                     rows={4}
                     placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
-                    
                     showCount
-                    style={{ fontFamily: 'Arial, sans-serif' }}
+                    style={{ fontFamily: "Arial, sans-serif" }}
                   />
                 </Form.Item>
               </Col>
@@ -1162,10 +1426,9 @@ const PreparationManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="اردو میں تفصیلی تفصیل درج کریں..."
-                    
                     showCount
                     dir="rtl"
-                    style={{ fontFamily: 'Arial, sans-serif' }}
+                    style={{ fontFamily: "Arial, sans-serif" }}
                   />
                 </Form.Item>
               </Col>

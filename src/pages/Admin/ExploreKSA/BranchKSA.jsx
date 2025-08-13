@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2, X, CheckCircle } from 'lucide-react';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 import axios from 'axios';
@@ -27,6 +27,8 @@ const BranchKSA = ({ isOpen }) => {
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Custom styles for react-select
   const customStyles = {
@@ -74,16 +76,12 @@ const BranchKSA = ({ isOpen }) => {
         return (
           <div className="space-y-1">
             <div className="font-medium">{row.name}</div>
-            {row.name_malayalam && (
-              <div className="text-sm text-gray-600">
-                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.name_malayalam}
-              </div>
-            )}
-            {row.name_urdu && (
-              <div className="text-sm text-gray-600">
-                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.name_urdu}
-              </div>
-            )}
+            <div className="text-sm text-gray-600">
+              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.name_malayalam || 'Not provided'}
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.name_urdu || 'Not provided'}
+            </div>
           </div>
         );
       }
@@ -99,16 +97,12 @@ const BranchKSA = ({ isOpen }) => {
         return (
           <div className="space-y-1">
             <div className="font-medium">{row.ref?.title || 'N/A'}</div>
-            {row.ref?.title_malayalam && (
-              <div className="text-sm text-gray-600">
-                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.ref.title_malayalam}
-              </div>
-            )}
-            {row.ref?.title_urdu && (
-              <div className="text-sm text-gray-600">
-                <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.ref.title_urdu}
-              </div>
-            )}
+            <div className="text-sm text-gray-600">
+              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">ML:</span> {row.ref?.title_malayalam || 'Not provided'}
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">UR:</span> {row.ref?.title_urdu || 'Not provided'}
+            </div>
           </div>
         );
       }
@@ -415,6 +409,16 @@ const BranchKSA = ({ isOpen }) => {
       id: selectedRows,
       isBulk: true
     });
+  };
+
+  // Handle row click to show details
+  const handleRowClick = (branch, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (event.target.closest('button') || event.target.closest('input[type="checkbox"]')) {
+      return;
+    }
+    setSelectedBranch(branch);
+    setShowDetailModal(true);
   };
 
   // Handle file upload
@@ -816,7 +820,10 @@ const BranchKSA = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredBranchData.map((row) => (
                   <React.Fragment key={row._id}>
-                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                    <tr 
+                      className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {branchColumns.map((column) => (
                         <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
                           {column.render ? column.render(row) : row[column.key]}
@@ -911,6 +918,126 @@ const BranchKSA = ({ isOpen }) => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedBranch && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-300 mx-4">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <CheckCircle size={20} />
+                  Branch Details
+                </h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                {/* Basic Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
+                      <p className="text-gray-900 bg-white p-2 rounded border">
+                        {selectedBranch.phoneNumber || 'Not provided'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Location Reference</label>
+                      <p className="text-gray-900 bg-white p-2 rounded border">
+                        {selectedBranch.ref?.title || 'Not provided'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Multilingual Content */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">Branch Names</h3>
+                  <div className="space-y-4">
+                    {/* English Content */}
+                    <div className="bg-white p-4 rounded border">
+                      <h4 className="font-medium text-gray-700 mb-2">English</h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Name</label>
+                        <p className="text-gray-900">{selectedBranch.name || 'Not provided'}</p>
+                      </div>
+                    </div>
+
+                    {/* Malayalam Content */}
+                    <div className="bg-white p-4 rounded border">
+                      <h4 className="font-medium text-gray-700 mb-2">Malayalam</h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Name</label>
+                        <p className="text-gray-900">{selectedBranch.name_malayalam || 'Not provided'}</p>
+                      </div>
+                    </div>
+
+                    {/* Urdu Content */}
+                    <div className="bg-white p-4 rounded border">
+                      <h4 className="font-medium text-gray-700 mb-2">Urdu</h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Name</label>
+                        <p className="text-gray-900">{selectedBranch.name_urdu || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">Location Information</h3>
+                  <div className="bg-white p-4 rounded border">
+                    {selectedBranch.ref ? (
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Location (English)</label>
+                          <p className="text-gray-900">{selectedBranch.ref.title}</p>
+                        </div>
+                        {selectedBranch.ref.title_malayalam && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Location (Malayalam)</label>
+                            <p className="text-gray-900">{selectedBranch.ref.title_malayalam}</p>
+                          </div>
+                        )}
+                        {selectedBranch.ref.title_urdu && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Location (Urdu)</label>
+                            <p className="text-gray-900">{selectedBranch.ref.title_urdu}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No location reference provided</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4 text-gray-800">Metadata</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Created Date</label>
+                      <p className="text-gray-900 bg-white p-2 rounded border">
+                        {selectedBranch.createdAt ? new Date(selectedBranch.createdAt).toLocaleString() : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Database ID</label>
+                      <p className="text-gray-900 bg-white p-2 rounded border font-mono text-sm">{selectedBranch._id}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

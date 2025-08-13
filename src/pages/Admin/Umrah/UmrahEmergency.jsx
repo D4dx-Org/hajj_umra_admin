@@ -23,6 +23,8 @@ const UmrahEmergency = ({ isOpen }) => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedEmergency, setSelectedEmergency] = useState(null);
   const [sortConfig, setSortConfig] = useState({
     field: "name",
     direction: "asc",
@@ -77,7 +79,7 @@ const UmrahEmergency = ({ isOpen }) => {
       key: "actions",
       title: "Actions",
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 action-buttons">
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -394,6 +396,20 @@ const UmrahEmergency = ({ isOpen }) => {
       id: selectedRows,
       isBulk: true,
     });
+  };
+
+  // Handle row click to show details
+  const handleRowClick = (emergency, event) => {
+    // Prevent row click when clicking on checkboxes or action buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest(".action-buttons")
+    ) {
+      return;
+    }
+    setSelectedEmergency(emergency);
+    setShowDetailsModal(true);
   };
 
   // Download template function
@@ -713,7 +729,10 @@ const UmrahEmergency = ({ isOpen }) => {
                 ) : (
                   filteredEmergencyData.map((row) => (
                     <React.Fragment key={row._id}>
-                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      <tr 
+                        className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                        onClick={(event) => handleRowClick(row, event)}
+                      >
                         {emergencyColumns.map((column) => (
                           <td
                             key={column.key}
@@ -811,6 +830,68 @@ const UmrahEmergency = ({ isOpen }) => {
             </table>
           </div>
         </div>
+
+        {/* Emergency Details Modal */}
+        {showDetailsModal && selectedEmergency && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full border border-gray-300 mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold">Emergency Contact Details</h3>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedEmergency.name || "N/A"}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Malayalam Name</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedEmergency.malayalamName || "N/A"}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Urdu Name</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedEmergency.urduName || "N/A"}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedEmergency.contact || "N/A"}</p>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedEmergency.createdAt ? new Date(selectedEmergency.createdAt).toLocaleString() : "N/A"}
+                  </p>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Updated At</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedEmergency.updatedAt ? new Date(selectedEmergency.updatedAt).toLocaleString() : "N/A"}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (

@@ -37,6 +37,8 @@ const UmrahBus = ({ isOpen }) => {
     direction: "asc",
     type: "alpha",
   });
+  const [selectedBusStation, setSelectedBusStation] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Define the table columns
   const busStationColumns = [
@@ -58,6 +60,7 @@ const UmrahBus = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={() => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -148,7 +151,7 @@ const UmrahBus = ({ isOpen }) => {
       key: "actions",
       title: "Actions",
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -711,6 +714,18 @@ const UmrahBus = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (busStation) => {
+    setSelectedBusStation(busStation);
+    setShowDetails(true);
+  };
+
+  // Handle close details
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedBusStation(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -1092,7 +1107,10 @@ const UmrahBus = ({ isOpen }) => {
                 ) : (
                   filteredBusStationData.map((row) => (
                     <React.Fragment key={row._id}>
-                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      <tr 
+                        className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                        onClick={() => handleRowClick(row)}
+                      >
                         {busStationColumns.map((column) => (
                           <td
                             key={column.key}
@@ -1316,6 +1334,109 @@ const UmrahBus = ({ isOpen }) => {
             </table>
           </div>
         </div>
+
+        {/* Bus Station Details Modal */}
+        {showDetails && selectedBusStation && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-96 overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Bus Station Details</h3>
+                <button
+                  onClick={handleCloseDetails}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Malayalam Name:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.malayalamName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Urdu Name:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.urduName || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Station Point:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.stationPoint || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Malayalam Station Point:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.malayalamStationPoint || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Urdu Station Point:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.urduStationPoint || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Destination Point:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.destinationPoint || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Malayalam Destination Point:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.malayalamDestinationPoint || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Urdu Destination Point:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.urduDestinationPoint || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Link:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBusStation.link ? (
+                      <a 
+                        href={selectedBusStation.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {selectedBusStation.link}
+                      </a>
+                    ) : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Location:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBusStation.location && selectedBusStation.location.lat && selectedBusStation.location.lng ? 
+                      `Lat: ${selectedBusStation.location.lat}, Lng: ${selectedBusStation.location.lng}` : 
+                      'N/A'
+                    }
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Branch:</label>
+                  <p className="text-sm text-gray-900">{selectedBusStation.ref?.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Created:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBusStation.createdAt ? new Date(selectedBusStation.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Last Updated:</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedBusStation.updatedAt ? new Date(selectedBusStation.updatedAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={handleCloseDetails}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
