@@ -63,6 +63,8 @@ const PlaceKSA = () => {
     video: [],
   });
   const [existingImages, setExistingImages] = useState([]);
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   // Fetch only locations
   const fetchLocations = async () => {
@@ -622,6 +624,44 @@ const PlaceKSA = () => {
     });
   };
 
+  // Handle row click to view details
+  const handleRowClick = (place, event) => {
+    // Don't trigger if clicking on checkbox or action buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest(".actions-cell")
+    ) {
+      return;
+    }
+    setSelectedPlace(place);
+    setViewModalVisible(true);
+  };
+
+  // Truncate text with read more functionality
+  const TruncatedText = ({ text, maxLength = 100, className = "" }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    if (!text || text.length <= maxLength) {
+      return <span className={className}>{text || "-"}</span>;
+    }
+
+    return (
+      <div className={className}>
+        <span>{isExpanded ? text : `${text.substring(0, maxLength)}...`}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className="ml-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          {isExpanded ? "Read Less" : "Read More"}
+        </button>
+      </div>
+    );
+  };
+
   // Table columns configuration
   const placeColumns = [
     {
@@ -961,7 +1001,11 @@ const PlaceKSA = () => {
                   </tr>
                 ) : (
                   paginatedPlaces.map((row) => (
-                    <tr key={row._id} className="hover:bg-gray-50">
+                    <tr
+                      key={row._id}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {placeColumns.map((column) => (
                         <td
                           key={column.key}
@@ -987,7 +1031,7 @@ const PlaceKSA = () => {
                               : column.key === "media"
                               ? "w-16 max-w-16 truncate"
                               : column.key === "actions"
-                              ? "w-20"
+                              ? "w-20 actions-cell"
                               : ""
                           }`}
                         >
@@ -1205,6 +1249,253 @@ const PlaceKSA = () => {
             </div>
           </div>
         )}
+
+        {/* View Details Modal */}
+        <Modal
+          title={
+            <div className="flex items-center gap-2">
+              <MapPin size={20} />
+              <span>Place Details</span>
+            </div>
+          }
+          open={viewModalVisible}
+          onCancel={() => {
+            setViewModalVisible(false);
+            setSelectedPlace(null);
+          }}
+          footer={[
+            <Button
+              key="close"
+              onClick={() => {
+                setViewModalVisible(false);
+                setSelectedPlace(null);
+              }}
+            >
+              Close
+            </Button>,
+            // <Button
+            //   key="edit"
+            //   type="primary"
+            //   icon={<Edit size={16} />}
+            //   onClick={() => {
+            //     if (selectedPlace) {
+            //       setEditingId(selectedPlace._id);
+            //       const recordImages = selectedPlace.images || [];
+
+            //       setExistingImages(recordImages);
+            //       form.setFieldsValue({
+            //         id: selectedPlace.id,
+            //         title: selectedPlace.title,
+            //         titleMalayalam: selectedPlace.titleMalayalam || "",
+            //         titleUrdu: selectedPlace.titleUrdu || "",
+            //         description: selectedPlace.description || "",
+            //         descriptionMalayalam:
+            //           selectedPlace.descriptionMalayalam || "",
+            //         descriptionUrdu: selectedPlace.descriptionUrdu || "",
+            //         images: recordImages,
+            //         video: selectedPlace.video || "",
+            //         map: selectedPlace.map || "",
+            //         locationRef: selectedPlace.locationRef?._id || undefined,
+            //       });
+
+            //       setUploadedFiles({ images: [], video: null });
+            //       setFileList({ images: [], video: [] });
+            //       setViewModalVisible(false);
+            //       setModalVisible(true);
+            //     }
+            //   }}
+            // >
+            //   Edit Place
+            // </Button>,
+          ]}
+          width={1000}
+        >
+          {selectedPlace && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Basic Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Place ID
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.id || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Title (English)
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.title || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Title (Malayalam)
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.titleMalayalam || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Title (Urdu)
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.titleUrdu || "-"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Location & Media
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Location
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.locationRef?.title ||
+                          selectedPlace.locationRef?.name ||
+                          "No location assigned"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Media Count
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.images?.length || 0} images,
+                        {selectedPlace.video ? " 1 video," : " 0 videos,"}
+                        {selectedPlace.map ? " 1 map" : " 0 maps"}
+                      </div>
+                    </div>
+                    {selectedPlace.video && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Video URL
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded border text-sm">
+                          <a
+                            href={selectedPlace.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 break-all"
+                          >
+                            {selectedPlace.video}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {selectedPlace.map && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Map URL
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded border text-sm">
+                          <a
+                            href={selectedPlace.map}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 break-all"
+                          >
+                            {selectedPlace.map}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Descriptions */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                  Descriptions
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Description (English)
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                      <TruncatedText
+                        text={selectedPlace.description}
+                        maxLength={200}
+                        className="text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Description (Malayalam)
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                      <TruncatedText
+                        text={selectedPlace.descriptionMalayalam}
+                        maxLength={200}
+                        className="text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Description (Urdu)
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                      <TruncatedText
+                        text={selectedPlace.descriptionUrdu}
+                        maxLength={200}
+                        className="text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Images Gallery */}
+              {selectedPlace.images && selectedPlace.images.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Images ({selectedPlace.images.length})
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {selectedPlace.images.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={imageUrl}
+                            alt={`Place image ${index + 1}`}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              e.target.nextSibling.style.display = "flex";
+                            }}
+                          />
+                          <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                            Image {index + 1}
+                          </div>
+                        </div>
+                        <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal>
 
         {/* Create/Edit Modal */}
         <Modal

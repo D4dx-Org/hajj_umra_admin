@@ -26,6 +26,8 @@ const Thanima = ({ isOpen }) => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [selectedThanima, setSelectedThanima] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
@@ -105,19 +107,33 @@ const Thanima = ({ isOpen }) => {
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
-    },    { 
+    },
+    { 
       key: 'name', 
-      title: 'Name',
+      title: 'Name (English)',
       render: (row) => <span className="truncate" title={row.name || '-'}>{row.name || '-'}</span>
-    },    { 
+    },
+    { 
+      key: 'nameMalayalam', 
+      title: 'Name (Malayalam)',
+      render: (row) => <span className="truncate" title={row.nameMalayalam || '-'}>{row.nameMalayalam || '-'}</span>
+    },
+    { 
+      key: 'nameUrdu', 
+      title: 'Name (Urdu)',
+      render: (row) => <span className="truncate" title={row.nameUrdu || '-'} dir="rtl">{row.nameUrdu || '-'}</span>
+    },
+    { 
       key: 'phone', 
       title: 'Phone',
       render: (row) => <span className="truncate" title={row.phone || '-'}>{row.phone || '-'}</span>
-    },    { 
+    },
+    { 
       key: 'id', 
       title: 'ID',
       render: (row) => <span className="truncate" title={row.id || '-'}>{row.id || '-'}</span>
-    },    { 
+    },
+    { 
       key: 'ref', 
       title: 'Location Reference',
       render: (row) => <span className="truncate" title={row.ref?.title || row.ref || '-'}>{row.ref?.title || row.ref || '-'}</span>
@@ -373,6 +389,26 @@ const Thanima = ({ isOpen }) => {
     }
   };
 
+  // Handle row click to show details
+  const handleRowClick = (thanima, event) => {
+    // Don't trigger if clicking on checkbox, edit, or delete buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest("a")
+    ) {
+      return;
+    }
+    setSelectedThanima(thanima);
+    setShowDetailsModal(true);
+  };
+
+  // Handle close details modal
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedThanima(null);
+  };
+
   // Add download template function
   const handleDownloadTemplate = () => {
     try {
@@ -615,7 +651,10 @@ const Thanima = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredThanimaData.map((row) => (
                   <React.Fragment key={row._id}>
-                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                    <tr 
+                      className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {thanimaColumns.map((column) => (
                         <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
                           {column.render ? column.render(row) : row[column.key]}
@@ -749,6 +788,115 @@ const Thanima = ({ isOpen }) => {
                 className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Thanima Details Modal */}
+      {showDetailsModal && selectedThanima && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">Thanima Details</h2>
+              <button
+                onClick={handleCloseDetailsModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Names Section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Name (English)</h3>
+                  <p className="text-gray-900 break-words">{selectedThanima.name || "N/A"}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Name (Malayalam)</h3>
+                  <p className="text-gray-900 break-words">{selectedThanima.nameMalayalam || "N/A"}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Name (Urdu)</h3>
+                  <p className="text-gray-900 break-words text-right" dir="rtl">{selectedThanima.nameUrdu || "N/A"}</p>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Phone Number</h3>
+                  <p className="text-gray-900 break-words">
+                    {selectedThanima.phone ? (
+                      <a 
+                        href={`tel:${selectedThanima.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {selectedThanima.phone}
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">ID</h3>
+                  <p className="text-gray-900 break-words font-mono">{selectedThanima.id || "N/A"}</p>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-700 mb-2">Location Reference</h3>
+                <p className="text-gray-900 break-words">
+                  {selectedThanima.ref?.title || 
+                   locations.find(loc => loc._id === selectedThanima.ref)?.title || 
+                   "No location reference"}
+                </p>
+              </div>
+
+              {/* Metadata Section */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-700 mb-2">Metadata</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">ID:</span> {selectedThanima._id}
+                  </div>
+                  {selectedThanima.createdAt && (
+                    <div>
+                      <span className="font-medium">Created:</span>{" "}
+                      {new Date(selectedThanima.createdAt).toLocaleString()}
+                    </div>
+                  )}
+                  {selectedThanima.updatedAt && (
+                    <div>
+                      <span className="font-medium">Updated:</span>{" "}
+                      {new Date(selectedThanima.updatedAt).toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  handleCloseDetailsModal();
+                  handleEditClick(selectedThanima);
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center gap-2"
+              >
+                <Edit size={16} />
+                Edit
+              </button>
+              <button
+                onClick={handleCloseDetailsModal}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Close
               </button>
             </div>
           </div>

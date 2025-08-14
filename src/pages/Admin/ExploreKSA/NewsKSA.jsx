@@ -27,6 +27,10 @@ const News = () => {
   });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [selectedNewsItem, setSelectedNewsItem] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  // Changed: Make expandedDescriptions more specific to each news item and field
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   // Handle select all
   const handleSelectAll = (event) => {
@@ -376,6 +380,66 @@ const News = () => {
     setOriginalData(null);
   };
 
+  // Handle row click to show details
+  const handleRowClick = (newsItem, event) => {
+    // Don't trigger if clicking on checkbox, edit, or delete buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest("a")
+    ) {
+      return;
+    }
+    setSelectedNewsItem(newsItem);
+    setShowDetailsModal(true);
+    // Reset expanded descriptions when opening modal
+    setExpandedDescriptions({
+      english: false,
+      malayalam: false,
+      urdu: false,
+    });
+  };
+
+  // Handle close details modal
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedNewsItem(null);
+  };
+
+  // Component for truncated text with read more functionality
+  const TruncatedText = ({ text, maxLength = 150, language }) => {
+    const isExpanded = expandedDescriptions[language];
+
+    if (!text || text.length <= maxLength) {
+      return (
+        <p className="text-gray-900 leading-relaxed break-words">
+          {text || "N/A"}
+        </p>
+      );
+    }
+
+    const toggleExpanded = () => {
+      setExpandedDescriptions((prev) => ({
+        ...prev,
+        [language]: !prev[language],
+      }));
+    };
+
+    return (
+      <div className="w-full max-w-full overflow-hidden">
+        <p className="text-gray-900 leading-relaxed break-words whitespace-normal">
+          {isExpanded ? text : `${text.substring(0, maxLength)}...`}
+        </p>
+        <button
+          onClick={toggleExpanded}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 inline-block"
+        >
+          {isExpanded ? "Read less" : "Read more"}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} />
@@ -614,7 +678,12 @@ const News = () => {
                 {filteredNewsData.map((row) => (
                   <React.Fragment key={row._id}>
                     <tr
-                      className={`${editingId === row._id ? "bg-blue-50" : ""}`}
+                      className={`${
+                        editingId === row._id
+                          ? "bg-blue-50"
+                          : "hover:bg-gray-50 cursor-pointer"
+                      }`}
+                      onClick={(e) => handleRowClick(row, e)}
                     >
                       {newsColumns.map((column) => (
                         <td
@@ -815,6 +884,157 @@ const News = () => {
                 className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* News Details Modal */}
+      {showDetailsModal && selectedNewsItem && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">News Details</h2>
+              <button
+                onClick={handleCloseDetailsModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Title Section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Title (English)
+                  </h3>
+                  <p className="text-gray-900">
+                    {selectedNewsItem.title?.english ||
+                      selectedNewsItem.title ||
+                      "N/A"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Title (Malayalam)
+                  </h3>
+                  <p className="text-gray-900">
+                    {selectedNewsItem.title?.malayalam || "N/A"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Title (Urdu)
+                  </h3>
+                  <p className="text-gray-900 text-right" dir="rtl">
+                    {selectedNewsItem.title?.urdu || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Link Section */}
+              {selectedNewsItem.link && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Link</h3>
+                  <a
+                    href={selectedNewsItem.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all"
+                  >
+                    {selectedNewsItem.link}
+                  </a>
+                </div>
+              )}
+
+              {/* Description Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Descriptions
+                </h3>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-700 mb-2">English</h4>
+                  <TruncatedText
+                    text={
+                      selectedNewsItem.description?.english ||
+                      selectedNewsItem.description ||
+                      "N/A"
+                    }
+                    maxLength={150}
+                    newsItemId={selectedNewsItem._id}
+                    language="english"
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Malayalam
+                  </h4>
+                  <TruncatedText
+                    text={selectedNewsItem.description?.malayalam || "N/A"}
+                    maxLength={150}
+                    newsItemId={selectedNewsItem._id}
+                    language="malayalam"
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-700 mb-2">Urdu</h4>
+                  <div className="text-right" dir="rtl">
+                    <TruncatedText
+                      text={selectedNewsItem.description?.urdu || "N/A"}
+                      maxLength={150}
+                      newsItemId={selectedNewsItem._id}
+                      language="urdu"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Metadata */}
+              {(selectedNewsItem.createdAt || selectedNewsItem.updatedAt) && (
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                    Metadata
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    {selectedNewsItem.createdAt && (
+                      <div>
+                        <span className="font-medium">Created:</span>{" "}
+                        {new Date(selectedNewsItem.createdAt).toLocaleString()}
+                      </div>
+                    )}
+                    {selectedNewsItem.updatedAt && (
+                      <div>
+                        <span className="font-medium">Updated:</span>{" "}
+                        {new Date(selectedNewsItem.updatedAt).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  handleCloseDetailsModal();
+                  handleEditClick(selectedNewsItem);
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center gap-2"
+              >
+                <Edit size={16} />
+                Edit
+              </button>
+              <button
+                onClick={handleCloseDetailsModal}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Close
               </button>
             </div>
           </div>
