@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Search, AlertTriangle, Edit, Trash2 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
+
 import axios from "axios";
 
 const News = () => {
@@ -371,7 +372,7 @@ const News = () => {
                 <label className="block text-sm font-medium mb-1">
                   Description
                 </label>
-                <textarea
+                <RTLTextarea
                   value={newNews.description}
                   onChange={(e) =>
                     setNewNews({ ...newNews, description: e.target.value })
@@ -526,7 +527,7 @@ const News = () => {
                                     <label className="block text-sm font-medium">
                                       Description
                                     </label>
-                                    <textarea
+                                    <RTLTextarea
                                       value={row.description || ""}
                                       onChange={(e) =>
                                         handleEditChange(

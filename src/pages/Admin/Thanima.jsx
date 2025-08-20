@@ -124,9 +124,9 @@ const Thanima = ({ isOpen }) => {
       key: "name",
       title: "Name",
       render: (row) => (
-        <span className="truncate" title={row.name}>
+        <RTLText className="truncate" title={row.name}>
           {row.name}
-        </span>
+        </RTLText>
       ),
     },
     {
@@ -558,7 +558,7 @@ const Thanima = ({ isOpen }) => {
             <h2 className="text-lg font-bold mb-4">Add New Thanima</h2>
             <div className="mb-4">
               <label className="block text-sm font-medium">Name</label>
-              <input
+              <RTLInput
                 type="text"
                 value={newThanima.name}
                 onChange={(e) =>
@@ -721,7 +721,7 @@ const Thanima = ({ isOpen }) => {
                                     <label className="block text-sm font-medium">
                                       Name *
                                     </label>
-                                    <input
+                                    <RTLInput
                                       type="text"
                                       value={row.name || ""}
                                       onChange={(e) =>
@@ -855,7 +855,7 @@ const Thanima = ({ isOpen }) => {
                 <label className="block text-sm font-medium text-gray-700">
                   Name:
                 </label>
-                <p className="text-sm text-gray-900">{selectedThanima.name}</p>
+                <RTLText className="text-sm text-gray-900">{selectedThanima.name}</RTLText>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">

@@ -2435,6 +2435,8 @@ const Camp = ({ isOpen }) => {
                 value={newCamp.pollUrdu}
                 onChange={(e) => setNewCamp({ ...newCamp, pollUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl"
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">
@@ -2462,6 +2464,8 @@ const Camp = ({ isOpen }) => {
                 value={newCamp.roadUrdu}
                 onChange={(e) => setNewCamp({ ...newCamp, roadUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl"
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">
@@ -2489,6 +2493,8 @@ const Camp = ({ isOpen }) => {
                 value={newCamp.tentUrdu}
                 onChange={(e) => setNewCamp({ ...newCamp, tentUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl"
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">
@@ -2732,8 +2738,9 @@ const Camp = ({ isOpen }) => {
                                   value={row.roadUrdu || ""}
                                   onChange={(e) => handleEditChange(row._id, 'roadUrdu', e.target.value)}
                                   placeholder="سڑک"
-                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                                   dir="rtl"
+                                  style={{ textAlign: 'right' }}
                                 />
                               </div>
                               <div>
@@ -2763,8 +2770,9 @@ const Camp = ({ isOpen }) => {
                                   value={row.tentUrdu || ""}
                                   onChange={(e) => handleEditChange(row._id, 'tentUrdu', e.target.value)}
                                   placeholder="خیمہ"
-                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                                   dir="rtl"
+                                  style={{ textAlign: 'right' }}
                                 />
                               </div>
                             </div>

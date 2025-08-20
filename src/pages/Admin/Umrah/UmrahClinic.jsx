@@ -853,8 +853,10 @@ const UmrahClinic = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewClinic({ ...newClinic, urduName: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 "
                   placeholder="کلینک"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">
@@ -911,8 +913,10 @@ const UmrahClinic = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewClinic({ ...newClinic, urduCenter: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 "
                   placeholder="سینٹر"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">
@@ -951,8 +955,10 @@ const UmrahClinic = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewClinic({ ...newClinic, urduPoll: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="پول"
+                  dir="rtl" 
+                                    style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4 md:col-span-2">

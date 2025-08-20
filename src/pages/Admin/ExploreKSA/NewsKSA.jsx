@@ -529,7 +529,9 @@ const News = () => {
                       })
                     }
                     className="w-full p-2 border rounded text-right"
-                    dir="rtl"
+                    dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                     placeholder="خبر کا عنوان"
                     required
                   />
@@ -757,7 +759,9 @@ const News = () => {
                                   }
                                   placeholder="خبر کا عنوان"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                  dir="rtl"
+                                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                                 />
                               </div>
                               <div>
@@ -829,7 +833,9 @@ const News = () => {
                                   placeholder="خبر کی تفصیل"
                                   rows="3"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                  dir="rtl"
+                                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                                 />
                               </div>
                             </div>

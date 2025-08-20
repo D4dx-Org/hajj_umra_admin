@@ -699,8 +699,11 @@ const BranchKSA = ({ isOpen }) => {
                   type="text"
                   value={newBranch.name_urdu}
                   onChange={(e) => setNewBranch({ ...newBranch, name_urdu: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter name in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                 />
               </div>
             </div>

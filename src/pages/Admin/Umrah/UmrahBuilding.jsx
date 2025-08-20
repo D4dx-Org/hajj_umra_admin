@@ -604,8 +604,10 @@ const [showDetails, setShowDetails] = useState(false);
                   type="text"
                   value={newBuilding.urduName}
                   onChange={(e) => setNewBuilding({ ...newBuilding, urduName: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="اردو نام"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">

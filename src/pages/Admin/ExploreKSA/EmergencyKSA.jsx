@@ -1157,6 +1157,9 @@ const Emergency = () => {
                       nameUrdu: e.target.value,
                     })
                   }
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                   className="w-full p-2 border rounded"
                 />
               </div>
@@ -1320,8 +1323,10 @@ const Emergency = () => {
                                     )
                                   }
                                   placeholder="ہنگامی رابطہ"
-                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                  dir="rtl"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
+                                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+                                  
                                 />
                               </div>
                               <div>

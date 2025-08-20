@@ -358,8 +358,10 @@ const LocationKSA = ({ isOpen }) => {
                       title_urdu: e.target.value,
                     })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter title in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
             </div>

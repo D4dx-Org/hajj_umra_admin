@@ -1926,6 +1926,8 @@ const Clinic = ({ isOpen }) => {
                 value={newClinic.nameUrdu}
                 onChange={(e) => setNewClinic({ ...newClinic, nameUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl"
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">
@@ -1953,6 +1955,8 @@ const Clinic = ({ isOpen }) => {
                 value={newClinic.centerUrdu}
                 onChange={(e) => setNewClinic({ ...newClinic, centerUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl"
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">
@@ -1980,6 +1984,8 @@ const Clinic = ({ isOpen }) => {
                 value={newClinic.pollUrdu}
                 onChange={(e) => setNewClinic({ ...newClinic, pollUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl" 
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">

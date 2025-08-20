@@ -629,8 +629,11 @@ const UmrahEmergency = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewEmergency({ ...newEmergency, urduName: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="ہنگامی رابطہ"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+                  
                 />
               </div>
               <div className="mb-4">
@@ -788,7 +791,10 @@ const UmrahEmergency = ({ isOpen }) => {
                                       handleEditChange(row._id, "urduName", e.target.value)
                                     }
                                     placeholder="اردو نام"
-                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
+                                    dir="rtl" 
+                                    style={{ textAlign: 'right' }}
+                                    
                                   />
                                 </div>
                                 <div>

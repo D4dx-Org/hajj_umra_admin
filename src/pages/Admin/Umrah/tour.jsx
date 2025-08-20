@@ -18,6 +18,7 @@ import {
   Upload,
   Image,
 } from "antd";
+
 import {
   MapPin,
   Search,
@@ -1137,7 +1138,7 @@ const TourManagement = () => {
                         <label className="block text-sm font-medium text-gray-600 mb-1">
                           Urdu Title
                         </label>
-                        <p className="text-gray-900" dir="rtl">
+                        <p className="text-gray-900" dir="rtl" style={{ textAlign: 'right' }}>
                           {selectedTour.title_urdu || "Not provided"}
                         </p>
                       </div>
@@ -1173,6 +1174,7 @@ const TourManagement = () => {
                         <p
                           className="text-gray-900 whitespace-pre-wrap"
                           dir="rtl"
+                          style={{ textAlign: 'right' }}
                         >
                           {selectedTour.description_urdu || "Not provided"}
                         </p>
@@ -1382,7 +1384,8 @@ const TourManagement = () => {
               </Col>
               <Col span={12}>
                 <Form.Item name="title_urdu" label="Title (Urdu)">
-                  <Input placeholder="Enter title in Urdu" />
+                  <Input placeholder="Enter title in Urdu" dir="rtl" 
+                    style={{ textAlign: 'right' }}/>
                 </Form.Item>
               </Col>
             </Row>
@@ -1404,8 +1407,10 @@ const TourManagement = () => {
                 <Form.Item name="description_urdu" label="Description (Urdu)">
                   <TextArea
                     rows={3}
-                    placeholder="Enter description in Urdu..."
+                    placeholder="اردو میں تفصیل درج کریں..."
                     showCount
+                    dir="rtl"
+                    style={{ textAlign: 'right' }}
                   />
                 </Form.Item>
               </Col>

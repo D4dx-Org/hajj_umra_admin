@@ -757,8 +757,10 @@ const AmbulanceKSA = ({ isOpen }) => {
                   type="text"
                   value={newAmbulance.category_urdu}
                   onChange={(e) => setNewAmbulance({ ...newAmbulance, category_urdu: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter category in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
             </div>
@@ -789,8 +791,10 @@ const AmbulanceKSA = ({ isOpen }) => {
                   type="text"
                   value={newAmbulance.center_urdu}
                   onChange={(e) => setNewAmbulance({ ...newAmbulance, center_urdu: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter center in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
             </div>
@@ -821,8 +825,10 @@ const AmbulanceKSA = ({ isOpen }) => {
                   type="text"
                   value={newAmbulance.poll_urdu}
                   onChange={(e) => setNewAmbulance({ ...newAmbulance, poll_urdu: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter poll in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
             </div>

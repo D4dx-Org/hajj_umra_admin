@@ -727,8 +727,11 @@ const BuildingKSA = ({ isOpen }) => {
                   type="text"
                   value={newBuilding.name_urdu}
                   onChange={(e) => setNewBuilding({ ...newBuilding, name_urdu: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter name in Urdu"
+                  dir="rtl" 
+                  
+                
                 />
               </div>
             </div>

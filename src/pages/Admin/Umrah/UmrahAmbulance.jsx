@@ -7,6 +7,7 @@ import { read, utils, write } from "xlsx";
 import Select from "react-select";
 import ambulanceCategories from "../../../data/ambulanceCategories.json";
 
+
 const UmrahAmbulance = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -735,8 +736,10 @@ const UmrahAmbulance = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewAmbulance({ ...newAmbulance, categoryUrdu: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Urdu translation"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
 
@@ -773,8 +776,10 @@ const UmrahAmbulance = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewAmbulance({ ...newAmbulance, centerUrdu: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Urdu translation"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
 
@@ -811,8 +816,10 @@ const UmrahAmbulance = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewAmbulance({ ...newAmbulance, pollUrdu: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Urdu translation"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
 

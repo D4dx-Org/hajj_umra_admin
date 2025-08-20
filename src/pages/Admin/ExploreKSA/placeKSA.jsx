@@ -1347,7 +1347,7 @@ const PlaceKSA = () => {
                       <label className="block text-sm font-medium text-gray-600 mb-1">
                         Title (Urdu)
                       </label>
-                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                      <div className="p-2 bg-gray-50 rounded border text-sm" dir="rtl">
                         {selectedPlace.titleUrdu || "-"}
                       </div>
                     </div>
@@ -1558,7 +1558,8 @@ const PlaceKSA = () => {
                   <Input placeholder="Enter place title in Malayalam" />
                 </Form.Item>
                 <Form.Item name="titleUrdu" label="Title (Urdu)">
-                  <Input placeholder="Enter place title in Urdu" />
+                  <Input className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left " placeholder="Enter place title in Urdu" dir="rtl" 
+                  style={{ textAlign: 'right' }} />
                 </Form.Item>
               </Col>
             </Row>
@@ -1587,7 +1588,8 @@ const PlaceKSA = () => {
               />
             </Form.Item>
             <Form.Item name="descriptionUrdu" label="Description (Urdu)">
-              <TextArea rows={2} placeholder="Enter description in Urdu..." />
+              <TextArea rows={2} className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left " placeholder="Enter description in Urdu" dir="rtl" 
+                  style={{ textAlign: 'right' }} />
             </Form.Item>
 
             {/* File Upload Sections */}

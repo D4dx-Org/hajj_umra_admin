@@ -12,6 +12,8 @@ import Navbar from "../../../components/Navbar";
 import axios from "axios";
 import { read, utils, write } from "xlsx";
 
+
+
 const UmrahBranch = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -657,8 +659,10 @@ const UmrahBranch = ({ isOpen }) => {
                   onChange={(e) =>
                     setNewBranch({ ...newBranch, urduName: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="اردو نام"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">

@@ -18,6 +18,7 @@ import {
   Upload,
   Image,
 } from "antd";
+
 import {
   MapPin,
   Search,
@@ -287,8 +288,7 @@ const ArrivedManagement = () => {
         window.location.href = "/admin-login";
       }
       throw new Error(
-        `Failed to upload ${fileType}: ${
-          error.response?.data?.message || error.message
+        `Failed to upload ${fileType}: ${error.response?.data?.message || error.message
         }`
       );
     }
@@ -1057,33 +1057,32 @@ const ArrivedManagement = () => {
                   {arrivedColumns.map((column) => (
                     <th
                       key={column.key}
-                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        column.key === "select"
-                          ? "w-12"
-                          : column.key === "id"
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.key === "select"
+                        ? "w-12"
+                        : column.key === "id"
                           ? "w-16"
                           : column.key === "title"
-                          ? "w-24"
-                          : column.key === "malayalamTitle"
-                          ? "w-20"
-                          : column.key === "urduTitle"
-                          ? "w-20"
-                          : column.key === "description"
-                          ? "w-32"
-                          : column.key === "malayalamDescription"
-                          ? "w-28"
-                          : column.key === "urduDescription"
-                          ? "w-28"
-                          : column.key === "transportationOptions"
-                          ? "w-20"
-                          : column.key === "emergencyContacts"
-                          ? "w-20"
-                          : column.key === "media"
-                          ? "w-20"
-                          : column.key === "actions"
-                          ? "w-20"
-                          : ""
-                      }`}
+                            ? "w-24"
+                            : column.key === "malayalamTitle"
+                              ? "w-20"
+                              : column.key === "urduTitle"
+                                ? "w-20"
+                                : column.key === "description"
+                                  ? "w-32"
+                                  : column.key === "malayalamDescription"
+                                    ? "w-28"
+                                    : column.key === "urduDescription"
+                                      ? "w-28"
+                                      : column.key === "transportationOptions"
+                                        ? "w-20"
+                                        : column.key === "emergencyContacts"
+                                          ? "w-20"
+                                          : column.key === "media"
+                                            ? "w-20"
+                                            : column.key === "actions"
+                                              ? "w-20"
+                                              : ""
+                        }`}
                     >
                       {column.title}
                     </th>
@@ -1119,31 +1118,30 @@ const ArrivedManagement = () => {
                       {arrivedColumns.map((column) => (
                         <td
                           key={column.key}
-                          className={`px-2 py-2 text-sm text-gray-900 ${
-                            column.key === "id"
-                              ? "max-w-16 truncate"
-                              : column.key === "title"
+                          className={`px-2 py-2 text-sm text-gray-900 ${column.key === "id"
+                            ? "max-w-16 truncate"
+                            : column.key === "title"
                               ? "max-w-24 truncate"
                               : column.key === "malayalamTitle"
-                              ? "max-w-20 truncate"
-                              : column.key === "urduTitle"
-                              ? "max-w-20 truncate"
-                              : column.key === "description"
-                              ? "max-w-32 truncate"
-                              : column.key === "malayalamDescription"
-                              ? "max-w-28 truncate"
-                              : column.key === "urduDescription"
-                              ? "max-w-28 truncate"
-                              : column.key === "transportationOptions"
-                              ? "max-w-20 truncate"
-                              : column.key === "emergencyContacts"
-                              ? "max-w-20 truncate"
-                              : column.key === "media"
-                              ? "max-w-20 truncate"
-                              : column.key === "actions"
-                              ? "whitespace-nowrap"
-                              : "whitespace-nowrap"
-                          }`}
+                                ? "max-w-20 truncate"
+                                : column.key === "urduTitle"
+                                  ? "max-w-20 truncate"
+                                  : column.key === "description"
+                                    ? "max-w-32 truncate"
+                                    : column.key === "malayalamDescription"
+                                      ? "max-w-28 truncate"
+                                      : column.key === "urduDescription"
+                                        ? "max-w-28 truncate"
+                                        : column.key === "transportationOptions"
+                                          ? "max-w-20 truncate"
+                                          : column.key === "emergencyContacts"
+                                            ? "max-w-20 truncate"
+                                            : column.key === "media"
+                                              ? "max-w-20 truncate"
+                                              : column.key === "actions"
+                                                ? "whitespace-nowrap"
+                                                : "whitespace-nowrap"
+                            }`}
                         >
                           {column.render(row)}
                         </td>
@@ -1407,7 +1405,7 @@ const ArrivedManagement = () => {
                           Images
                         </label>
                         {selectedArrived.images &&
-                        selectedArrived.images.length > 0 ? (
+                          selectedArrived.images.length > 0 ? (
                           <div className="grid grid-cols-4 gap-2 mt-2">
                             {selectedArrived.images.map((imageUrl, index) => (
                               <div key={index} className="relative">
@@ -1480,8 +1478,8 @@ const ArrivedManagement = () => {
                         <p className="text-gray-900 text-sm">
                           {selectedArrived.createdAt
                             ? new Date(
-                                selectedArrived.createdAt
-                              ).toLocaleString()
+                              selectedArrived.createdAt
+                            ).toLocaleString()
                             : "Not available"}
                         </p>
                       </div>
@@ -1492,8 +1490,8 @@ const ArrivedManagement = () => {
                         <p className="text-gray-900 text-sm">
                           {selectedArrived.updatedAt
                             ? new Date(
-                                selectedArrived.updatedAt
-                              ).toLocaleString()
+                              selectedArrived.updatedAt
+                            ).toLocaleString()
                             : "Not available"}
                         </p>
                       </div>
@@ -1653,9 +1651,8 @@ const ArrivedManagement = () => {
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  label={`Multiple Images Upload (${
-                    uploadedFiles.images?.length || 0
-                  }/20)`}
+                  label={`Multiple Images Upload (${uploadedFiles.images?.length || 0
+                    }/20)`}
                 >
                   <Dragger
                     {...uploadProps}
@@ -1688,142 +1685,142 @@ const ArrivedManagement = () => {
                     existingImages.length > 0) ||
                     (uploadedFiles.images &&
                       uploadedFiles.images.length > 0)) && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-sm font-medium text-gray-700">
-                          Images (
-                          {(existingImages?.length || 0) +
-                            (uploadedFiles.images?.length || 0)}
-                          /20)
-                          <span className="ml-2 text-xs text-gray-500">
-                            (Existing: {existingImages?.length || 0}, New:{" "}
-                            {uploadedFiles.images?.length || 0})
-                          </span>
+                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="text-sm font-medium text-gray-700">
+                            Images (
+                            {(existingImages?.length || 0) +
+                              (uploadedFiles.images?.length || 0)}
+                            /20)
+                            <span className="ml-2 text-xs text-gray-500">
+                              (Existing: {existingImages?.length || 0}, New:{" "}
+                              {uploadedFiles.images?.length || 0})
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            {editingId &&
+                              existingImages &&
+                              existingImages.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={clearAllExistingImages}
+                                  className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                                  title="Clear all existing images"
+                                >
+                                  Clear Existing
+                                </button>
+                              )}
+                            {uploadedFiles.images &&
+                              uploadedFiles.images.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={clearAllNewImages}
+                                  className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                                  title="Clear all new images"
+                                >
+                                  Clear New
+                                </button>
+                              )}
+                          </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="grid grid-cols-6 gap-2">
+                          {/* Existing images */}
                           {editingId &&
                             existingImages &&
-                            existingImages.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={clearAllExistingImages}
-                                className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                                title="Clear all existing images"
+                            existingImages.map((imageUrl, index) => (
+                              <div
+                                key={`existing-${index}`}
+                                className="relative group"
                               >
-                                Clear Existing
-                              </button>
-                            )}
-                          {uploadedFiles.images &&
-                            uploadedFiles.images.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={clearAllNewImages}
-                                className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                                title="Clear all new images"
-                              >
-                                Clear New
-                              </button>
-                            )}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-6 gap-2">
-                        {/* Existing images */}
-                        {editingId &&
-                          existingImages &&
-                          existingImages.map((imageUrl, index) => (
-                            <div
-                              key={`existing-${index}`}
-                              className="relative group"
-                            >
-                              <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
-                                <img
-                                  src={imageUrl}
-                                  alt={`Existing ${index + 1}`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                    e.target.nextSibling.style.display = "flex";
-                                  }}
-                                />
-                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                                  IMG
-                                </div>
-                                <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
-                                  E{index + 1}
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeExistingImage(index);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                title="Remove this existing image"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-
-                        {/* New images */}
-                        {uploadedFiles.images &&
-                          uploadedFiles.images.map((file, index) => (
-                            <div
-                              key={`new-${index}`}
-                              className="relative group"
-                            >
-                              <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
-                                {file && file.type?.startsWith("image/") ? (
+                                <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
                                   <img
-                                    src={URL.createObjectURL(file)}
-                                    alt={`New ${index + 1}`}
+                                    src={imageUrl}
+                                    alt={`Existing ${index + 1}`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       e.target.style.display = "none";
-                                      e.target.nextSibling.style.display =
-                                        "flex";
+                                      e.target.nextSibling.style.display = "flex";
                                     }}
                                   />
-                                ) : null}
-                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
-                                  IMG
+                                  <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                                    IMG
+                                  </div>
+                                  <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
+                                    E{index + 1}
+                                  </div>
                                 </div>
-                                <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
-                                  N{index + 1}
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    removeExistingImage(index);
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                  title="Remove this existing image"
+                                >
+                                  ×
+                                </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeImageFile(index);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                title="Remove this new image"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                      </div>
+                            ))}
 
-                      {/* Legend */}
-                      <div className="mt-2 flex gap-4 text-xs text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                          <span>Existing Images</span>
+                          {/* New images */}
+                          {uploadedFiles.images &&
+                            uploadedFiles.images.map((file, index) => (
+                              <div
+                                key={`new-${index}`}
+                                className="relative group"
+                              >
+                                <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                                  {file && file.type?.startsWith("image/") ? (
+                                    <img
+                                      src={URL.createObjectURL(file)}
+                                      alt={`New ${index + 1}`}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.style.display = "none";
+                                        e.target.nextSibling.style.display =
+                                          "flex";
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
+                                    IMG
+                                  </div>
+                                  <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
+                                    N{index + 1}
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    removeImageFile(index);
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                  title="Remove this new image"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-500 rounded"></div>
-                          <span>New Images</span>
+
+                        {/* Legend */}
+                        <div className="mt-2 flex gap-4 text-xs text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                            <span>Existing Images</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-green-500 rounded"></div>
+                            <span>New Images</span>
+                          </div>
+                          <div className="text-gray-500">Hover to delete</div>
                         </div>
-                        <div className="text-gray-500">Hover to delete</div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </Form.Item>
               </Col>
 

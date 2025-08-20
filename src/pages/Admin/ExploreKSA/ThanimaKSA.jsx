@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Download, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
+
 import axios from 'axios';
 import { read, utils, write } from 'xlsx';
 
@@ -121,7 +122,7 @@ const Thanima = ({ isOpen }) => {
     { 
       key: 'nameUrdu', 
       title: 'Name (Urdu)',
-      render: (row) => <span className="truncate" title={row.nameUrdu || '-'} dir="rtl">{row.nameUrdu || '-'}</span>
+      render: (row) => <RTLText className="truncate" title={row.nameUrdu || '-'}>{row.nameUrdu || '-'}</RTLText>
     },
     { 
       key: 'phone', 
@@ -575,6 +576,10 @@ const Thanima = ({ isOpen }) => {
                 value={newThanima.nameUrdu}
                 onChange={(e) => setNewThanima({ ...newThanima, nameUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
+
               />
             </div>
             <div className="mb-4">
@@ -690,11 +695,11 @@ const Thanima = ({ isOpen }) => {
                               </div>
                               <div>
                                 <label className="block text-sm font-medium">Name (Urdu)</label>
-                                <input
+                                <RTLInput
                                   type="text"
                                   value={row.nameUrdu || ""}
                                   onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)}
-                                  placeholder="Enter name in Urdu"
+                                  placeholder="اردو میں نام درج کریں"
                                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   dir="rtl"
                                 />

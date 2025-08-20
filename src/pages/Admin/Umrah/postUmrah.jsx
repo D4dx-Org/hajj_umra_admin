@@ -18,6 +18,7 @@ import {
   Upload,
   Image,
 } from "antd";
+
 import {
   CheckCircle,
   Search,
@@ -1151,7 +1152,8 @@ const PostUmrahManagement = () => {
               </Col>
               <Col span={12}>
                 <Form.Item name="title_urdu" label="Title (Urdu)">
-                  <Input placeholder="Enter title in Urdu" />
+                  <Input placeholder="Enter title in Urdu" dir="rtl" 
+    style={{ textAlign: 'right' }}/>
                 </Form.Item>
               </Col>
             </Row>
@@ -1183,8 +1185,10 @@ const PostUmrahManagement = () => {
                 <Form.Item name="description_urdu" label="Description (Urdu)">
                   <TextArea
                     rows={3}
-                    placeholder="Enter description in Urdu..."
+                    placeholder="اردو میں تفصیل درج کریں..."
                     showCount
+                    dir="rtl" 
+    style={{ textAlign: 'right' }}
                   />
                 </Form.Item>
               </Col>

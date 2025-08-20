@@ -683,6 +683,9 @@ const Nusuk = ({ isOpen }) => {
                   setNewNusuk({ ...newNusuk, nameUrdu: e.target.value })
                 }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
               />
             </div>
             <div className="mb-4">
@@ -725,6 +728,9 @@ const Nusuk = ({ isOpen }) => {
                   setNewNusuk({ ...newNusuk, buildingUrdu: e.target.value })
                 }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
               />
             </div>
             <div className="mb-4">
@@ -974,7 +980,8 @@ const Nusuk = ({ isOpen }) => {
                                     }
                                     placeholder="Enter name in Urdu"
                                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                    dir="rtl"
+                                    dir="rtl" 
+                                    style={{ textAlign: 'right' }}
                                   />
                                 </div>
                                 <div>
@@ -1030,7 +1037,8 @@ const Nusuk = ({ isOpen }) => {
                                     }
                                     placeholder="Enter building name in Urdu"
                                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                    dir="rtl"
+                                    dir="rtl" 
+                                    style={{ textAlign: 'right' }}
                                   />
                                 </div>
                               </div>

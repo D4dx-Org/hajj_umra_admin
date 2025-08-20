@@ -999,8 +999,10 @@ const BusStationKSA = ({ isOpen }) => {
                       name: { ...newBusStation.name, urdu: e.target.value },
                     })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left "
                   placeholder="Enter station name in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                   required
                 />
               </div>
@@ -1062,8 +1064,11 @@ const BusStationKSA = ({ isOpen }) => {
                       },
                     })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left "
                   placeholder="Enter station point in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                 />
               </div>
             </div>
@@ -1136,8 +1141,10 @@ const BusStationKSA = ({ isOpen }) => {
                       },
                     })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left"
                   placeholder="Enter destination point in Urdu"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
             </div>

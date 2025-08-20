@@ -980,8 +980,10 @@ const UmrahCamp = () => {
                   onChange={(e) =>
                     setNewCamp({ ...newCamp, urduMaktab: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="مکتب"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">
@@ -1017,8 +1019,11 @@ const UmrahCamp = () => {
                   onChange={(e) =>
                     setNewCamp({ ...newCamp, urduZone: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="علاقہ"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
                 />
               </div>
               <div className="mb-4">
@@ -1093,8 +1098,10 @@ const UmrahCamp = () => {
                   onChange={(e) =>
                     setNewCamp({ ...newCamp, urduPoll: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="پول"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">
@@ -1130,8 +1137,10 @@ const UmrahCamp = () => {
                   onChange={(e) =>
                     setNewCamp({ ...newCamp, urduRoad: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder"
                   placeholder="سڑک"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4">
@@ -1167,8 +1176,10 @@ const UmrahCamp = () => {
                   onChange={(e) =>
                     setNewCamp({ ...newCamp, urduTent: e.target.value })
                   }
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2 "
                   placeholder="خیمہ"
+                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
                 />
               </div>
               <div className="mb-4 md:col-span-2">

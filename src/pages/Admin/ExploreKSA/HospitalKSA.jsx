@@ -1802,6 +1802,9 @@ const Hospital = ({ isOpen }) => {
                 value={newHospital.nameUrdu}
                 onChange={(e) => setNewHospital({ ...newHospital, nameUrdu: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
               />
             </div>
             <div className="mb-4">
@@ -1811,6 +1814,9 @@ const Hospital = ({ isOpen }) => {
                 value={newHospital.arabicName}
                 onChange={(e) => setNewHospital({ ...newHospital, arabicName: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
               />
             </div>
             
