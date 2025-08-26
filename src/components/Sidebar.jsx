@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logoblack from "../assets/logo-white.png";
 import {
   Ambulance,
@@ -24,10 +24,16 @@ import {
   PlaneTakeoff,
   ChevronDown,
   ChevronRight,
+  Plus,
+  X,
+  Save,
+  Trash2,
 } from "lucide-react";
+import AddForm from "./AddForm";
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("hajj");
   const [expandedSections, setExpandedSections] = useState({
     hajj: true,
@@ -36,15 +42,93 @@ const Sidebar = ({ isOpen }) => {
   });
   const [expandedUmrahSections, setExpandedUmrahSections] = useState({
     essential: false,
+    categories: false,
   });
   const [expandedKsaSections, setExpandedKsaSections] = useState({
     essential: false,
   });
-  const isUserInteraction = useRef(false); // Track user interactions
+  const [showAddPageModal, setShowAddPageModal] = useState(false);
+  const [customPages, setCustomPages] = useState([]);
+  const isUserInteraction = useRef(false);
+
+  // Load custom pages from backend JSON
+  const fetchCustomPages = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah`);
+      const data = await res.json();
+      setCustomPages((data && data.pages) || []);
+    } catch (e) {
+      console.error("Failed to load custom pages", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomPages();
+  }, []);
+
+  const openAddPageModal = (e) => {
+    e.stopPropagation();
+    setShowAddPageModal(true);
+  };
+
+  const closeAddPageModal = () => {
+    setShowAddPageModal(false);
+  };
+
+  const handleAddPageSuccess = (page) => {
+    if (!page) return;
+  
+    // ✅ Immediately push new page to sidebar state
+    setCustomPages((prev) => [...prev, page]);
+  
+    // Notify App.jsx to refresh its routes
+    window.dispatchEvent(new CustomEvent('customPageCreated'));
+  
+    // Optional: still sync with backend
+    setTimeout(() => {
+      fetchCustomPages();
+    }, 500);
+  };
+  
+  
+
+  const handleDeletePage = async (name, route) => {
+    const ok = confirm(`Are you sure you want to delete ${name} page?`);
+    if (!ok) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to delete page");
+      setCustomPages(data.pages || []);
+      // If current route is the deleted page, navigate away
+      if (location.pathname === route) {
+        navigate("/umrah-preparation");
+      }
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // Helper function to get icon component from string
+  const getIconComponent = (iconName) => {
+    const iconMap = {
+      BookOpen: <BookOpen size={16} />,
+      Video: <Video size={16} />,
+      Calendar: <Calendar size={16} />,
+      PlaneLanding: <PlaneLanding size={16} />,
+      PlaneTakeoff: <PlaneTakeoff size={16} />,
+      Navigation: <Navigation size={16} />,
+      MapPin: <MapPin size={16} />,
+      Bell: <Bell size={16} />,
+    };
+
+    return iconMap[iconName] || <BookOpen size={16} />;
+  };
 
   // Automatically set the correct tab based on current route
   useEffect(() => {
-    // Skip if the change is due to user interaction
     if (isUserInteraction.current) {
       isUserInteraction.current = false;
       return;
@@ -59,7 +143,6 @@ const Sidebar = ({ isOpen }) => {
       "/KSA/bus-station",
       "/KSA/camp",
       "/KSA/clinic",
-      // "/KSA/countries",
       "/KSA/emergency",
       "/KSA/hospital",
       "/KSA/news",
@@ -74,7 +157,6 @@ const Sidebar = ({ isOpen }) => {
       "/umrah-bus",
       "/umrah-camp",
       "/umrah-clinic",
-      // "/umrah-country",
       "/umrah-emergency",
       "/umrah-hospital",
       "/umrah-news",
@@ -86,6 +168,7 @@ const Sidebar = ({ isOpen }) => {
       "/umrah-duas",
       "/umrah-virtual-tour",
       "/umrah-post",
+      ...customPages.map((page) => page.route),
     ];
 
     const essentialUmrahRoutes = [
@@ -95,13 +178,21 @@ const Sidebar = ({ isOpen }) => {
       "/umrah-bus",
       "/umrah-camp",
       "/umrah-clinic",
-      // "/umrah-country",
       "/umrah-emergency",
       "/umrah-hospital",
       "/umrah-news",
       "/umrah-nusuk",
       "/umrah-thanima",
       "/umrah-notification",
+    ];
+
+    const categoriesUmrahRoutes = [
+      "/umrah-preparation",
+      "/umrah-arrived",
+      "/umrah-duas",
+      "/umrah-virtual-tour",
+      "/umrah-post",
+      ...customPages.map((page) => page.route),
     ];
 
     const essentialKsaRoutes = [
@@ -111,7 +202,6 @@ const Sidebar = ({ isOpen }) => {
       "/KSA/bus-station",
       "/KSA/camp",
       "/KSA/clinic",
-      // "/KSA/countries",
       "/KSA/emergency",
       "/KSA/hospital",
       "/KSA/news",
@@ -121,14 +211,6 @@ const Sidebar = ({ isOpen }) => {
       "/locationKSA",
     ];
 
-    const alternativeUmrahRoutes = [
-      "/umrah-preparation",
-      "/umrah-arrived",
-      "/umrah-duas",
-      "/umrah-virtual-tour",
-      "/umrah-post",
-    ];
-
     if (ksaRoutes.includes(location.pathname)) {
       setActiveTab("explore-ksa");
       setExpandedSections({
@@ -136,8 +218,7 @@ const Sidebar = ({ isOpen }) => {
         umrah: false,
         "explore-ksa": true,
       });
-      
-      // Auto-expand the essential services if it's an essential route
+
       if (essentialKsaRoutes.includes(location.pathname)) {
         setExpandedKsaSections({
           essential: true,
@@ -150,11 +231,16 @@ const Sidebar = ({ isOpen }) => {
         umrah: true,
         "explore-ksa": false,
       });
-      
-      // Auto-expand the essential services if it's an essential route
+
       if (essentialUmrahRoutes.includes(location.pathname)) {
         setExpandedUmrahSections({
           essential: true,
+          categories: false,
+        });
+      } else if (categoriesUmrahRoutes.includes(location.pathname)) {
+        setExpandedUmrahSections({
+          essential: false,
+          categories: true,
         });
       }
     } else {
@@ -165,10 +251,11 @@ const Sidebar = ({ isOpen }) => {
         "explore-ksa": false,
       });
     }
-  }, [location.pathname]);
+  }, [location.pathname, customPages]);
 
   // Hajj related menu items
   const hajjMenuItems = [
+    
     {
       id: "ambulance",
       label: "Ambulance",
@@ -324,11 +411,11 @@ const Sidebar = ({ isOpen }) => {
       label: "Notifications",
       icon: <Bell size={16} />,
       path: "/umrah-notification",
-    },
+    }
   ];
 
-  // Alternative Umrah services
-  const alternativeUmrahMenuItems = [
+  // Categories Umrah services (including custom pages)
+  const categoriesUmrahMenuItems = [
     {
       id: "umrah-preparation",
       label: "Preparation",
@@ -359,10 +446,17 @@ const Sidebar = ({ isOpen }) => {
       icon: <PlaneTakeoff size={16} />,
       path: "/umrah-post",
     },
+    ...customPages.map((p) => ({
+      id: p.route,
+      label: p.name,
+      icon: <BookOpen size={16} />,
+      path: p.route,
+      __isCustom: true,
+    })),
   ];
 
-  // Essential KSA services
   const essentialKsaMenuItems = [
+    
     {
       id: "ksa-location",
       label: "Location",
@@ -449,7 +543,6 @@ const Sidebar = ({ isOpen }) => {
     },
   ];
 
-  // Regular KSA menu items (non-essential)
   const regularKsaMenuItems = [
     {
       id: "ksa-places",
@@ -459,47 +552,34 @@ const Sidebar = ({ isOpen }) => {
     },
   ];
 
-  const toggleSection = (sectionId) => {
-    isUserInteraction.current = true; // Mark as user interaction
-    setActiveTab(sectionId);
-    setExpandedSections((prev) => ({
-      hajj: sectionId === "hajj" ? !prev.hajj : false,
-      umrah: sectionId === "umrah" ? !prev.umrah : false,
-      "explore-ksa": sectionId === "explore-ksa" ? !prev["explore-ksa"] : false,
-    }));
-  };
-
-  const toggleUmrahSection = (sectionId) => {
-    isUserInteraction.current = true;
-    setExpandedUmrahSections((prev) => ({
-      essential: sectionId === "essential" ? !prev.essential : false,
-    }));
-  };
-
-  const toggleKsaSection = (sectionId) => {
-    isUserInteraction.current = true;
-    setExpandedKsaSections((prev) => ({
-      essential: sectionId === "essential" ? !prev.essential : false,
-    }));
-  };
-
   const renderMenuItems = (menuItems) => (
     <ul className="space-y-0.5">
       {menuItems.map((item) => (
-        <li key={item.id}>
-          <Link
-            to={item.path}
-            className={`flex items-center gap-2 px-3 py-1.5 ml-1 transition-colors rounded-md text-[14px]
+        <li key={item.id || item.path}>
+          <div className="flex items-center justify-between">
+            <Link
+              to={item.path}
+              className={`flex items-center gap-2 px-3 py-1.5 ml-1 transition-colors rounded-md text-[14px]
               ${
                 location.pathname === item.path
                   ? "bg-[#4A90E2] text-white shadow-md"
                   : "text-gray-300 hover:bg-blue-900/50 hover:text-white"
               }`}
-            onClick={() => (isUserInteraction.current = true)}
-          >
-            <span className="opacity-80">{item.icon}</span>
-            <span>{item.label}</span>
-          </Link>
+              onClick={() => (isUserInteraction.current = true)}
+            >
+              <span className="opacity-80">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+            {item.__isCustom && (
+              <button
+                className="mr-2 p-1 rounded hover:bg-white/10 text-red-200 hover:text-red-400"
+                title={`Delete ${item.label}`}
+                onClick={() => handleDeletePage(item.label, item.path)}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
         </li>
       ))}
     </ul>
@@ -511,7 +591,15 @@ const Sidebar = ({ isOpen }) => {
     return (
       <div className="ml-2 mb-1">
         <button
-          onClick={() => toggleUmrahSection(sectionId)}
+          onClick={(e) => {
+            if (sectionId === "categories") {
+              if (e.target.closest('.add-on-button')) {
+                openAddPageModal(e);
+                return;
+              }
+            }
+            toggleUmrahSection(sectionId);
+          }}
           className={`w-full flex items-center justify-between p-2 text-left transition-all duration-200 rounded-lg hover:bg-[#1e3a8a]/50
             ${
               isExpanded
@@ -521,7 +609,18 @@ const Sidebar = ({ isOpen }) => {
           `}
         >
           <span className="font-medium text-[14px]">{title}</span>
-          {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          <div className="flex items-center">
+            {sectionId === "categories" && (
+              <button 
+                className="add-on-button mr-2 p-1 rounded hover:bg-white/10"
+                onClick={openAddPageModal}
+                title="Add New Page"
+              >
+                <Plus size={12} />
+              </button>
+            )}
+            {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          </div>
         </button>
 
         {isExpanded && (
@@ -531,6 +630,31 @@ const Sidebar = ({ isOpen }) => {
         )}
       </div>
     );
+  };
+
+  const toggleSection = (sectionId) => {
+    isUserInteraction.current = true;
+    setActiveTab(sectionId);
+    setExpandedSections((prev) => ({
+      hajj: sectionId === "hajj" ? !prev.hajj : false,
+      umrah: sectionId === "umrah" ? !prev.umrah : false,
+      "explore-ksa": sectionId === "explore-ksa" ? !prev["explore-ksa"] : false,
+    }));
+  };
+
+  const toggleUmrahSection = (sectionId) => {
+    isUserInteraction.current = true;
+    setExpandedUmrahSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  const toggleKsaSection = (sectionId) => {
+    isUserInteraction.current = true;
+    setExpandedKsaSections((prev) => ({
+      essential: sectionId === "essential" ? !prev.essential : false,
+    }));
   };
 
   const renderKsaSubSection = (sectionId, title, menuItems) => {
@@ -585,7 +709,7 @@ const Sidebar = ({ isOpen }) => {
             {sectionId === "umrah" ? (
               <div className="space-y-1">
                 {renderUmrahSubSection("essential", "Essential Service", essentialUmrahMenuItems)}
-                {renderMenuItems(alternativeUmrahMenuItems)}
+                {renderUmrahSubSection("categories", "Categories", categoriesUmrahMenuItems)}
               </div>
             ) : sectionId === "explore-ksa" ? (
               <div className="space-y-1">
@@ -602,47 +726,48 @@ const Sidebar = ({ isOpen }) => {
   };
 
   return (
-    <aside
-      className={`fixed bg-[#3a51a3] text-white h-screen z-10 transition-all duration-300 top-0 flex flex-col
-        ${isOpen ? "w-64" : "w-0 md:w-16"}`}
-    >
-      {/* Logo Section */}
-      {isOpen && (
-        <div className="flex items-center justify-center p-4 border-b border-[#4A90E2]/30">
-          <img
-            src={logoblack}
-            alt="Thanima Logo"
-            className="h-12 w-auto"
-          />
-        </div>
-      )}
+    <>
+      <aside
+        className={`fixed bg-[#3a51a3] text-white h-screen z-10 transition-all duration-300 top-0 flex flex-col
+          ${isOpen ? "w-64" : "w-0 md:w-16"}`}
+      >
+        {isOpen && (
+          <div className="flex items-center justify-center p-4 border-b border-[#4A90E2]/30">
+            <img
+              src={logoblack}
+              alt="Thanima Logo"
+              className="h-12 w-auto"
+            />
+          </div>
+        )}
 
-      {/* Menu Items Container */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-4 scrollbar-hide">
-        <nav className="p-2">
-          {isOpen ? (
-            <div className="space-y-1">
-              {renderDropdownSection("hajj", "Hajj Services", hajjMenuItems)}
-              {renderDropdownSection("umrah", "Umrah Services", [])}
-              {renderDropdownSection("explore-ksa", "Explore KSA", [])}
-            </div>
-          ) : (
-            // Collapsed sidebar - show minimal icons
-            <div className="space-y-4 pt-4">
-              <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center justify-center mx-auto">
-                <span className="text-white font-bold text-xs">H</span>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden pt-4 scrollbar-hide">
+          <nav className="p-2">
+            {isOpen ? (
+              <div className="space-y-1">
+                {renderDropdownSection("hajj", "Hajj Services", hajjMenuItems)}
+                {renderDropdownSection("umrah", "Umrah Services", [])}
+                {renderDropdownSection("explore-ksa", "Explore KSA", [])}
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#357ABD] flex items-center justify-center mx-auto">
-                <span className="text-white font-bold text-xs">U</span>
+            ) : (
+              <div className="space-y-4 pt-4">
+                <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center justify-center mx-auto">
+                  <span className="text-white font-bold text-xs">H</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#357ABD] flex items-center justify-center mx-auto">
+                  <span className="text-white font-bold text-xs">U</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#2563eb] flex items-center justify-center mx-auto">
+                  <span className="text-white font-bold text-xs">K</span>
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#2563eb] flex items-center justify-center mx-auto">
-                <span className="text-white font-bold text-xs">K</span>
-              </div>
-            </div>
-          )}
-        </nav>
-      </div>
-    </aside>
+            )}
+          </nav>
+        </div>
+      </aside>
+
+      <AddForm open={showAddPageModal} onClose={closeAddPageModal} onSuccess={handleAddPageSuccess} />
+    </>
   );
 };
 
