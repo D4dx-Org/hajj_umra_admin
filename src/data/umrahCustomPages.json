@@ -7,10 +7,24 @@
     "fields": [
       {
         "fieldName": "title",
-        "type": "image"
+        "type": "video"
       }
     ],
     "modelFile": "Prayer.js",
     "routeFile": "Prayer.js"
+  },
+  {
+    "name": "Swalath",
+    "slug": "swalath",
+    "route": "/umrah-swalath",
+    "component": "Swalath.jsx",
+    "fields": [
+      {
+        "fieldName": "title",
+        "type": "map"
+      }
+    ],
+    "modelFile": "Swalath.js",
+    "routeFile": "Swalath.js"
   }
 ]

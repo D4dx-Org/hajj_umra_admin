@@ -49,9 +49,9 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { Dragger } = Upload;
 
-const Prayer = () => {
+const Swalath = () => {
   
-  const API_URL = `${import.meta.env.VITE_BACKEND_URL_V2}/umrah-prayer`;
+  const API_URL = `${import.meta.env.VITE_BACKEND_URL_V2}/umrah-swalath`;
   
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -376,7 +376,7 @@ const Prayer = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "prayer_template.xlsx");
+      link.setAttribute("download", "swalath_template.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -424,9 +424,9 @@ const Prayer = () => {
         title: "title",
         render: (row) => (
           row.title ? (
-            <a href={row.title} target="_blank" rel="noopener noreferrer">
-              <Button size="small" icon={<Play size={14} />}>
-                Watch on YouTube
+            <a href={row.title} target="_blank" rel="noopener noreferrer" className="inline-block">
+              <Button size="small" icon={<MapPin size={14} />} className="hover:shadow-md transition-shadow">
+                View Map
               </Button>
             </a>
           ) : '-'
@@ -484,7 +484,7 @@ const Prayer = () => {
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Settings size={24} />
-              Prayer
+              Swalath
             </h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               Total: {filteredData.length} entries
@@ -667,43 +667,17 @@ const Prayer = () => {
         {selectedItem.title ? (
           <div className="space-y-2">
             <a href={selectedItem.title} target="_blank" rel="noopener noreferrer">
-              <Button size="small" icon={<Play size={14} />}>
-                Watch on YouTube
+              <Button size="small" icon={<MapPin size={14} />}>
+                View on Map
               </Button>
             </a>
-            {/* YouTube embed */}
-            {(() => {
-              const getYouTubeId = (url) => {
-                if (!url) return null;
-                // Simple YouTube ID extraction
-                let videoId = null;
-                if (url.includes('youtu.be/')) {
-                  videoId = url.split('youtu.be/')[1]?.split(/[?&]/)[0];
-                } else if (url.includes('youtube.com/watch?v=')) {
-                  videoId = url.split('v=')[1]?.split(/[?&]/)[0];
-                } else if (url.includes('youtube.com/embed/')) {
-                  videoId = url.split('embed/')[1]?.split(/[?&]/)[0];
-                }
-                return (videoId && videoId.length === 11) ? videoId : null;
-              };
-              const videoId = getYouTubeId(selectedItem.title);
-              return videoId ? (
-                <div className="mt-2">
-                  <iframe
-                    width="320"
-                    height="180"
-                    src={`https://www.youtube.com/embed/${videoId}`}
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="rounded"
-                  />
-                </div>
-              ) : null;
-            })()}
+            <div className="text-sm text-gray-600 break-all">
+              <a href={selectedItem.title} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
+                {selectedItem.title}
+              </a>
+            </div>
           </div>
-        ) : 'No video'}
+        ) : 'No map'}
       </div>
                     </div>
                   </div>
@@ -783,20 +757,8 @@ const Prayer = () => {
               </Col>
             </Row>
 
-            <Form.Item name="title" label="YouTube Video URL" rules={[
-          { type: "url", message: "Please enter a valid URL" },
-          { 
-            validator: (_, value) => {
-              if (!value) return Promise.resolve();
-              const urlStr = value.toLowerCase();
-              if (urlStr.includes('youtube.com') || urlStr.includes('youtu.be')) {
-                return Promise.resolve();
-              }
-              return Promise.reject(new Error('Please enter a valid YouTube URL'));
-            }
-          }
-        ]}>
-          <Input placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID" addonBefore="🎥" />
+            <Form.Item name="title" label="Map Link URL" rules={[{ type: "url", message: "Please enter a valid URL" }]}>
+          <Input placeholder="https://maps.google.com/... or any map URL" addonBefore="🗺" />
         </Form.Item>
 
             <Form.Item>
@@ -879,4 +841,4 @@ const Prayer = () => {
   );
 };
 
-export default Prayer;
+export default Swalath;
