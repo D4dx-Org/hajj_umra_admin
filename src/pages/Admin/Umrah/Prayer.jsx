@@ -32,11 +32,14 @@ import {
   X,
   RotateCcw,
   Download,
+  Play,
+  MapPin,
 } from "lucide-react";
 import { UploadOutlined, InboxOutlined } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
 import { read, utils, write } from "xlsx";
+// Import your Sidebar and Navbar components
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
 
@@ -46,7 +49,9 @@ const { Option } = Select;
 const { Dragger } = Upload;
 
 const Prayer = () => {
+  // Configure your API URL - adjust based on your setup
   const API_URL = `${import.meta.env.VITE_BACKEND_URL_V2}/umrah-prayer`;
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -65,10 +70,19 @@ const Prayer = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-   const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
+
+  // Image upload states (only initialize for image fields)
+  const [uploadedFiles, setUploadedFiles] = useState({
+    title: []
+  });
+  const [fileList, setFileList] = useState({
+    title: []
+  });
+  const [existingTitle, setExistingTitle] = useState([]);
 
   // Fetch data
   const fetchData = async (page = 1, pageSize = 10) => {
@@ -76,11 +90,11 @@ const Prayer = () => {
       setLoading(true);
       const response = await axios.get(`${API_URL}?page=${page}&limit=${pageSize}`);
       
-      setData(response.data.entries || []);
+      setData(response.data.entries || response.data.data || []);
       setPagination({
         current: page,
         pageSize: pageSize,
-        total: response.data.count || response.data.entries?.length || 0,
+        total: response.data.count || response.data.total || response.data.entries?.length || 0,
         showSizeChanger: true,
         showQuickJumper: true,
         showTotal: (total, range) =>
@@ -98,8 +112,111 @@ const Prayer = () => {
     fetchData();
   }, []);
   
-  // Handle file upload
-  const handleFileUpload = async (file) => {
+  // File upload validation function
+  const beforeUploadFile = (file, fileType) => {
+    const isValidType = fileType === "image" ? file.type.startsWith("image/") : file.type.startsWith("video/");
+    
+    if (!isValidType) {
+      message.error(`Please upload a valid ${fileType} file!`);
+      return false;
+    }
+    
+    const maxSize = fileType === "image" ? 5 : 50; // 5MB for images, 50MB for videos
+    const isValidSize = file.size / 1024 / 1024 < maxSize;
+    if (!isValidSize) {
+      message.error(`${fileType} must be smaller than ${maxSize}MB!`);
+      return false;
+    }
+    
+    return false; // Prevent automatic upload
+  };
+
+  // File upload configuration for images
+  const imageUploadProps = {
+    showUploadList: false,
+    multiple: false,
+  };
+
+  // Handle file change for images
+  const handleFileChange = (info, fieldName) => {
+    const { fileList } = info;
+    const maxImages = 20;
+
+    if (fileList.length > maxImages) {
+      message.warning(`Maximum ${maxImages} images allowed. Only the first ${maxImages} images will be kept.`);
+    }
+
+    const limitedFileList = fileList.slice(0, maxImages);
+    const files = limitedFileList.map((item) => item.originFileObj || item).filter(Boolean);
+
+    setUploadedFiles((prev) => ({
+      ...prev,
+      [fieldName]: files,
+    }));
+    setFileList((prev) => ({
+      ...prev,
+      [fieldName]: limitedFileList,
+    }));
+  };
+
+  // Remove specific image from title
+  const removeTitleFile = (index) => {
+    setUploadedFiles((prev) => {
+      const newImages = prev.title.filter((_, i) => i !== index);
+      return { ...prev, title: newImages };
+    });
+    setFileList((prev) => {
+      const newFileList = prev.title.filter((_, i) => i !== index);
+      return { ...prev, title: newFileList };
+    });
+    message.success("Image removed successfully");
+  };
+
+  // Remove existing image from title
+  const removeExistingTitle = (index) => {
+    const updatedImages = existingTitle.filter((_, i) => i !== index);
+    setExistingTitle(updatedImages);
+    form.setFieldsValue({ title: updatedImages });
+    form.validateFields(["title"]);
+    message.success("Existing image removed successfully");
+  };
+
+  // Clear all new uploaded images for title
+  const clearAllNewTitle = () => {
+    setUploadedFiles((prev) => ({ ...prev, title: [] }));
+    setFileList((prev) => ({ ...prev, title: [] }));
+    message.success("All new images cleared");
+  };
+
+  // Clear all existing images for title
+  const clearAllExistingTitle = () => {
+    setExistingTitle([]);
+    form.setFieldsValue({ title: [] });
+    form.validateFields(["title"]);
+    message.success("All existing images cleared");
+  };
+
+  // Upload file to server
+  const uploadFileToServer = async (file, fileType) => {
+    if (!file) return null;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(`${API_URL}/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      return response.data.url;
+    } catch (error) {
+      console.error(`Error uploading ${fileType}:`, error);
+      throw new Error(`Failed to upload ${fileType}: ${error.response?.data?.message || error.message}`);
+    }
+  };
+  
+  // Handle bulk file upload
+  const handleBulkFileUpload = async (file) => {
     setUploading(true);
     setUploadProgress(0);
     
@@ -119,13 +236,13 @@ const Prayer = () => {
         },
       });
       
-      if (response.data.details.errors.length > 0) {
+      if (response.data.details?.errors?.length > 0) {
         message.warning(
           `Upload completed with ${response.data.details.errors.length} errors. Check console for details.`
         );
         console.log("Upload errors:", response.data.details.errors);
       } else {
-        message.success(response.data.message);
+        message.success(response.data.message || "Upload completed successfully");
       }
       
       setUploadModalVisible(false);
@@ -142,14 +259,11 @@ const Prayer = () => {
   };
 
   // Upload props for Dragger
-  const uploadProps = {
-    beforeUpload: handleFileUpload,
+  const bulkUploadProps = {
+    beforeUpload: handleBulkFileUpload,
     accept: ".xlsx, .xls",
     showUploadList: false,
   };
-
-  
-
 
   // Handle pagination change
   const handleTableChange = (paginationInfo, filters, sorter) => {
@@ -160,13 +274,35 @@ const Prayer = () => {
   const handleSubmit = async (values) => {
     setSubmitting(true);
     try {
+      let titleUrls = existingTitle || [];
+
+      // Upload multiple images for title if they exist
+      if (uploadedFiles.title && uploadedFiles.title.length > 0) {
+        try {
+          message.loading("Uploading title images...", 0);
+          const uploadPromises = uploadedFiles.title.map((file) => uploadFileToServer(file, "image"));
+          const uploadedUrls = await Promise.all(uploadPromises);
+          titleUrls = [...titleUrls, ...uploadedUrls.filter((url) => url)];
+          message.destroy();
+        } catch (error) {
+          message.destroy();
+          message.error("Failed to upload title images");
+          return;
+        }
+      }
+
+      const formData = {
+        ...values,
+        title: titleUrls
+      };
+
       if (editingId) {
         // Update existing entry
-        const response = await axios.put(`${API_URL}/${editingId}`, values);
+        const response = await axios.put(`${API_URL}/${editingId}`, formData);
         message.success("Entry updated successfully");
       } else {
         // Create new entry
-        const response = await axios.post(API_URL, values);
+        const response = await axios.post(API_URL, formData);
         message.success("Entry created successfully");
       }
 
@@ -174,7 +310,7 @@ const Prayer = () => {
       fetchData();
     } catch (error) {
       console.error("Error saving data:", error);
-      message.error("Failed to save data");
+      message.error(error.response?.data?.message || "Failed to save data");
     } finally {
       setSubmitting(false);
     }
@@ -186,6 +322,11 @@ const Prayer = () => {
     setEditingId(null);
     setSubmitting(false);
     form.resetFields();
+    setUploadedFiles({ title: []
+    });
+    setFileList({ title: []
+    });
+    setExistingTitle([]);
   };
 
   // Handle deletion
@@ -306,7 +447,7 @@ const Prayer = () => {
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === filteredData.length}
+          checked={selectedRows.length === filteredData.length && filteredData.length > 0}
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -330,14 +471,22 @@ const Prayer = () => {
       ),
     },
     {
-      key: "title",
-      title: "title",
-      render: (row) => (
-        <span className="truncate" title={row.title || '-'}>
-          {row.title || '-'}
-        </span>
-      ),
-    },
+        key: "title",
+        title: "title",
+        render: (row) => {
+          if (row.title && Array.isArray(row.title) && row.title.length > 0) {
+            return (
+              <div className="flex items-center gap-1">
+                <Image src={row.title[0]} width={40} height={40} className="object-cover rounded" />
+                {row.title.length > 1 && (
+                  <span className="text-xs text-gray-500">+{row.title.length - 1}</span>
+                )}
+              </div>
+            );
+          }
+          return '-';
+        },
+      },
     {
       key: "actions",
       title: "Actions",
@@ -346,7 +495,18 @@ const Prayer = () => {
           <button
             onClick={() => {
               setEditingId(row._id);
-              form.setFieldsValue(row);
+              const recordTitle = row.title || [];
+              setExistingTitle(recordTitle);
+              
+              form.setFieldsValue({
+                ...row,
+                title: row.title || []
+              });
+              
+              setUploadedFiles({ title: []
+              });
+              setFileList({ title: []
+              });
               setModalVisible(true);
             }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -375,12 +535,12 @@ const Prayer = () => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"} transition-all duration-300`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Settings size={24} />
-              prayer
+              Prayer
             </h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               Total: {filteredData.length} entries
@@ -419,7 +579,7 @@ const Prayer = () => {
                 form.resetFields();
                 setModalVisible(true);
               }}
-              className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600 border-0 font-normal"
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 border-0 font-normal"
             >
               Add Entry
             </button>
@@ -445,8 +605,8 @@ const Prayer = () => {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-300 mx-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
               <div className="flex items-center gap-3 text-amber-500 mb-4">
                 <AlertTriangle size={24} />
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
@@ -535,7 +695,7 @@ const Prayer = () => {
 
         {/* Detail Modal */}
         {showDetailModal && selectedItem && (
-          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -543,6 +703,7 @@ const Prayer = () => {
                   <button
                     onClick={() => setShowDetailModal(false)}
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    aria-label="Close"
                   >
                     <X size={20} />
                   </button>
@@ -557,11 +718,31 @@ const Prayer = () => {
                         <label className="block text-sm font-medium text-gray-600 mb-1">ID</label>
                         <p className="text-gray-900 font-medium">{selectedItem.id}</p>
                       </div>
-                      
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">title</label>
-                        <p className="text-gray-900">{`${selectedItem.title || 'Not provided'}`}</p>
-                      </div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">title</label>
+        {selectedItem.title && Array.isArray(selectedItem.title) && selectedItem.title.length > 0 ? (
+          <div className="grid grid-cols-4 gap-2 mt-2">
+            {selectedItem.title.map((imageUrl, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={imageUrl}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-20 object-cover rounded border"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-20 hidden items-center justify-center text-xs text-gray-500 bg-gray-100 rounded border">
+                  IMG {index + 1}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No images available</p>
+        )}
+      </div>
                     </div>
                   </div>
 
@@ -640,8 +821,59 @@ const Prayer = () => {
               </Col>
             </Row>
 
-            <Form.Item name="title" label="title">
-          <Input placeholder="Enter title..." />
+            <Form.Item label={`Multiple Images Upload (${uploadedFiles.title?.length || 0}/20)`}>
+          <Dragger
+            {...imageUploadProps}
+            accept="image/*"
+            multiple={true}
+            maxCount={20}
+            onChange={(info) => handleFileChange(info, "title")}
+            beforeUpload={(file) => beforeUploadFile(file, "image")}
+          >
+            <p className="ant-upload-drag-icon">
+              <UploadCloud size={40} className="mx-auto text-blue-500" />
+            </p>
+            <p className="ant-upload-text">Click or drag images to upload</p>
+            <p className="ant-upload-hint">Support for jpg, png, gif. Max size 5MB each. Maximum 20 images allowed.</p>
+          </Dragger>
+          {/* Display images preview */}
+          {((editingId && existingTitle && existingTitle.length > 0) || (uploadedFiles.title && uploadedFiles.title.length > 0)) && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-sm font-medium text-gray-700">
+                  Images ({(existingTitle?.length || 0) + (uploadedFiles.title?.length || 0)}/20)
+                </div>
+                <div className="flex gap-2">
+                  {editingId && existingTitle && existingTitle.length > 0 && (
+                    <button type="button" onClick={clearAllExistingTitle} className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">Clear Existing</button>
+                  )}
+                  {uploadedFiles.title && uploadedFiles.title.length > 0 && (
+                    <button type="button" onClick={clearAllNewTitle} className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">Clear New</button>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-6 gap-2">
+                {editingId && existingTitle && existingTitle.map((imageUrl, index) => (
+                  <div key={`existing-${index}`} className="relative group">
+                    <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
+                      <img src={imageUrl} alt={`Existing ${index + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">E{index + 1}</div>
+                    </div>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeExistingTitle(index); }} className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100">×</button>
+                  </div>
+                ))}
+                {uploadedFiles.title && uploadedFiles.title.map((file, index) => (
+                  <div key={`new-${index}`} className="relative group">
+                    <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                      {file && file.type?.startsWith("image/") ? <img src={URL.createObjectURL(file)} alt={`New ${index + 1}`} className="w-full h-full object-cover" /> : null}
+                      <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">N{index + 1}</div>
+                    </div>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeTitleFile(index); }} className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100">×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </Form.Item>
 
             <Form.Item>
@@ -687,7 +919,7 @@ const Prayer = () => {
               </ul>
             </div>
 
-            <Dragger {...uploadProps} className="upload-dragger">
+            <Dragger {...bulkUploadProps} className="upload-dragger">
               <p className="ant-upload-drag-icon">
                 <InboxOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
               </p>

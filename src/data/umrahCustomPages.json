@@ -1,16 +1,16 @@
 [
-    {
-        "name": "Prayer",
-        "slug": "prayer",
-        "route": "/umrah-prayer",
-        "component": "Prayer.jsx",
-        "fields": [
-            {
-                "fieldName": "title",
-                "type": "string"
-            }
-        ],
-        "modelFile": "Prayer.js",
-        "routeFile": "Prayer.js"
-    }
+  {
+    "name": "Prayer",
+    "slug": "prayer",
+    "route": "/umrah-prayer",
+    "component": "Prayer.jsx",
+    "fields": [
+      {
+        "fieldName": "title",
+        "type": "image"
+      }
+    ],
+    "modelFile": "Prayer.js",
+    "routeFile": "Prayer.js"
+  }
 ]

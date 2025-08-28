@@ -82,6 +82,7 @@ const AddForm = ({ open, onClose, onSuccess }) => {
                     <option value="text">text</option>
                     <option value="image">image</option>
                     <option value="video">video</option>
+                    <option value="url">url</option>
                   </select>
                 </div>
                 <div className="col-span-5 text-right">

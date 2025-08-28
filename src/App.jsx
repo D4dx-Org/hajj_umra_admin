@@ -186,6 +186,9 @@ const App = () => {
         <Route path="/umrah-nusuk" element={<UmrahNusuk />} />
         <Route path="/umrah-thanima" element={<UmrahThanima />} />
         <Route path="/umrah-notification" element={<UmrahNotification />} />
+
+        <Route path="/add" element={<add />} />
+
         
 
         {customPages.map(page => {
