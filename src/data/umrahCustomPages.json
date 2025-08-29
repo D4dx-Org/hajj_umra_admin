@@ -12,5 +12,23 @@
     ],
     "modelFile": "Test1.js",
     "routeFile": "Test1.js"
+  },
+  {
+    "name": "test2",
+    "slug": "test2",
+    "route": "/umrah-test2",
+    "component": "Test2.jsx",
+    "fields": [
+      {
+        "fieldName": "title",
+        "type": "string"
+      },
+      {
+        "fieldName": "descr",
+        "type": "map"
+      }
+    ],
+    "modelFile": "Test2.js",
+    "routeFile": "Test2.js"
   }
 ]

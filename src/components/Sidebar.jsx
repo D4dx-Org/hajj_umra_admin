@@ -123,13 +123,43 @@ const Sidebar = ({ isOpen }) => {
   const handleAddPageSuccess = (page) => {
     if (!page) return;
   
-    // ✅ Immediately push new page to sidebar state
+    // 1. Update local state immediately
     setCustomPages((prev) => [...prev, page]);
   
-    // Notify App.jsx to refresh its routes
-    window.dispatchEvent(new CustomEvent('customPageCreated'));
-    
-    // Optional: still sync with backend
+    // 2. Expand categories section
+    setActiveTab("umrah");
+    setExpandedSections({
+      hajj: false,
+      umrah: true,
+      "explore-ksa": false,
+    });
+    setExpandedUmrahSections({
+      essential: false,
+      categories: true,
+    });
+  
+    // 3. Wait for routes to be ready before navigating
+    const handleRoutesReady = (event) => {
+      if (event.detail?.page?.route === page.route) {
+        navigate(page.route);
+        window.removeEventListener('routesReady', handleRoutesReady);
+      }
+    };
+  
+    window.addEventListener('routesReady', handleRoutesReady);
+  
+    // 4. Notify App.jsx to update routes
+    window.dispatchEvent(new CustomEvent('customPageCreated', { 
+      detail: { page } 
+    }));
+  
+    // 5. Fallback navigation if no confirmation (safety net)
+    setTimeout(() => {
+      window.removeEventListener('routesReady', handleRoutesReady);
+      // This will only run if routesReady event didn't fire
+    }, 3000);
+  
+    // 6. Sync with backend
     setTimeout(() => {
       fetchCustomPages();
     }, 500);

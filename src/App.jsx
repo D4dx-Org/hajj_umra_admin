@@ -63,8 +63,6 @@ const App = () => {
   const [customPages, setCustomPages] = useState([]);
 
   useEffect(() => {
-    console.log(Object.keys(umrahModules));
-
     const fetchPages = async () => {
       try {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah`);
@@ -77,8 +75,15 @@ const App = () => {
     fetchPages();
 
     // Listen for custom events when new pages are created
-    const handlePageCreated = () => {
-      fetchPages();
+    const handlePageCreated = (event) => {
+      fetchPages().then(() => {
+        // After state updates, wait for React to re-render routes
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('routesReady', {
+            detail: { page: event.detail?.page }
+          }));
+        }, 100); // Give React Router time to process new routes
+      });
     };
 
     window.addEventListener('customPageCreated', handlePageCreated);
