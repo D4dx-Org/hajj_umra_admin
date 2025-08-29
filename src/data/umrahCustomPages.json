@@ -1,30 +1,16 @@
 [
   {
-    "name": "Prayer",
-    "slug": "prayer",
-    "route": "/umrah-prayer",
-    "component": "Prayer.jsx",
+    "name": "test1",
+    "slug": "test1",
+    "route": "/umrah-test1",
+    "component": "Test1.jsx",
     "fields": [
       {
         "fieldName": "title",
-        "type": "video"
+        "type": "image"
       }
     ],
-    "modelFile": "Prayer.js",
-    "routeFile": "Prayer.js"
-  },
-  {
-    "name": "Swalath",
-    "slug": "swalath",
-    "route": "/umrah-swalath",
-    "component": "Swalath.jsx",
-    "fields": [
-      {
-        "fieldName": "title",
-        "type": "map"
-      }
-    ],
-    "modelFile": "Swalath.js",
-    "routeFile": "Swalath.js"
+    "modelFile": "Test1.js",
+    "routeFile": "Test1.js"
   }
 ]

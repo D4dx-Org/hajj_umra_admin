@@ -28,8 +28,48 @@ import {
   X,
   Save,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import AddForm from "./AddForm";
+
+
+// Delete Confirmation Modal Component
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, pageName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-red-100 p-2 rounded-full">
+            <AlertTriangle className="text-red-600" size={24} />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">Delete Page</h3>
+        </div>
+        
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete the page "<span className="font-medium">{pageName}</span>"? 
+          This action cannot be undone.
+        </p>
+        
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Delete Page
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
@@ -48,6 +88,11 @@ const Sidebar = ({ isOpen }) => {
     essential: false,
   });
   const [showAddPageModal, setShowAddPageModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    pageName: "",
+    pageRoute: "",
+  });
   const [customPages, setCustomPages] = useState([]);
   const isUserInteraction = useRef(false);
 
@@ -83,33 +128,53 @@ const Sidebar = ({ isOpen }) => {
   
     // Notify App.jsx to refresh its routes
     window.dispatchEvent(new CustomEvent('customPageCreated'));
-  
+    
     // Optional: still sync with backend
     setTimeout(() => {
       fetchCustomPages();
     }, 500);
   };
-  
-  
-
-  const handleDeletePage = async (name, route) => {
-    const ok = confirm(`Are you sure you want to delete ${name} page?`);
-    if (!ok) return;
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah/${encodeURIComponent(name)}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to delete page");
-      setCustomPages(data.pages || []);
-      // If current route is the deleted page, navigate away
-      if (location.pathname === route) {
-        navigate("/umrah-preparation");
-      }
-    } catch (e) {
-      alert(e.message);
-    }
+   // Open delete confirmation modal
+   const openDeleteModal = (name, route) => {
+    setDeleteModal({
+      isOpen: true,
+      pageName: name,
+      pageRoute: route,
+    });
   };
+  
+ // Close delete confirmation modal
+ const closeDeleteModal = () => {
+  setDeleteModal({
+    isOpen: false,
+    pageName: "",
+    pageRoute: "",
+  });
+};
+
+const handleDeletePage = async () => {
+  const { pageName, pageRoute } = deleteModal;
+  
+  try {
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah/${encodeURIComponent(pageName)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to delete page");
+    setCustomPages(data.pages || []);
+    // If current route is the deleted page, navigate away
+    if (location.pathname === pageRoute) {
+      navigate("/umrah-preparation");
+    }
+    // 🔄 Force page reload after successful delete
+    window.location.reload();
+  } catch (e) {
+    console.error("Delete error:", e);
+    // You could add a toast notification here instead of alert
+  } finally {
+    closeDeleteModal();
+  }
+};
 
   // Helper function to get icon component from string
   const getIconComponent = (iconName) => {
@@ -555,16 +620,20 @@ const Sidebar = ({ isOpen }) => {
   const renderMenuItems = (menuItems) => (
     <ul className="space-y-0.5">
       {menuItems.map((item) => (
-        <li key={item.id || item.path}>
-          <div className="flex items-center justify-between">
+        <li key={item.id || item.path} className="group">
+          <div className={`flex items-center justify-between rounded-md transition-colors
+            ${location.pathname === item.path 
+              ? "bg-[#4A90E2]" 
+              : "hover:bg-blue-900/50"}`}
+          >
             <Link
               to={item.path}
-              className={`flex items-center gap-2 px-3 py-1.5 ml-1 transition-colors rounded-md text-[14px]
-              ${
-                location.pathname === item.path
-                  ? "bg-[#4A90E2] text-white shadow-md"
-                  : "text-gray-300 hover:bg-blue-900/50 hover:text-white"
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 ml-1 text-[14px] flex-1
+                ${
+                  location.pathname === item.path
+                    ? "text-white"
+                    : "text-gray-300 group-hover:text-white"
+                }`}
               onClick={() => (isUserInteraction.current = true)}
             >
               <span className="opacity-80">{item.icon}</span>
@@ -572,9 +641,9 @@ const Sidebar = ({ isOpen }) => {
             </Link>
             {item.__isCustom && (
               <button
-                className="mr-2 p-1 rounded hover:bg-white/10 text-red-200 hover:text-red-400"
+                className="mr-2 p-1 rounded text-gray-300 group-hover:text-white hover:bg-white/10 hover:text-red-400"
                 title={`Delete ${item.label}`}
-                onClick={() => handleDeletePage(item.label, item.path)}
+                onClick={() => openDeleteModal(item.label, item.path)}
               >
                 <Trash2 size={14} />
               </button>
@@ -587,42 +656,37 @@ const Sidebar = ({ isOpen }) => {
 
   const renderUmrahSubSection = (sectionId, title, menuItems) => {
     const isExpanded = expandedUmrahSections[sectionId];
-
+  
     return (
       <div className="ml-2 mb-1">
-        <button
-          onClick={(e) => {
-            if (sectionId === "categories") {
-              if (e.target.closest('.add-on-button')) {
-                openAddPageModal(e);
-                return;
+        <div className="relative">
+          <button
+            onClick={() => toggleUmrahSection(sectionId)}
+            className={`w-full flex items-center justify-between p-2 text-left transition-all duration-200 rounded-lg
+              ${
+                isExpanded
+                  ? "bg-gradient-to-r from-[#357ABD] to-[#2563eb] text-white"
+                  : "text-gray-400 hover:bg-[#1e3a8a]/50 hover:text-white"
               }
-            }
-            toggleUmrahSection(sectionId);
-          }}
-          className={`w-full flex items-center justify-between p-2 text-left transition-all duration-200 rounded-lg hover:bg-[#1e3a8a]/50
-            ${
-              isExpanded
-                ? "bg-gradient-to-r from-[#357ABD] to-[#2563eb] text-white"
-                : "text-gray-400 hover:text-white"
-            }
-          `}
-        >
-          <span className="font-medium text-[14px]">{title}</span>
-          <div className="flex items-center">
-            {sectionId === "categories" && (
-              <button 
-                className="add-on-button mr-2 p-1 rounded hover:bg-white/10"
-                onClick={openAddPageModal}
-                title="Add New Page"
-              >
-                <Plus size={12} />
-              </button>
-            )}
-            {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-          </div>
-        </button>
-
+            `}
+          >
+            <span className="font-medium text-[14px]">{title}</span>
+            <div className="flex items-center">
+              {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </div>
+          </button>
+          
+          {sectionId === "categories" && (
+            <button 
+              className="absolute right-6 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 add-on-button"
+              onClick={openAddPageModal}
+              title="Add New Page"
+            >
+              <Plus size={12} />
+            </button>
+          )}
+        </div>
+  
         {isExpanded && (
           <div className="mt-1 ml-1 border-l-2 border-[#357ABD]/30">
             {renderMenuItems(menuItems)}
@@ -767,7 +831,15 @@ const Sidebar = ({ isOpen }) => {
       </aside>
 
       <AddForm open={showAddPageModal} onClose={closeAddPageModal} onSuccess={handleAddPageSuccess} />
+      
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeletePage}
+        pageName={deleteModal.pageName}
+      />
     </>
+    
   );
 };
 

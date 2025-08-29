@@ -49,9 +49,9 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { Dragger } = Upload;
 
-const Swalath = () => {
+const Test1 = () => {
   
-  const API_URL = `${import.meta.env.VITE_BACKEND_URL_V2}/umrah-swalath`;
+  const API_URL = `${import.meta.env.VITE_BACKEND_URL_V2}/umrah-test1`;
   
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -78,10 +78,12 @@ const Swalath = () => {
 
   // Image upload states (only initialize for image fields)
   const [uploadedFiles, setUploadedFiles] = useState({
+    title: []
   });
   const [fileList, setFileList] = useState({
+    title: []
   });
-  
+  const [existingTitle, setExistingTitle] = useState([]);
 
   // Fetch data
   const fetchData = async (page = 1, pageSize = 10) => {
@@ -158,7 +160,42 @@ const Swalath = () => {
     }));
   };
 
-  
+  // Remove specific image from title
+  const removeTitleFile = (index) => {
+    setUploadedFiles((prev) => {
+      const newImages = prev.title.filter((_, i) => i !== index);
+      return { ...prev, title: newImages };
+    });
+    setFileList((prev) => {
+      const newFileList = prev.title.filter((_, i) => i !== index);
+      return { ...prev, title: newFileList };
+    });
+    message.success("Image removed successfully");
+  };
+
+  // Remove existing image from title
+  const removeExistingTitle = (index) => {
+    const updatedImages = existingTitle.filter((_, i) => i !== index);
+    setExistingTitle(updatedImages);
+    form.setFieldsValue({ title: updatedImages });
+    form.validateFields(["title"]);
+    message.success("Existing image removed successfully");
+  };
+
+  // Clear all new uploaded images for title
+  const clearAllNewTitle = () => {
+    setUploadedFiles((prev) => ({ ...prev, title: [] }));
+    setFileList((prev) => ({ ...prev, title: [] }));
+    message.success("All new images cleared");
+  };
+
+  // Clear all existing images for title
+  const clearAllExistingTitle = () => {
+    setExistingTitle([]);
+    form.setFieldsValue({ title: [] });
+    form.validateFields(["title"]);
+    message.success("All existing images cleared");
+  };
 
   // Upload file to server
   const uploadFileToServer = async (file, fileType) => {
@@ -238,11 +275,26 @@ const Swalath = () => {
   const handleSubmit = async (values) => {
     setSubmitting(true);
     try {
-      
+      let titleUrls = existingTitle || [];
+
+      // Upload multiple images for title if they exist
+      if (uploadedFiles.title && uploadedFiles.title.length > 0) {
+        try {
+          message.loading("Uploading title images...", 0);
+          const uploadPromises = uploadedFiles.title.map((file) => uploadFileToServer(file, "image"));
+          const uploadedUrls = await Promise.all(uploadPromises);
+          titleUrls = [...titleUrls, ...uploadedUrls.filter((url) => url)];
+          message.destroy();
+        } catch (error) {
+          message.destroy();
+          message.error("Failed to upload title images");
+          return;
+        }
+      }
 
       const formData = {
         ...values,
-        
+        title: titleUrls
       };
 
       if (editingId) {
@@ -271,11 +323,11 @@ const Swalath = () => {
     setEditingId(null);
     setSubmitting(false);
     form.resetFields();
-    setUploadedFiles({
+    setUploadedFiles({ title: []
     });
-    setFileList({
+    setFileList({ title: []
     });
-    
+    setExistingTitle([]);
   };
 
   // Handle deletion
@@ -376,7 +428,7 @@ const Swalath = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "swalath_template.xlsx");
+      link.setAttribute("download", "test1_template.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -422,15 +474,19 @@ const Swalath = () => {
     {
         key: "title",
         title: "title",
-        render: (row) => (
-          row.title ? (
-            <a href={row.title} target="_blank" rel="noopener noreferrer" className="inline-block">
-              <Button size="small" icon={<MapPin size={14} />} className="hover:shadow-md transition-shadow">
-                View Map
-              </Button>
-            </a>
-          ) : '-'
-        ),
+        render: (row) => {
+          if (row.title && Array.isArray(row.title) && row.title.length > 0) {
+            return (
+              <div className="flex items-center gap-1">
+                <Image src={row.title[0]} width={40} height={40} className="object-cover rounded" />
+                {row.title.length > 1 && (
+                  <span className="text-xs text-gray-500">+{row.title.length - 1}</span>
+                )}
+              </div>
+            );
+          }
+          return '-';
+        },
       },
     {
       key: "actions",
@@ -440,16 +496,17 @@ const Swalath = () => {
           <button
             onClick={() => {
               setEditingId(row._id);
-              
+              const recordTitle = row.title || [];
+              setExistingTitle(recordTitle);
               
               form.setFieldsValue({
                 ...row,
-                
+                title: row.title || []
               });
               
-              setUploadedFiles({
+              setUploadedFiles({ title: []
               });
-              setFileList({
+              setFileList({ title: []
               });
               setModalVisible(true);
             }}
@@ -479,42 +536,43 @@ const Swalath = () => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? "ml-72" : "ml-20"} transition-all duration-300`}>
-        <div className="flex justify-between items-center mt-20 mb-6">
-          <div className="flex items-center gap-4">
+      <div className={(sidebarOpen ? "ml-72" : "ml-20") + " transition-all duration-300 pr-6"}>
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mt-20 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Settings size={24} />
-              Swalath
+              test1
             </h1>
-            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm w-fit">
               Total: {filteredData.length} entries
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 lg:gap-4">
             {selectedRows.length > 0 && (
               <button
                 onClick={() => handleBulkAction("delete")}
-                className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-red-600 border-0 font-normal"
+                className="flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-red-600 border-0 font-normal min-w-[120px] h-[40px]"
               >
-                Delete Selected ({selectedRows.length})
+                <Trash2 size={16} />
+                Delete ({selectedRows.length})
               </button>
             )}
 
             <button
               onClick={handleDownloadTemplate}
-              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600 border-0 font-normal"
+              className="flex items-center justify-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600 border-0 font-normal min-w-[120px] h-[40px]"
             >
-              <Download size={20} />
-              Download Template
+              <Download size={16} />
+              Template
             </button>
 
             <button
               onClick={() => setUploadModalVisible(true)}
-              className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 border-0 font-normal"
+              className="flex items-center justify-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 border-0 font-normal min-w-[120px] h-[40px]"
             >
-              <UploadCloud size={20} />
-              Upload File
+              <UploadCloud size={16} />
+              Upload
             </button>
 
             <button
@@ -523,8 +581,9 @@ const Swalath = () => {
                 form.resetFields();
                 setModalVisible(true);
               }}
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 border-0 font-normal"
+              className="flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 border-0 font-normal min-w-[120px] h-[40px]"
             >
+              <Plus size={16} />
               Add Entry
             </button>
           </div>
@@ -664,20 +723,28 @@ const Swalath = () => {
                       </div>
                       <div>
         <label className="block text-sm font-medium text-gray-600 mb-1">title</label>
-        {selectedItem.title ? (
-          <div className="space-y-2">
-            <a href={selectedItem.title} target="_blank" rel="noopener noreferrer">
-              <Button size="small" icon={<MapPin size={14} />}>
-                View on Map
-              </Button>
-            </a>
-            <div className="text-sm text-gray-600 break-all">
-              <a href={selectedItem.title} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
-                {selectedItem.title}
-              </a>
-            </div>
+        {selectedItem.title && Array.isArray(selectedItem.title) && selectedItem.title.length > 0 ? (
+          <div className="grid grid-cols-4 gap-2 mt-2">
+            {selectedItem.title.map((imageUrl, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={imageUrl}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-20 object-cover rounded border"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-20 hidden items-center justify-center text-xs text-gray-500 bg-gray-100 rounded border">
+                  IMG {index + 1}
+                </div>
+              </div>
+            ))}
           </div>
-        ) : 'No map'}
+        ) : (
+          <p className="text-gray-500">No images available</p>
+        )}
       </div>
                     </div>
                   </div>
@@ -757,8 +824,59 @@ const Swalath = () => {
               </Col>
             </Row>
 
-            <Form.Item name="title" label="Map Link URL" rules={[{ type: "url", message: "Please enter a valid URL" }]}>
-          <Input placeholder="https://maps.google.com/... or any map URL" addonBefore="🗺" />
+            <Form.Item label={`Multiple Images Upload (${uploadedFiles.title?.length || 0}/20)`}>
+          <Dragger
+            {...imageUploadProps}
+            accept="image/*"
+            multiple={true}
+            maxCount={20}
+            onChange={(info) => handleFileChange(info, "title")}
+            beforeUpload={(file) => beforeUploadFile(file, "image")}
+          >
+            <p className="ant-upload-drag-icon">
+              <UploadCloud size={40} className="mx-auto text-blue-500" />
+            </p>
+            <p className="ant-upload-text">Click or drag images to upload</p>
+            <p className="ant-upload-hint">Support for jpg, png, gif. Max size 5MB each. Maximum 20 images allowed.</p>
+          </Dragger>
+          {/* Display images preview */}
+          {((editingId && existingTitle && existingTitle.length > 0) || (uploadedFiles.title && uploadedFiles.title.length > 0)) && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-sm font-medium text-gray-700">
+                  Images ({(existingTitle?.length || 0) + (uploadedFiles.title?.length || 0)}/20)
+                </div>
+                <div className="flex gap-2">
+                  {editingId && existingTitle && existingTitle.length > 0 && (
+                    <button type="button" onClick={clearAllExistingTitle} className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors">Clear Existing</button>
+                  )}
+                  {uploadedFiles.title && uploadedFiles.title.length > 0 && (
+                    <button type="button" onClick={clearAllNewTitle} className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">Clear New</button>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-6 gap-2">
+                {editingId && existingTitle && existingTitle.map((imageUrl, index) => (
+                  <div key={`existing-${index}`} className="relative group">
+                    <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
+                      <img src={imageUrl} alt={`Existing ${index + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">E{index + 1}</div>
+                    </div>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeExistingTitle(index); }} className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100">×</button>
+                  </div>
+                ))}
+                {uploadedFiles.title && uploadedFiles.title.map((file, index) => (
+                  <div key={`new-${index}`} className="relative group">
+                    <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                      {file && file.type?.startsWith("image/") ? <img src={URL.createObjectURL(file)} alt={`New ${index + 1}`} className="w-full h-full object-cover" /> : null}
+                      <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">N{index + 1}</div>
+                    </div>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeTitleFile(index); }} className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100">×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </Form.Item>
 
             <Form.Item>
@@ -841,4 +959,4 @@ const Swalath = () => {
   );
 };
 
-export default Swalath;
+export default Test1;
