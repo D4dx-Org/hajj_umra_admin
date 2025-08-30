@@ -125,8 +125,8 @@ const PreparationManagement = () => {
     );
   };
 
-  // Fetch preparation data
-  const fetchData = async (page = 1, pageSize = 10) => {
+  // Fetch preparation data with retry logic
+  const fetchData = async (page = 1, pageSize = 10, retryCount = 0, maxRetries = 5) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -156,9 +156,23 @@ const PreparationManagement = () => {
       });
     } catch (error) {
       console.error(
-        "Error fetching preparation data:",
+        `Error fetching preparation data (attempt ${retryCount + 1}):`,
         error.response?.data || error.message
       );
+      
+      // Check if it's a connection error and retry
+      if (retryCount < maxRetries && 
+          (error.code === 'ERR_NETWORK' || 
+           error.message.includes('Network Error') ||
+           error.code === 'ECONNREFUSED')) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s, 8s, 16s
+        console.log(`Retrying in ${delay}ms...`);
+        setTimeout(() => {
+          fetchData(page, pageSize, retryCount + 1, maxRetries);
+        }, delay);
+        return;
+      }
+      
       if (error.response?.status === 401) {
         message.error("Authentication failed. Please log in again.");
         localStorage.removeItem("token");

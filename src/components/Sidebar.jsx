@@ -96,19 +96,35 @@ const Sidebar = ({ isOpen }) => {
   const [customPages, setCustomPages] = useState([]);
   const isUserInteraction = useRef(false);
 
-  // Load custom pages from backend JSON
-  const fetchCustomPages = async () => {
+  // Load custom pages from backend JSON with retry logic
+  const fetchCustomPages = async (retryCount = 0, maxRetries = 5) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah`);
       const data = await res.json();
       setCustomPages((data && data.pages) || []);
     } catch (e) {
-      console.error("Failed to load custom pages", e);
+      console.error(`Failed to load custom pages (attempt ${retryCount + 1}):`, e);
+      
+      // Retry with exponential backoff if it's a connection error
+      if (retryCount < maxRetries && (e.name === 'TypeError' || e.message.includes('fetch'))) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s, 8s, 16s
+        console.log(`Retrying in ${delay}ms...`);
+        setTimeout(() => {
+          fetchCustomPages(retryCount + 1, maxRetries);
+        }, delay);
+      }
     }
   };
 
   useEffect(() => {
-    fetchCustomPages();
+    // Wait a bit for backend to be ready, then fetch
+    const initializeData = async () => {
+      // Small delay to let backend start
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      fetchCustomPages();
+    };
+    
+    initializeData();
   }, []);
 
   const openAddPageModal = (e) => {
@@ -191,16 +207,26 @@ const handleDeletePage = async () => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to delete page");
+    
+    // Update local state immediately
     setCustomPages(data.pages || []);
-    // If current route is the deleted page, navigate away
+    
+    // If we're on the deleted page, navigate away FIRST, then reload
     if (location.pathname === pageRoute) {
-      navigate("/umrah-preparation");
+      navigate("/umrah-preparation", { replace: true });
+      // Wait for navigation to complete before reloading
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    } else {
+      // If not on deleted page, reload immediately
+      window.location.reload();
     }
-    // 🔄 Force page reload after successful delete
-    window.location.reload();
+    
   } catch (e) {
     console.error("Delete error:", e);
-    // You could add a toast notification here instead of alert
+    // Show error to user instead of silent failure
+    alert("Failed to delete page: " + e.message);
   } finally {
     closeDeleteModal();
   }

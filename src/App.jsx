@@ -63,13 +63,22 @@ const App = () => {
   const [customPages, setCustomPages] = useState([]);
 
   useEffect(() => {
-    const fetchPages = async () => {
+    const fetchPages = async (retryCount = 0, maxRetries = 5) => {
       try {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah`);
         const data = await res.json();
         setCustomPages((data && data.pages) || []);
       } catch (e) {
-        console.error('Failed loading custom pages', e);
+        console.error(`Failed loading custom pages (attempt ${retryCount + 1}):`, e);
+        
+        // Retry with exponential backoff if it's a connection error
+        if (retryCount < maxRetries && (e.name === 'TypeError' || e.message.includes('fetch'))) {
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s, 8s, 16s
+          console.log(`Retrying in ${delay}ms...`);
+          setTimeout(() => {
+            fetchPages(retryCount + 1, maxRetries);
+          }, delay);
+        }
       }
     };
     fetchPages();
