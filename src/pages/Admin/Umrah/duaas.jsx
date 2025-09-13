@@ -93,7 +93,7 @@ const DuasManagement = () => {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL_V2}/duas`,
+        `${import.meta.env.VITE_BACKEND_URL_V2}/duas?limit=1000`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -168,6 +168,7 @@ const DuasManagement = () => {
         .map((item) => item.originFileObj || item)
         .filter(Boolean);
 
+      // Replace existing images instead of merging
       setUploadedFiles((prev) => ({
         ...prev,
         images: files,
@@ -477,13 +478,48 @@ const DuasManagement = () => {
         item.urduDescription?.toLowerCase().includes(searchStr) ||
         item.id?.toLowerCase().includes(searchStr)
       );
-    });
+    })
+      .sort((a, b) => {
+        // Sort by ID number (extract numeric part and sort numerically)
+        const aId = parseInt(a.id?.replace(/\D/g, "")) || 0;
+        const bId = parseInt(b.id?.replace(/\D/g, "")) || 0;
+        return aId - bId;
+      });
   }, [duasData, searchTerm]);
+
+  // Handle pagination change
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination({
+      ...pagination,
+      current: page,
+      pageSize: pageSize,
+    });
+  };
+
+  // Get paginated data
+  const paginatedDuasData = useMemo(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const endIndex = startIndex + pagination.pageSize;
+    const paginated = filteredDuasData.slice(startIndex, endIndex);
+    console.log(
+      `Pagination: Page ${pagination.current}, showing ${paginated.length} of ${filteredDuasData.length} total items`
+    );
+    return paginated;
+  }, [filteredDuasData, pagination.current, pagination.pageSize]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      current: 1,
+      total: filteredDuasData.length,
+    }));
+  }, [searchTerm]);
 
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredDuasData.map((row) => row._id));
+      setSelectedRows(paginatedDuasData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -678,7 +714,7 @@ const DuasManagement = () => {
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === filteredDuasData.length}
+          checked={selectedRows.length === paginatedDuasData.length && paginatedDuasData.length > 0}
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -894,6 +930,11 @@ const DuasManagement = () => {
             <button
               onClick={() => {
                 setEditingId(null);
+                // Reset form and file states when adding new entry
+                form.resetFields();
+                setUploadedFiles({ images: [], video: null });
+                setFileList({ images: [], video: [] });
+                setExistingImages([]);
                 setModalVisible(true);
               }}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600 border-0 font-normal"
@@ -1021,7 +1062,7 @@ const DuasManagement = () => {
                       Loading...
                     </td>
                   </tr>
-                ) : filteredDuasData.length === 0 ? (
+                ) : paginatedDuasData.length === 0 ? (
                   <tr>
                     <td
                       colSpan={duasColumns.length}
@@ -1031,7 +1072,7 @@ const DuasManagement = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredDuasData.map((row) => (
+                  paginatedDuasData.map((row) => (
                     <tr 
                       key={row._id} 
                       className="hover:bg-gray-50 cursor-pointer"
@@ -1072,6 +1113,149 @@ const DuasManagement = () => {
             </table>
           </div>
         </div>
+
+        {/* Pagination Controls */}
+        {filteredDuasData.length > 0 && (
+          <div className="bg-white rounded-lg shadow mt-4 p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {(pagination.current - 1) * pagination.pageSize + 1} to{" "}
+                {Math.min(
+                  pagination.current * pagination.pageSize,
+                  filteredDuasData.length
+                )}{" "}
+                of {filteredDuasData.length} duas entries
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Page Size Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Show:</span>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={(e) => {
+                      const newPageSize = parseInt(e.target.value);
+                      setPagination({
+                        ...pagination,
+                        pageSize: newPageSize,
+                        current: 1, // Reset to first page when changing page size
+                      });
+                    }}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span className="text-sm text-gray-600">per page</span>
+                </div>
+
+                {/* Pagination Buttons */}
+                <div className="flex items-center gap-1">
+                  {/* First Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(1, pagination.pageSize)
+                    }
+                    disabled={pagination.current === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="First page"
+                  >
+                    ««
+                  </button>
+
+                  {/* Previous Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(
+                        pagination.current - 1,
+                        pagination.pageSize
+                      )
+                    }
+                    disabled={pagination.current === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Previous page"
+                  >
+                    ‹
+                  </button>
+
+                  {/* Page Numbers */}
+                  {(() => {
+                    const totalPages = Math.ceil(
+                      filteredDuasData.length / pagination.pageSize
+                    );
+                    const currentPage = pagination.current;
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+                    // Adjust start page if we're near the end
+                    if (endPage - startPage + 1 < maxVisiblePages) {
+                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+
+                    const pages = [];
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePaginationChange(i, pagination.pageSize)}
+                          className={`px-3 py-1 text-sm border rounded ${
+                            i === currentPage
+                              ? "bg-blue-500 text-white border-blue-500"
+                              : "border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
+
+                  {/* Next Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(
+                        pagination.current + 1,
+                        pagination.pageSize
+                      )
+                    }
+                    disabled={
+                      pagination.current >=
+                      Math.ceil(filteredDuasData.length / pagination.pageSize)
+                    }
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Next page"
+                  >
+                    ›
+                  </button>
+
+                  {/* Last Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(
+                        Math.ceil(filteredDuasData.length / pagination.pageSize),
+                        pagination.pageSize
+                      )
+                    }
+                    disabled={
+                      pagination.current >=
+                      Math.ceil(filteredDuasData.length / pagination.pageSize)
+                    }
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Last page"
+                  >
+                    »»
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Detail Modal */}
         {showDetailModal && selectedDuas && (
@@ -1377,6 +1561,7 @@ const DuasManagement = () => {
                     accept="image/*"
                     multiple={true}
                     maxCount={20}
+                    fileList={fileList.images}
                     onChange={(info) => handleFileChange(info, "images")}
                     beforeUpload={(file) =>
                       uploadProps.beforeUpload(file, "image")

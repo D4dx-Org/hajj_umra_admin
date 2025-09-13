@@ -220,6 +220,7 @@ const PlaceKSA = () => {
         .map((item) => item.originFileObj || item)
         .filter(Boolean);
 
+      // Completely replace images - don't merge with existing state
       setUploadedFiles((prev) => ({
         ...prev,
         images: files,
@@ -864,6 +865,11 @@ const PlaceKSA = () => {
               type="primary"
               onClick={() => {
                 setEditingId(null);
+                // Reset form and file states when adding new entry
+                form.resetFields();
+                setUploadedFiles({ images: [], video: null });
+                setFileList({ images: [], video: [] });
+                setExistingImages([]);
                 setModalVisible(true);
               }}
               icon={<Plus size={18} />}
@@ -1605,6 +1611,7 @@ const PlaceKSA = () => {
                     accept="image/*"
                     multiple={true}
                     maxCount={20}
+                    fileList={fileList.images}
                     onChange={(info) => handleFileChange(info, "images")}
                     beforeUpload={(file) =>
                       uploadProps.beforeUpload(file, "images")
