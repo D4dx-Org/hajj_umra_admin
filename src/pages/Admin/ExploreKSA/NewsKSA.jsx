@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Edit, Trash2 } from 'lucide-react';
-import Sidebar from '../../../components/Sidebar';
-import Navbar from '../../../components/Navbar';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import Sidebar from "../../../components/Sidebar";
+import Navbar from "../../../components/Navbar";
+import axios from "axios";
 
 const News = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,24 +14,28 @@ const News = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [newNews, setNewNews] = useState({
     title: {
-      english: '',
-      malayalam: '',
-      urdu: ''
+      english: "",
+      malayalam: "",
+      urdu: "",
     },
-    link: '',
+    link: "",
     description: {
-      english: '',
-      malayalam: '',
-      urdu: ''
-    }
+      english: "",
+      malayalam: "",
+      urdu: "",
+    },
   });
   const [originalData, setOriginalData] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [selectedNewsItem, setSelectedNewsItem] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  // Changed: Make expandedDescriptions more specific to each news item and field
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(newsData.map(row => row._id));
+      setSelectedRows(newsData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -39,9 +43,9 @@ const News = () => {
 
   // Handle select single row
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -54,117 +58,164 @@ const News = () => {
     setDeleteConfirm({
       show: true,
       id: selectedRows,
-      isBulk: true
+      isBulk: true,
     });
   };
 
   // Define table columns
-  const newsColumns = useMemo(() => [
-    {
-      key: 'select',
-      title: (
-        <input
-          type="checkbox"
-          checked={newsData.length > 0 && selectedRows.length === newsData.length}
-          onChange={handleSelectAll}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-      ),
-      render: (row) => (
-        <input
-          type="checkbox"
-          checked={selectedRows.includes(row._id)}
-          onChange={() => handleSelectRow(row._id)}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-      )
-    },
-    {
-      key: 'title',
-      title: 'Title (English)',
-      render: (row) => {
-        return row.title?.english || 'N/A';
-      }
-    },
-    {
-      key: 'titleMalayalam',
-      title: 'Title (Malayalam)',
-      render: (row) => {
-        return row.title?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'titleUrdu',
-      title: 'Title (Urdu)',
-      render: (row) => {
-        return row.title?.urdu || 'N/A';
-      }
-    },
-    {
-      key: 'link',
-      title: 'Link',
-      render: (row) => {
-        return row.link ? (
-          <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-            {row.link}
-          </a>
-        ) : 'N/A';
-      }
-    },
-    {
-      key: 'description',
-      title: 'Description (English)',
-      render: (row) => {
-        return row.description?.english || 'N/A';
-      }
-    },
-    {
-      key: 'descriptionMalayalam',
-      title: 'Description (Malayalam)',
-      render: (row) => {
-        return row.description?.malayalam || 'N/A';
-      }
-    },
-    {
-      key: 'descriptionUrdu',
-      title: 'Description (Urdu)',
-      render: (row) => {
-        return row.description?.urdu || 'N/A';
-      }
-    },
-    {
-      key: 'actions',
-      title: 'Actions',
-      render: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleEditClick(row)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            title="Edit"
+  const newsColumns = useMemo(
+    () => [
+      {
+        key: "select",
+        title: (
+          <input
+            type="checkbox"
+            checked={
+              newsData.length > 0 && selectedRows.length === newsData.length
+            }
+            onChange={handleSelectAll}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+        ),
+        render: (row) => (
+          <input
+            type="checkbox"
+            checked={selectedRows.includes(row._id)}
+            onChange={() => handleSelectRow(row._id)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+        ),
+      },
+      {
+        key: "title",
+        title: "Title (English)",
+        render: (row) => (
+          <span
+            className="truncate max-w-32 block"
+            title={row.title?.english || row.title || "-"}
           >
-            <Edit size={16} />
-          </button>
-          <button
-            onClick={() => handleDelete(row._id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            title="Delete"
+            {row.title?.english || row.title || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "titleMalayalam",
+        title: "Title (Malayalam)",
+        render: (row) => (
+          <span
+            className="truncate max-w-32 block"
+            title={row.title?.malayalam || "-"}
           >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      )
-    }
-  ], [selectedRows, newsData.length]);
+            {row.title?.malayalam || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "titleUrdu",
+        title: "Title (Urdu)",
+        render: (row) => (
+          <span
+            className="truncate max-w-32 block text-right"
+            dir="rtl"
+            title={row.title?.urdu || "-"}
+          >
+            {row.title?.urdu || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "link",
+        title: "Link",
+        render: (row) => {
+          return row.link ? (
+            <a
+              href={row.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline truncate max-w-32 block"
+              title={row.link}
+            >
+              {row.link}
+            </a>
+          ) : (
+            <span className="text-gray-400">N/A</span>
+          );
+        },
+      },
+      {
+        key: "description",
+        title: "Description (English)",
+        render: (row) => (
+          <span
+            className="truncate max-w-40 block"
+            title={row.description?.english || row.description || "-"}
+          >
+            {row.description?.english || row.description || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "descriptionMalayalam",
+        title: "Description (Malayalam)",
+        render: (row) => (
+          <span
+            className="truncate max-w-40 block"
+            title={row.description?.malayalam || "-"}
+          >
+            {row.description?.malayalam || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "descriptionUrdu",
+        title: "Description (Urdu)",
+        render: (row) => (
+          <span
+            className="truncate max-w-40 block text-right"
+            dir="rtl"
+            title={row.description?.urdu || "-"}
+          >
+            {row.description?.urdu || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "actions",
+        title: "Actions",
+        render: (row) => (
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleEditClick(row)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              title="Edit"
+            >
+              <Edit size={16} />
+            </button>
+            <button
+              onClick={() => handleDelete(row._id)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [selectedRows, newsData.length]
+  );
 
   // Fetch news data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/news`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/news`
+        );
         setNewsData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching News data:', error);
+        console.error("Error fetching News data:", error);
         setLoading(false);
       }
     };
@@ -174,25 +225,40 @@ const News = () => {
 
   // Filter data based on search
   const filteredNewsData = useMemo(() => {
-    return newsData.filter(item =>
-      (item.title?.english || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.title?.malayalam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.title?.urdu || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description?.english || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description?.malayalam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description?.urdu || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.link || '').toLowerCase().includes(searchTerm.toLowerCase())
+    return newsData.filter(
+      (item) =>
+        (item.title?.english || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.title?.malayalam || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.title?.urdu || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.description?.english || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.description?.malayalam || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.description?.urdu || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (item.link || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [newsData, searchTerm]);
 
   // Handle edit change
   const handleEditChange = (id, field, value) => {
-    setNewsData(newsData.map(item => {
-      if (item._id === id) {
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+    setNewsData(
+      newsData.map((item) => {
+        if (item._id === id) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      })
+    );
   };
 
   // Handle save edit
@@ -209,7 +275,7 @@ const News = () => {
         {
           title: row.title,
           link: row.link,
-          description: row.description
+          description: row.description,
         },
         {
           headers: {
@@ -218,9 +284,9 @@ const News = () => {
         }
       );
 
-      setNewsData(newsData.map(item =>
-        item._id === row._id ? response.data : item
-      ));
+      setNewsData(
+        newsData.map((item) => (item._id === row._id ? response.data : item))
+      );
       setEditingId(null);
     } catch (error) {
       console.error("Error updating news data:", error);
@@ -241,21 +307,25 @@ const News = () => {
         return;
       }
 
-      const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
+      const ids = Array.isArray(deleteConfirm.id)
+        ? deleteConfirm.id
+        : [deleteConfirm.id];
 
-      await Promise.all(ids.map(id =>
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/news/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      ));
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/news/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
 
-      setNewsData(newsData.filter(item => !ids.includes(item._id)));
+      setNewsData(newsData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting news data:', error);
+      console.error("Error deleting news data:", error);
     }
   };
 
@@ -284,10 +354,10 @@ const News = () => {
       );
 
       setNewsData([...newsData, response.data]);
-      setNewNews({ 
-        title: { english: '', malayalam: '', urdu: '' }, 
-        link: '', 
-        description: { english: '', malayalam: '', urdu: '' } 
+      setNewNews({
+        title: { english: "", malayalam: "", urdu: "" },
+        link: "",
+        description: { english: "", malayalam: "", urdu: "" },
       });
       setShowAddForm(false);
     } catch (error) {
@@ -303,11 +373,71 @@ const News = () => {
 
   // Handle cancel edit
   const handleCancelEdit = () => {
-    setNewsData(newsData.map(item =>
-      item._id === editingId ? originalData : item
-    ));
+    setNewsData(
+      newsData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
+  };
+
+  // Handle row click to show details
+  const handleRowClick = (newsItem, event) => {
+    // Don't trigger if clicking on checkbox, edit, or delete buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest("a")
+    ) {
+      return;
+    }
+    setSelectedNewsItem(newsItem);
+    setShowDetailsModal(true);
+    // Reset expanded descriptions when opening modal
+    setExpandedDescriptions({
+      english: false,
+      malayalam: false,
+      urdu: false,
+    });
+  };
+
+  // Handle close details modal
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedNewsItem(null);
+  };
+
+  // Component for truncated text with read more functionality
+  const TruncatedText = ({ text, maxLength = 150, language }) => {
+    const isExpanded = expandedDescriptions[language];
+
+    if (!text || text.length <= maxLength) {
+      return (
+        <p className="text-gray-900 leading-relaxed break-words">
+          {text || "N/A"}
+        </p>
+      );
+    }
+
+    const toggleExpanded = () => {
+      setExpandedDescriptions((prev) => ({
+        ...prev,
+        [language]: !prev[language],
+      }));
+    };
+
+    return (
+      <div className="w-full max-w-full overflow-hidden">
+        <p className="text-gray-900 leading-relaxed break-words whitespace-normal">
+          {isExpanded ? text : `${text.substring(0, maxLength)}...`}
+        </p>
+        <button
+          onClick={toggleExpanded}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 inline-block"
+        >
+          {isExpanded ? "Read less" : "Read more"}
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -318,7 +448,7 @@ const News = () => {
         isOpen={sidebarOpen}
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">News Management</h1>
@@ -339,7 +469,7 @@ const News = () => {
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add New'}
+              {showAddForm ? "Cancel" : "Add New"}
             </button>
           </div>
         </div>
@@ -350,41 +480,59 @@ const News = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Title (English)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Title (English)
+                  </label>
                   <input
                     type="text"
                     value={newNews.title.english}
-                    onChange={(e) => setNewNews({ 
-                      ...newNews, 
-                      title: { ...newNews.title, english: e.target.value } 
-                    })}
+                    onChange={(e) =>
+                      setNewNews({
+                        ...newNews,
+                        title: { ...newNews.title, english: e.target.value },
+                      })
+                    }
                     className="w-full p-2 border rounded"
+                    placeholder="Enter news title"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Title (Malayalam)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Title (Malayalam)
+                  </label>
                   <input
                     type="text"
                     value={newNews.title.malayalam}
-                    onChange={(e) => setNewNews({ 
-                      ...newNews, 
-                      title: { ...newNews.title, malayalam: e.target.value } 
-                    })}
+                    onChange={(e) =>
+                      setNewNews({
+                        ...newNews,
+                        title: { ...newNews.title, malayalam: e.target.value },
+                      })
+                    }
                     className="w-full p-2 border rounded"
+                    placeholder="വാർത്താ ശീർഷകം"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Title (Urdu)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Title (Urdu)
+                  </label>
                   <input
                     type="text"
                     value={newNews.title.urdu}
-                    onChange={(e) => setNewNews({ 
-                      ...newNews, 
-                      title: { ...newNews.title, urdu: e.target.value } 
-                    })}
-                    className="w-full p-2 border rounded"
+                    onChange={(e) =>
+                      setNewNews({
+                        ...newNews,
+                        title: { ...newNews.title, urdu: e.target.value },
+                      })
+                    }
+                    className="w-full p-2 border rounded text-right"
+                    dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
+                    placeholder="خبر کا عنوان"
                     required
                   />
                 </div>
@@ -394,44 +542,71 @@ const News = () => {
                 <input
                   type="text"
                   value={newNews.link}
-                  onChange={(e) => setNewNews({ ...newNews, link: e.target.value })}
+                  onChange={(e) =>
+                    setNewNews({ ...newNews, link: e.target.value })
+                  }
                   className="w-full p-2 border rounded"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description (English)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Description (English)
+                  </label>
                   <textarea
                     value={newNews.description.english}
-                    onChange={(e) => setNewNews({ 
-                      ...newNews, 
-                      description: { ...newNews.description, english: e.target.value } 
-                    })}
+                    onChange={(e) =>
+                      setNewNews({
+                        ...newNews,
+                        description: {
+                          ...newNews.description,
+                          english: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full p-2 border rounded"
+                    placeholder="Enter news description"
                     rows="3"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description (Malayalam)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Description (Malayalam)
+                  </label>
                   <textarea
                     value={newNews.description.malayalam}
-                    onChange={(e) => setNewNews({ 
-                      ...newNews, 
-                      description: { ...newNews.description, malayalam: e.target.value } 
-                    })}
+                    onChange={(e) =>
+                      setNewNews({
+                        ...newNews,
+                        description: {
+                          ...newNews.description,
+                          malayalam: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full p-2 border rounded"
+                    placeholder="വാർത്താ വിവരണം"
                     rows="3"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description (Urdu)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Description (Urdu)
+                  </label>
                   <textarea
                     value={newNews.description.urdu}
-                    onChange={(e) => setNewNews({ 
-                      ...newNews, 
-                      description: { ...newNews.description, urdu: e.target.value } 
-                    })}
-                    className="w-full p-2 border rounded"
+                    onChange={(e) =>
+                      setNewNews({
+                        ...newNews,
+                        description: {
+                          ...newNews.description,
+                          urdu: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full p-2 border rounded text-right"
+                    dir="rtl"
+                    placeholder="خبر کی تفصیل"
                     rows="3"
                   />
                 </div>
@@ -455,7 +630,10 @@ const News = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
             />
-            <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+            <Search
+              size={20}
+              className="absolute left-3 top-3.5 text-gray-400"
+            />
           </div>
         </div>
 
@@ -465,11 +643,34 @@ const News = () => {
           <p className="text-center">No news items found</p>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full full text-sm">
+            <table className="min-w-full text-sm table-fixed">
               <thead className="bg-gray-50">
                 <tr>
                   {newsColumns.map((column) => (
-                    <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      key={column.key}
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === "select"
+                          ? "w-12"
+                          : column.key === "title"
+                          ? "w-32"
+                          : column.key === "titleMalayalam"
+                          ? "w-32"
+                          : column.key === "titleUrdu"
+                          ? "w-32"
+                          : column.key === "link"
+                          ? "w-32"
+                          : column.key === "description"
+                          ? "w-40"
+                          : column.key === "descriptionMalayalam"
+                          ? "w-40"
+                          : column.key === "descriptionUrdu"
+                          ? "w-40"
+                          : column.key === "actions"
+                          ? "w-20"
+                          : ""
+                      }`}
+                    >
                       {column.title}
                     </th>
                   ))}
@@ -478,139 +679,179 @@ const News = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredNewsData.map((row) => (
                   <React.Fragment key={row._id}>
-                    <tr className={`${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                    <tr
+                      className={`${
+                        editingId === row._id
+                          ? "bg-blue-50"
+                          : "hover:bg-gray-50 cursor-pointer"
+                      }`}
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
                       {newsColumns.map((column) => (
-                        <td key={`${row._id}-${column.key}`} className="px-4 py-1 whitespace-nowrap">
+                        <td
+                          key={`${row._id}-${column.key}`}
+                          className={`px-4 py-3 text-sm text-gray-900 ${
+                            column.key === "titleUrdu" ||
+                            column.key === "descriptionUrdu"
+                              ? "text-right"
+                              : ""
+                          }`}
+                        >
                           {column.render ? column.render(row) : row[column.key]}
                         </td>
                       ))}
                     </tr>
                     {editingId === row._id && (
                       <tr>
-                        <td colSpan={newsColumns.length} className="p-0">
-                          <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                              <h3 className="text-lg font-semibold text-gray-900">Edit News Item</h3>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => handleSaveEdit(row)}
-                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Cancel
-                                </button>
+                        <td colSpan={newsColumns.length} className="p-4">
+                          <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                            <h2 className="text-lg font-bold mb-4">
+                              Edit News Item
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Title (English) *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={row.title?.english || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(row._id, "title", {
+                                      ...row.title,
+                                      english: e.target.value,
+                                    })
+                                  }
+                                  placeholder="News title in English"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Title (Malayalam)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={row.title?.malayalam || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(row._id, "title", {
+                                      ...row.title,
+                                      malayalam: e.target.value,
+                                    })
+                                  }
+                                  placeholder="വാർത്താ ശീർഷകം"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Title (Urdu)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={row.title?.urdu || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(row._id, "title", {
+                                      ...row.title,
+                                      urdu: e.target.value,
+                                    })
+                                  }
+                                  placeholder="خبر کا عنوان"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
+
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Link
+                                </label>
+                                <input
+                                  type="url"
+                                  value={row.link || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(
+                                      row._id,
+                                      "link",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="https://example.com"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Title Information */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Title Information</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (English) *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, english: e.target.value })}
-                                    placeholder="News title in English"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (Malayalam)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, malayalam: e.target.value })}
-                                    placeholder="വാർത്താ ശീർഷകം"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title (Urdu)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={row.title?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'title', { ...row.title, urdu: e.target.value })}
-                                    placeholder="خبر کا عنوان"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Description (English)
+                                </label>
+                                <textarea
+                                  value={row.description?.english || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(row._id, "description", {
+                                      ...row.description,
+                                      english: e.target.value,
+                                    })
+                                  }
+                                  placeholder="News description in English"
+                                  rows="3"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
                               </div>
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Description (Malayalam)
+                                </label>
+                                <textarea
+                                  value={row.description?.malayalam || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(row._id, "description", {
+                                      ...row.description,
+                                      malayalam: e.target.value,
+                                    })
+                                  }
+                                  placeholder="വാർത്താ വിവരണം"
+                                  rows="3"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Description (Urdu)
+                                </label>
+                                <textarea
+                                  value={row.description?.urdu || ""}
+                                  onChange={(e) =>
+                                    handleEditChange(row._id, "description", {
+                                      ...row.description,
+                                      urdu: e.target.value,
+                                    })
+                                  }
+                                  placeholder="خبر کی تفصیل"
+                                  rows="3"
+                                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  dir="rtl" 
+                  style={{ textAlign: 'right' }}
 
-                              {/* Link & Description */}
-                              <div className="space-y-4">
-                                <h4 className="font-medium text-gray-700">Link & Description</h4>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Link
-                                  </label>
-                                  <input
-                                    type="url"
-                                    value={row.link || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'link', e.target.value)}
-                                    placeholder="https://example.com"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (English)
-                                  </label>
-                                  <textarea
-                                    value={row.description?.english || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, english: e.target.value })}
-                                    placeholder="News description in English"
-                                    rows="3"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
+                                />
                               </div>
                             </div>
-
-                            {/* Description Translations */}
-                            <div className="mt-6">
-                              <h4 className="font-medium text-gray-700 mb-4">Description Translations</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (Malayalam)
-                                  </label>
-                                  <textarea
-                                    value={row.description?.malayalam || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, malayalam: e.target.value })}
-                                    placeholder="വാർത്താ വിവരണം"
-                                    rows="3"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (Urdu)
-                                  </label>
-                                  <textarea
-                                    value={row.description?.urdu || ""}
-                                    onChange={(e) => handleEditChange(row._id, 'description', { ...row.description, urdu: e.target.value })}
-                                    placeholder="خبر کی تفصیل"
-                                    rows="3"
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleSaveEdit(row)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
                         </td>
@@ -635,7 +876,7 @@ const News = () => {
             <p className="text-gray-600 mb-6">
               {Array.isArray(deleteConfirm.id)
                 ? `Are you sure you want to delete ${deleteConfirm.id.length} selected news items?`
-                : 'Are you sure you want to delete this news item?'}
+                : "Are you sure you want to delete this news item?"}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -654,8 +895,159 @@ const News = () => {
           </div>
         </div>
       )}
+
+      {/* News Details Modal */}
+      {showDetailsModal && selectedNewsItem && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">News Details</h2>
+              <button
+                onClick={handleCloseDetailsModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Title Section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Title (English)
+                  </h3>
+                  <p className="text-gray-900">
+                    {selectedNewsItem.title?.english ||
+                      selectedNewsItem.title ||
+                      "N/A"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Title (Malayalam)
+                  </h3>
+                  <p className="text-gray-900">
+                    {selectedNewsItem.title?.malayalam || "N/A"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Title (Urdu)
+                  </h3>
+                  <p className="text-gray-900 text-right" dir="rtl">
+                    {selectedNewsItem.title?.urdu || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Link Section */}
+              {selectedNewsItem.link && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Link</h3>
+                  <a
+                    href={selectedNewsItem.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all"
+                  >
+                    {selectedNewsItem.link}
+                  </a>
+                </div>
+              )}
+
+              {/* Description Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Descriptions
+                </h3>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-700 mb-2">English</h4>
+                  <TruncatedText
+                    text={
+                      selectedNewsItem.description?.english ||
+                      selectedNewsItem.description ||
+                      "N/A"
+                    }
+                    maxLength={150}
+                    newsItemId={selectedNewsItem._id}
+                    language="english"
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Malayalam
+                  </h4>
+                  <TruncatedText
+                    text={selectedNewsItem.description?.malayalam || "N/A"}
+                    maxLength={150}
+                    newsItemId={selectedNewsItem._id}
+                    language="malayalam"
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-700 mb-2">Urdu</h4>
+                  <div className="text-right" dir="rtl">
+                    <TruncatedText
+                      text={selectedNewsItem.description?.urdu || "N/A"}
+                      maxLength={150}
+                      newsItemId={selectedNewsItem._id}
+                      language="urdu"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Metadata */}
+              {(selectedNewsItem.createdAt || selectedNewsItem.updatedAt) && (
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                    Metadata
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    {selectedNewsItem.createdAt && (
+                      <div>
+                        <span className="font-medium">Created:</span>{" "}
+                        {new Date(selectedNewsItem.createdAt).toLocaleString()}
+                      </div>
+                    )}
+                    {selectedNewsItem.updatedAt && (
+                      <div>
+                        <span className="font-medium">Updated:</span>{" "}
+                        {new Date(selectedNewsItem.updatedAt).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  handleCloseDetailsModal();
+                  handleEditClick(selectedNewsItem);
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center gap-2"
+              >
+                <Edit size={16} />
+                Edit
+              </button>
+              <button
+                onClick={handleCloseDetailsModal}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default News; 
+export default News;

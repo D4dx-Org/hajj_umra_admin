@@ -412,6 +412,7 @@ const Notification = () => {
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
             ),
+            width: 60,
             render: (row) => (
                 <input
                     type="checkbox"
@@ -424,18 +425,24 @@ const Notification = () => {
         {
             title: 'Title',
             dataIndex: 'title',
-            key: 'title'
+            key: 'title',
+            width: 200,
+            ellipsis: true,
+            render: (text) => <span title={text}>{text}</span>
         },
         {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
-            render: (text) => text || '-'
+            width: 250,
+            ellipsis: true,
+            render: (text) => <span title={text || '-'}>{text || '-'}</span>
         },
         {
             title: 'Type',
             dataIndex: 'type',
             key: 'type',
+            width: 100,
             render: (type) => (
                 <Tag color={
                     type === 'link' ? 'blue' :
@@ -450,21 +457,24 @@ const Notification = () => {
             title: 'Created At',
             dataIndex: 'createdAt',
             key: 'createdAt',
+            width: 150,
             render: (date) => moment(date).format('YYYY-MM-DD HH:mm')
         },
         {
             title: 'Content',
             key: 'content',
+            width: 200,
+            ellipsis: true,
             render: (_, record) => {
                 switch (record.type) {
                     case 'link':
-                        return <a href={record.content} target="_blank" rel="noopener noreferrer">Open Link</a>;
+                        return <a href={record.content} target="_blank" rel="noopener noreferrer" title={record.content}>Open Link</a>;
                     case 'text':
-                        return <span>{record.content.substring(0, 50)}...</span>;
+                        return <span title={record.content}>{record.content.substring(0, 50)}...</span>;
                     case 'image':
                         return <img src={record.content} alt="Preview" style={{ maxWidth: 50, maxHeight: 50 }} />;
                     case 'pdf':
-                        return <a href={record.content} target="_blank" rel="noopener noreferrer">View PDF</a>;
+                        return <a href={record.content} target="_blank" rel="noopener noreferrer" title={record.content}>View PDF</a>;
                     default:
                         return '-';
                 }
@@ -473,6 +483,7 @@ const Notification = () => {
         {
             title: 'Actions',
             key: 'actions',
+            width: 100,
             render: (_, record) => (
                 <Space>
                     <button

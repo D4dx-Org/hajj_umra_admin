@@ -1,12 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
-import axios from 'axios';
-import { read, utils, write } from 'xlsx';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Search,
+  AlertTriangle,
+  Download,
+  ArrowUpDown,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+import axios from "axios";
+import { read, utils, write } from "xlsx";
 
 const Building = ({ isOpen }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [buildingData, setBuildingData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,22 +23,27 @@ const Building = ({ isOpen }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [branches, setBranches] = useState([]);
   const [newBuilding, setNewBuilding] = useState({
-    name: '',
-    location: { lat: '', lng: '' },
-    phone: '',
-    ref: '',
-    branchRef: ''
+    name: "",
+    location: { lat: "", lng: "" },
+    phone: "",
+    ref: "",
+    branchRef: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
-  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
+  const [sortConfig, setSortConfig] = useState({
+    field: "name",
+    direction: "asc",
+    type: "alpha",
+  });
 
   // Define the table columns with editable configuration
   const buildingColumns = [
     {
-      key: 'select',
+      key: "select",
       title: (
         <input
           type="checkbox"
@@ -45,81 +57,169 @@ const Building = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-      )
-    },
-    { 
-      key: 'name', 
-      title: 'Name',
-      render: (row) => row.name
-    },
-    { 
-      key: 'location', 
-      title: 'Location',
-      render: (row) => row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A'
-    },
-    { 
-      key: 'phone', 
-      title: 'Phone',
-      render: (row) => row.phone
-    },
-    { 
-      key: 'ref', 
-      title: 'Location Reference',
-      render: (row) => row.ref?.name || 'N/A'
-    },
-    { 
-      key: 'branchRef', 
-      title: 'Branch Reference',
-      render: (row) => row.branchRef?.name || 'N/A'
+      ),
     },
     {
-      key: 'actions',
-      title: 'Actions',
+      key: "name",
+      title: "Name",
+      render: (row) => (
+        <span className="truncate" title={row.name}>
+          {row.name}
+        </span>
+      ),
+    },
+    {
+      key: "location",
+      title: "Location",
+      render: (row) => {
+        const locationText = row.location
+          ? `${row.location.lat}, ${row.location.lng}`
+          : "N/A";
+        return (
+          <span className="truncate" title={locationText}>
+            {locationText}
+          </span>
+        );
+      },
+    },
+    {
+      key: "phone",
+      title: "Phone",
+      render: (row) => (
+        <span className="truncate" title={row.phone || "N/A"}>
+          {row.phone || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "ref",
+      title: "Location Reference",
+      render: (row) => {
+        const locationName = row.ref?.name || "N/A";
+        return (
+          <span className="truncate" title={locationName}>
+            {locationName}
+          </span>
+        );
+      },
+    },
+    {
+      key: "branchRef",
+      title: "Branch Reference",
+      render: (row) => {
+        const branchName = row.branchRef?.name || "N/A";
+        return (
+          <span className="truncate" title={branchName}>
+            {branchName}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
             <Trash2 size={16} />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // Add sorting options
   const sortOptions = [
-    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
-    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
-    { value: 'phone-alpha-asc', label: 'Phone (A-Z)', field: 'phone', direction: 'asc', type: 'alpha' },
-    { value: 'phone-alpha-desc', label: 'Phone (Z-A)', field: 'phone', direction: 'desc', type: 'alpha' },
-    { value: 'ref-alpha-asc', label: 'Location (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
-    { value: 'ref-alpha-desc', label: 'Location (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' },
-    { value: 'branchRef-alpha-asc', label: 'Branch (A-Z)', field: 'branchRef', direction: 'asc', type: 'alpha' },
-    { value: 'branchRef-alpha-desc', label: 'Branch (Z-A)', field: 'branchRef', direction: 'desc', type: 'alpha' }
+    {
+      value: "name-alpha-asc",
+      label: "Name (A-Z)",
+      field: "name",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "name-alpha-desc",
+      label: "Name (Z-A)",
+      field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "phone-alpha-asc",
+      label: "Phone (A-Z)",
+      field: "phone",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "phone-alpha-desc",
+      label: "Phone (Z-A)",
+      field: "phone",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "ref-alpha-asc",
+      label: "Location (A-Z)",
+      field: "ref",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "ref-alpha-desc",
+      label: "Location (Z-A)",
+      field: "ref",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "branchRef-alpha-asc",
+      label: "Branch (A-Z)",
+      field: "branchRef",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "branchRef-alpha-desc",
+      label: "Branch (Z-A)",
+      field: "branchRef",
+      direction: "desc",
+      type: "alpha",
+    },
   ];
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/building`);
-        console.log('Fetched building data:', response.data);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/building`
+        );
+        console.log("Fetched building data:", response.data);
         setBuildingData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching building data:', error);
+        console.error("Error fetching building data:", error);
         setLoading(false);
       }
     };
@@ -131,10 +231,12 @@ const Building = ({ isOpen }) => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/location`
+        );
         setLocations(response.data);
       } catch (error) {
-        console.error('Error fetching locations:', error);
+        console.error("Error fetching locations:", error);
       }
     };
 
@@ -145,10 +247,12 @@ const Building = ({ isOpen }) => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/branch`
+        );
         setBranches(response.data);
       } catch (error) {
-        console.error('Error fetching branches:', error);
+        console.error("Error fetching branches:", error);
       }
     };
 
@@ -157,35 +261,41 @@ const Building = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setBuildingData(buildingData.map(item => {
-      if (item._id === id) {
-        if (field === 'location') {
-          return { ...item, location: value };
+    setBuildingData(
+      buildingData.map((item) => {
+        if (item._id === id) {
+          if (field === "location") {
+            return { ...item, location: value };
+          }
+          if (field === "ref") {
+            const selectedLocation = locations.find((loc) => loc._id === value);
+            return {
+              ...item,
+              ref: selectedLocation
+                ? {
+                    _id: selectedLocation._id,
+                    name: selectedLocation.name,
+                  }
+                : value,
+            };
+          }
+          return { ...item, [field]: value };
         }
-        if (field === 'ref') {
-          const selectedLocation = locations.find(loc => loc._id === value);
-          return { 
-            ...item, 
-            ref: selectedLocation ? { 
-              _id: selectedLocation._id,
-              name: selectedLocation.name 
-            } : value 
-          };
-        }
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+        return item;
+      })
+    );
   };
 
   // Add handle sort change
   const handleSortChange = (event) => {
-    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    const selectedOption = sortOptions.find(
+      (option) => option.value === event.target.value
+    );
     if (selectedOption) {
       setSortConfig({
         field: selectedOption.field,
         direction: selectedOption.direction,
-        type: selectedOption.type
+        type: selectedOption.type,
       });
     }
   };
@@ -193,17 +303,19 @@ const Building = ({ isOpen }) => {
   // Add sort function
   const sortData = (data) => {
     return [...data].sort((a, b) => {
-      let aValue = sortConfig.field === 'ref' || sortConfig.field === 'branchRef' 
-        ? a[sortConfig.field]?.name || '' 
-        : a[sortConfig.field] || '';
-      let bValue = sortConfig.field === 'ref' || sortConfig.field === 'branchRef'
-        ? b[sortConfig.field]?.name || ''
-        : b[sortConfig.field] || '';
-      
+      let aValue =
+        sortConfig.field === "ref" || sortConfig.field === "branchRef"
+          ? a[sortConfig.field]?.name || ""
+          : a[sortConfig.field] || "";
+      let bValue =
+        sortConfig.field === "ref" || sortConfig.field === "branchRef"
+          ? b[sortConfig.field]?.name || ""
+          : b[sortConfig.field] || "";
+
       aValue = aValue.toLowerCase();
       bValue = bValue.toLowerCase();
-      
-      if (sortConfig.direction === 'asc') {
+
+      if (sortConfig.direction === "asc") {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -215,11 +327,11 @@ const Building = ({ isOpen }) => {
   const filteredBuildingData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     let filtered = buildingData;
-    
+
     if (lowerCaseSearch) {
       filtered = buildingData.filter((item) => {
-        const locationName = item.ref?.name || '';
-        const branchName = item.branchRef?.name || '';
+        const locationName = item.ref?.name || "";
+        const branchName = item.branchRef?.name || "";
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
           (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
@@ -228,7 +340,7 @@ const Building = ({ isOpen }) => {
         );
       });
     }
-    
+
     return sortData(filtered);
   }, [buildingData, searchTerm, sortConfig]);
 
@@ -251,9 +363,11 @@ const Building = ({ isOpen }) => {
         }
       );
 
-      setBuildingData(buildingData.map(item => 
-        item._id === row._id ? { ...item, ...response.data } : item
-      ));
+      setBuildingData(
+        buildingData.map((item) =>
+          item._id === row._id ? { ...item, ...response.data } : item
+        )
+      );
       setEditingId(null);
     } catch (error) {
       console.error("Error updating building data:", error);
@@ -267,8 +381,10 @@ const Building = ({ isOpen }) => {
 
   // Add handleDeleteConfirm
   const handleDeleteConfirm = async () => {
-    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+    const ids = Array.isArray(deleteConfirm.id)
+      ? deleteConfirm.id
+      : [deleteConfirm.id];
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -277,19 +393,21 @@ const Building = ({ isOpen }) => {
       }
 
       // Delete all selected items
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/building/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      ));
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(`${import.meta.env.VITE_BACKEND_URL}/building/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
 
-      setBuildingData(buildingData.filter(item => !ids.includes(item._id)));
+      setBuildingData(buildingData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting building data:', error);
+      console.error("Error deleting building data:", error);
     }
   };
 
@@ -318,14 +436,16 @@ const Building = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/building`);
+        const updatedResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/building`
+        );
         setBuildingData(updatedResponse.data);
-        setNewBuilding({ 
-          name: '', 
-          location: { lat: '', lng: '' },
-          phone: '',
-          ref: '',
-          branchRef: ''
+        setNewBuilding({
+          name: "",
+          location: { lat: "", lng: "" },
+          phone: "",
+          ref: "",
+          branchRef: "",
         });
         setShowAddForm(false);
       }
@@ -334,8 +454,8 @@ const Building = ({ isOpen }) => {
     }
   };
 
-   // Modify the edit button click handler
-   const handleEditClick = (row) => {
+  // Modify the edit button click handler
+  const handleEditClick = (row) => {
     setOriginalData(row); // Store original data
     setEditingId(row._id);
   };
@@ -343,9 +463,9 @@ const Building = ({ isOpen }) => {
   // Modify the cancel button click handler
   const handleCancelEdit = () => {
     // Restore original data
-    setBuildingData(buildingData.map(item => 
-      item._id === editingId ? originalData : item
-    ));
+    setBuildingData(
+      buildingData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
   };
@@ -353,190 +473,227 @@ const Building = ({ isOpen }) => {
   // Handle file upload
   const handleFileUpload = async (event) => {
     try {
-        const file = event.target.files[0];
-        if (!file) return;
+      const file = event.target.files[0];
+      if (!file) return;
 
-        if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-            setUploadError('Please upload an Excel file (.xlsx or .xls)');
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        setUploadError("Please upload an Excel file (.xlsx or .xls)");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const workbook = read(e.target.result, { type: "array" });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = utils.sheet_to_json(worksheet);
+
+          if (data.length === 0) {
+            setUploadError("The Excel file is empty. Please add some data.");
             return;
-        }
+          }
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const workbook = read(e.target.result, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const data = utils.sheet_to_json(worksheet);
+          // Check the first row to understand the column structure
+          const firstRow = data[0];
+          const hasRequiredColumns =
+            "name" in firstRow &&
+            "location_name" in firstRow &&
+            "branch_name" in firstRow;
 
-                if (data.length === 0) {
-                    setUploadError('The Excel file is empty. Please add some data.');
-                    return;
-                }
+          if (!hasRequiredColumns) {
+            setUploadError(
+              "Excel file must have required columns: name, location_name, and branch_name"
+            );
+            console.log(
+              "Required columns missing. Found columns:",
+              Object.keys(firstRow)
+            );
+            return;
+          }
 
-                // Check the first row to understand the column structure
-                const firstRow = data[0];
-                const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow && 'branch_name' in firstRow;
-                
-                if (!hasRequiredColumns) {
-                    setUploadError('Excel file must have required columns: name, location_name, and branch_name');
-                    console.log('Required columns missing. Found columns:', Object.keys(firstRow));
-                    return;
-                }
+          // Validate each row
+          for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const rowNumber = i + 2; // Excel row number (accounting for header)
 
-                // Validate each row
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    const rowNumber = i + 2; // Excel row number (accounting for header)
-
-                    if (!row.name || !row.location_name || !row.branch_name) {
-                        const missing = [];
-                        if (!row.name) missing.push('name');
-                        if (!row.location_name) missing.push('location_name');
-                        if (!row.branch_name) missing.push('branch_name');
-                        setUploadError(`Row ${rowNumber}: Missing required fields: ${missing.join(', ')}`);
-                        return;
-                    }
-
-                    // Validate coordinates if present (optional)
-                    if (row.latitude !== undefined || row.longitude !== undefined) {
-                        const lat = Number(row.latitude);
-                        const lng = Number(row.longitude);
-                        
-                        if (isNaN(lat) || lat < -90 || lat > 90) {
-                            setUploadError(`Row ${rowNumber}: Invalid latitude. Must be a number between -90 and 90`);
-                            return;
-                        }
-                        if (isNaN(lng) || lng < -180 || lng > 180) {
-                            setUploadError(`Row ${rowNumber}: Invalid longitude. Must be a number between -180 and 180`);
-                            return;
-                        }
-                    }
-
-                    // Validate location_name exists
-                    const locationExists = locations.some(location => location.name === row.location_name);
-                    if (!locationExists) {
-                        setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
-                        return;
-                    }
-
-                    // Validate branch_name exists
-                    const branchExists = branches.some(branch => branch.name === row.branch_name);
-                    if (!branchExists) {
-                        setUploadError(`Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`);
-                        return;
-                    }
-                }
-
-                const formData = new FormData();
-                formData.append('file', file);
-
-                const token = localStorage.getItem("token");
-                if (!token) {
-                    setUploadError('Authentication token not found. Please log in again.');
-                    return;
-                }
-
-                const response = await axios.post(
-                    `${import.meta.env.VITE_BACKEND_URL}/building/bulk-upload`,
-                    formData,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    }
-                );
-
-                setUploadSuccess(`Successfully uploaded ${response.data.count} buildings`);
-                setUploadError(null);
-
-                // Refresh the data
-                const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/building`);
-                setBuildingData(updatedResponse.data);
-                
-                // Reset the file input
-                event.target.value = '';
-            } catch (error) {
-                console.error('Excel processing error:', error);
-                setUploadError(error.response?.data?.message || 'Error processing the Excel file');
-                setUploadSuccess(null);
+            if (!row.name || !row.location_name || !row.branch_name) {
+              const missing = [];
+              if (!row.name) missing.push("name");
+              if (!row.location_name) missing.push("location_name");
+              if (!row.branch_name) missing.push("branch_name");
+              setUploadError(
+                `Row ${rowNumber}: Missing required fields: ${missing.join(
+                  ", "
+                )}`
+              );
+              return;
             }
-        };
 
-        reader.readAsArrayBuffer(file);
+            // Validate coordinates if present (optional)
+            if (row.latitude !== undefined || row.longitude !== undefined) {
+              const lat = Number(row.latitude);
+              const lng = Number(row.longitude);
+
+              if (isNaN(lat) || lat < -90 || lat > 90) {
+                setUploadError(
+                  `Row ${rowNumber}: Invalid latitude. Must be a number between -90 and 90`
+                );
+                return;
+              }
+              if (isNaN(lng) || lng < -180 || lng > 180) {
+                setUploadError(
+                  `Row ${rowNumber}: Invalid longitude. Must be a number between -180 and 180`
+                );
+                return;
+              }
+            }
+
+            // Validate location_name exists
+            const locationExists = locations.some(
+              (location) => location.name === row.location_name
+            );
+            if (!locationExists) {
+              setUploadError(
+                `Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`
+              );
+              return;
+            }
+
+            // Validate branch_name exists
+            const branchExists = branches.some(
+              (branch) => branch.name === row.branch_name
+            );
+            if (!branchExists) {
+              setUploadError(
+                `Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`
+              );
+              return;
+            }
+          }
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const token = localStorage.getItem("token");
+          if (!token) {
+            setUploadError(
+              "Authentication token not found. Please log in again."
+            );
+            return;
+          }
+
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/building/bulk-upload`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          setUploadSuccess(
+            `Successfully uploaded ${response.data.count} buildings`
+          );
+          setUploadError(null);
+
+          // Refresh the data
+          const updatedResponse = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL}/building`
+          );
+          setBuildingData(updatedResponse.data);
+
+          // Reset the file input
+          event.target.value = "";
+        } catch (error) {
+          console.error("Excel processing error:", error);
+          setUploadError(
+            error.response?.data?.message || "Error processing the Excel file"
+          );
+          setUploadSuccess(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
     } catch (error) {
-        console.error('File upload error:', error);
-        setUploadError('Error processing file. Please try again.');
-        setUploadSuccess(null);
+      console.error("File upload error:", error);
+      setUploadError("Error processing file. Please try again.");
+      setUploadSuccess(null);
     }
   };
 
   // Update download template function
   const handleDownloadTemplate = () => {
     try {
-        const sampleData = [
-            {
-                name: 'Sample Building',
-                location_name: 'Azizia',
-                branch_name: 'Branch 1',
-                phone: '+966 123456789',
-                latitude: '21.4225',
-                longitude: '39.8262'
-            }
-        ];
+      const sampleData = [
+        {
+          name: "Sample Building",
+          location_name: "Azizia",
+          branch_name: "Branch 1",
+          phone: "+966 123456789",
+          latitude: "21.4225",
+          longitude: "39.8262",
+        },
+      ];
 
-        const ws = utils.json_to_sheet([]);
-        
-        // Add headers with required/optional indicators
-        utils.sheet_add_aoa(ws, [[
-            'name',
-            'location_name',
-            'branch_name',
-            'phone',
-            'latitude',
-            'longitude'
-        ]], { origin: 'A1' });
+      const ws = utils.json_to_sheet([]);
 
-        // Add sample data
-        utils.sheet_add_json(ws, sampleData, { 
-            origin: 'A2',
-            skipHeader: true
-        });
+      // Add headers with required/optional indicators
+      utils.sheet_add_aoa(
+        ws,
+        [
+          [
+            "name",
+            "location_name",
+            "branch_name",
+            "phone",
+            "latitude",
+            "longitude",
+          ],
+        ],
+        { origin: "A1" }
+      );
 
-        // Set column widths
-        ws['!cols'] = [
-            { wch: 25 }, // name
-            { wch: 30 }, // location_name
-            { wch: 30 }, // branch_name
-            { wch: 20 }, // phone
-            { wch: 15 }, // latitude
-            { wch: 15 }  // longitude
-        ];
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, {
+        origin: "A2",
+        skipHeader: true,
+      });
 
-        const wb = utils.book_new();
-        utils.book_append_sheet(wb, ws, 'Template');
+      // Set column widths
+      ws["!cols"] = [
+        { wch: 25 }, // name
+        { wch: 30 }, // location_name
+        { wch: 30 }, // branch_name
+        { wch: 20 }, // phone
+        { wch: 15 }, // latitude
+        { wch: 15 }, // longitude
+      ];
 
-        const blob = new Blob(
-            [write(wb, { bookType: 'xlsx', type: 'array' })], 
-            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-        );
-        
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'building_upload_template.xlsx';
-        link.click();
-        window.URL.revokeObjectURL(url);
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "Template");
+
+      const blob = new Blob([write(wb, { bookType: "xlsx", type: "array" })], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "building_upload_template.xlsx";
+      link.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-        console.error('Error creating template:', error);
-        setUploadError('Failed to download template. Please try again.');
+      console.error("Error creating template:", error);
+      setUploadError("Failed to download template. Please try again.");
     }
   };
 
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredBuildingData.map(row => row._id));
+      setSelectedRows(filteredBuildingData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -544,9 +701,9 @@ const Building = ({ isOpen }) => {
 
   // Add handleSelectRow function
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -556,12 +713,22 @@ const Building = ({ isOpen }) => {
   // Add handleBulkDelete function
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0) return;
-    
-    setDeleteConfirm({ 
-      show: true, 
+
+    setDeleteConfirm({
+      show: true,
       id: selectedRows,
-      isBulk: true 
+      isBulk: true,
     });
+  };
+
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
   };
 
   return (
@@ -573,7 +740,7 @@ const Building = ({ isOpen }) => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">Building Management</h1>
@@ -610,11 +777,11 @@ const Building = ({ isOpen }) => {
             >
               Upload Excel
             </label>
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add More'}
+              {showAddForm ? "Cancel" : "Add More"}
             </button>
           </div>
         </div>
@@ -630,7 +797,10 @@ const Building = ({ isOpen }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               />
-              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-3.5 text-gray-400"
+              />
             </div>
             <div className="flex items-center gap-2">
               <ArrowUpDown size={20} className="text-gray-400" />
@@ -639,7 +809,7 @@ const Building = ({ isOpen }) => {
                 value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
                 className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               >
-                {sortOptions.map(option => (
+                {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -668,17 +838,21 @@ const Building = ({ isOpen }) => {
               <input
                 type="text"
                 value={newBuilding.name}
-                onChange={(e) => setNewBuilding({ ...newBuilding, name: e.target.value })}
+                onChange={(e) =>
+                  setNewBuilding({ ...newBuilding, name: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium">Phone</label>
               <input
                 type="text"
                 value={newBuilding.phone}
-                onChange={(e) => setNewBuilding({ ...newBuilding, phone: e.target.value })}
+                onChange={(e) =>
+                  setNewBuilding({ ...newBuilding, phone: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -686,27 +860,41 @@ const Building = ({ isOpen }) => {
               <label className="block text-sm font-medium">Location</label>
               <div className="flex gap-4">
                 <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Latitude</label>
+                  <label className="block text-xs text-gray-500">
+                    Latitude
+                  </label>
                   <input
                     type="number"
                     value={newBuilding.location.lat}
-                    onChange={(e) => setNewBuilding({
-                      ...newBuilding,
-                      location: { ...newBuilding.location, lat: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewBuilding({
+                        ...newBuilding,
+                        location: {
+                          ...newBuilding.location,
+                          lat: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="Enter latitude"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
                 </div>
                 <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Longitude</label>
+                  <label className="block text-xs text-gray-500">
+                    Longitude
+                  </label>
                   <input
                     type="number"
                     value={newBuilding.location.lng}
-                    onChange={(e) => setNewBuilding({
-                      ...newBuilding,
-                      location: { ...newBuilding.location, lng: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewBuilding({
+                        ...newBuilding,
+                        location: {
+                          ...newBuilding.location,
+                          lng: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="Enter longitude"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
@@ -714,14 +902,18 @@ const Building = ({ isOpen }) => {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Location Reference</label>
+              <label className="block text-sm font-medium">
+                Location Reference
+              </label>
               <select
                 value={newBuilding.ref}
-                onChange={(e) => setNewBuilding({ ...newBuilding, ref: e.target.value })}
+                onChange={(e) =>
+                  setNewBuilding({ ...newBuilding, ref: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
-                {locations.map(location => (
+                {locations.map((location) => (
                   <option key={location._id} value={location._id}>
                     {location.name}
                   </option>
@@ -729,14 +921,18 @@ const Building = ({ isOpen }) => {
               </select>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Branch Reference</label>
+              <label className="block text-sm font-medium">
+                Branch Reference
+              </label>
               <select
                 value={newBuilding.branchRef}
-                onChange={(e) => setNewBuilding({ ...newBuilding, branchRef: e.target.value })}
+                onChange={(e) =>
+                  setNewBuilding({ ...newBuilding, branchRef: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Branch</option>
-                {branches.map(branch => (
+                {branches.map((branch) => (
                   <option key={branch._id} value={branch._id}>
                     {branch.name}
                   </option>
@@ -760,11 +956,30 @@ const Building = ({ isOpen }) => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {buildingColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === "select"
+                            ? "w-12"
+                            : column.key === "name"
+                            ? "w-24"
+                            : column.key === "location"
+                            ? "w-28"
+                            : column.key === "phone"
+                            ? "w-20"
+                            : column.key === "ref"
+                            ? "w-24"
+                            : column.key === "branchRef"
+                            ? "w-24"
+                            : column.key === "actions"
+                            ? "w-20"
+                            : ""
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -775,7 +990,7 @@ const Building = ({ isOpen }) => {
                     <tr>
                       <td
                         colSpan={buildingColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No buildings found
                       </td>
@@ -783,151 +998,187 @@ const Building = ({ isOpen }) => {
                   ) : (
                     filteredBuildingData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            editingId === row._id ? "bg-blue-50" : ""
+                          }`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {buildingColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === "name"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "location"
+                                  ? "max-w-28 truncate"
+                                  : column.key === "phone"
+                                  ? "max-w-20 truncate"
+                                  : column.key === "ref"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "branchRef"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "actions"
+                                  ? "whitespace-nowrap"
+                                  : "whitespace-nowrap"
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}
                         </tr>
                         {editingId === row._id && (
                           <tr>
-                            <td colSpan={buildingColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit Building</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                            <td
+                              colSpan={buildingColumns.length}
+                              className="p-4"
+                            >
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">
+                                  Edit Building
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "name",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Building name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Phone
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.phone || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "phone",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Phone number"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Location Reference
+                                    </label>
+                                    <select
+                                      value={row.ref?._id || row.ref || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "ref",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                      <option value="">Select Location</option>
+                                      {locations.map((location) => (
+                                        <option
+                                          key={location._id}
+                                          value={location._id}
+                                        >
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Branch Reference
+                                    </label>
+                                    <select
+                                      value={
+                                        row.branchRef?._id ||
+                                        row.branchRef ||
+                                        ""
+                                      }
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "branchRef",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Cancel
-                                    </button>
+                                      <option value="">Select Branch</option>
+                                      {branches.map((branch) => (
+                                        <option
+                                          key={branch._id}
+                                          value={branch._id}
+                                        >
+                                          {branch.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Latitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lat || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lat: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter latitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Longitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lng || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lng: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter longitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                  {/* Basic Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Name *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.name || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "name", e.target.value)
-                                        }
-                                        placeholder="Building name"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Phone
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.phone || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "phone", e.target.value)
-                                        }
-                                        placeholder="Phone number"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Location Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Location Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Location Reference
-                                      </label>
-                                      <select
-                                        value={row.ref?._id || row.ref || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "ref", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Location</option>
-                                        {locations.map(location => (
-                                          <option key={location._id} value={location._id}>
-                                            {location.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Branch Reference
-                                      </label>
-                                      <select
-                                        value={row.branchRef?._id || row.branchRef || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "branchRef", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Branch</option>
-                                        {branches.map(branch => (
-                                          <option key={branch._id} value={branch._id}>
-                                            {branch.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
-
-                                  {/* Coordinates */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Coordinates</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Latitude
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={row.location?.lat || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "location", {
-                                            ...row.location,
-                                            lat: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter latitude"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Longitude
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={row.location?.lng || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "location", {
-                                            ...row.location,
-                                            lng: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter longitude"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                  </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
                             </td>
@@ -951,9 +1202,9 @@ const Building = ({ isOpen }) => {
                 <h3 className="text-lg font-semibold">Confirm Deletion</h3>
               </div>
               <p className="text-gray-600 mb-6">
-                {Array.isArray(deleteConfirm.id) 
+                {Array.isArray(deleteConfirm.id)
                   ? `Are you sure you want to delete ${deleteConfirm.id.length} selected buildings? This action cannot be undone.`
-                  : 'Are you sure you want to delete this building? This action cannot be undone.'}
+                  : "Are you sure you want to delete this building? This action cannot be undone."}
               </p>
               <div className="flex justify-end gap-3">
                 <button
@@ -967,6 +1218,97 @@ const Building = ({ isOpen }) => {
                   className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Modal */}
+        {viewModal.show && viewModal.data && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Building Details
+                </h3>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.name || "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.phone || "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Location Reference
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.ref?.name || "N/A"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Branch Reference
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.branchRef?.name || "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Coordinates
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.location?.lat &&
+                      viewModal.data.location?.lng
+                        ? `${viewModal.data.location.lat}, ${viewModal.data.location.lng}`
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ID
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                      {viewModal.data._id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

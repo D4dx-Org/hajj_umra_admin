@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
 import AdminLogin from "./components/adminLogin";
 import HomePage from "./components/homePage";
 import Ambulance from "./pages/Admin/Ambulance";
@@ -53,14 +54,101 @@ import UmrahNusuk from "./pages/Admin/Umrah/UmrahNusuk";
 import UmrahThanima from "./pages/Admin/Umrah/UmrahThanima";
 import UmrahNotification from "./pages/Admin/Umrah/UmrahNotification";
 
+import add from "../src/components/AddForm";
+
+// Vite: dynamically import all Umrah pages
+const umrahModules = import.meta.glob('./pages/Admin/Umrah/*.jsx');
 
 const App = () => {
+  const [customPages, setCustomPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async (retryCount = 0, maxRetries = 5) => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL_V2}/page-builder/umrah`);
+        const data = await res.json();
+        setCustomPages((data && data.pages) || []);
+      } catch (e) {
+        console.error(`Failed loading custom pages (attempt ${retryCount + 1}):`, e);
+        
+        // Retry with exponential backoff if it's a connection error
+        if (retryCount < maxRetries && (e.name === 'TypeError' || e.message.includes('fetch'))) {
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s, 8s, 16s
+          console.log(`Retrying in ${delay}ms...`);
+          setTimeout(() => {
+            fetchPages(retryCount + 1, maxRetries);
+          }, delay);
+        }
+      }
+    };
+    fetchPages();
+
+    // Listen for custom events when new pages are created
+    const handlePageCreated = (event) => {
+      fetchPages().then(() => {
+        // After state updates, wait for React to re-render routes
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('routesReady', {
+            detail: { page: event.detail?.page }
+          }));
+        }, 100); // Give React Router time to process new routes
+      });
+    };
+
+    window.addEventListener('customPageCreated', handlePageCreated);
+    return () => window.removeEventListener('customPageCreated', handlePageCreated);
+  }, []);
+
+  const renderDynamicRoute = (page) => {
+    const path = `./pages/Admin/Umrah/${page.component}`;
+    const loader = umrahModules[path];
+  
+    if (!loader) {
+      console.warn("Module not found for path:", path, "- Creating fallback route");
+      // Create a fallback component for newly created pages
+      return (
+        <Route
+          key={page.route}
+          path={page.route}
+          element={
+            <div className="p-6">
+              <h1 className="text-2xl font-bold mb-4">{page.name}</h1>
+              <p className="text-gray-600">
+                This is a dynamically created page. The component file may need to be generated.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Expected component: {page.component}
+              </p>
+            </div>
+          }
+        />
+      );
+    }
+  
+    const LazyComp = React.lazy(() => loader());
+
+    return (
+      <Route
+        key={page.route}
+        path={page.route}
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyComp />
+          </Suspense>
+        }
+      />
+    );
+  };
+  
+ 
+  
+
   return (
     <Router>
       <Routes>
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/" element={<HomePage />} />
-
+        <Route path="/add" element={<add />} />
         {/* Admin Routes */}
         {/* <Route element={<AdminLayout />}> */}
         <Route path="/ambulance" element={<Ambulance />} />
@@ -112,6 +200,16 @@ const App = () => {
         <Route path="/umrah-nusuk" element={<UmrahNusuk />} />
         <Route path="/umrah-thanima" element={<UmrahThanima />} />
         <Route path="/umrah-notification" element={<UmrahNotification />} />
+
+        <Route path="/add" element={<add />} />
+
+        
+
+        {customPages.map(page => {
+          console.log("Rendering dynamic route:", page.route, "Component:", page.component);
+          return renderDynamicRoute(page);
+        })}
+
         {/* </Route> */}
       </Routes>
     </Router>

@@ -18,6 +18,7 @@ import {
   Upload,
   Image,
 } from "antd";
+
 import {
   MapPin,
   Search,
@@ -69,6 +70,21 @@ const ArrivedManagement = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [selectedArrived, setSelectedArrived] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Handle row click to show details
+  const handleRowClick = (arrived, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (
+      event.target.closest("button") ||
+      event.target.closest('input[type="checkbox"]')
+    ) {
+      return;
+    }
+    setSelectedArrived(arrived);
+    setShowDetailModal(true);
+  };
 
   // Fetch arrived data
   const fetchData = async (page = 1, pageSize = 10) => {
@@ -272,8 +288,7 @@ const ArrivedManagement = () => {
         window.location.href = "/admin-login";
       }
       throw new Error(
-        `Failed to upload ${fileType}: ${
-          error.response?.data?.message || error.message
+        `Failed to upload ${fileType}: ${error.response?.data?.message || error.message
         }`
       );
     }
@@ -310,8 +325,8 @@ const ArrivedManagement = () => {
 
       const arrivedData = {
         id: values.id.trim(),
-        title: values.title.trim(),
-        malayalamTitle: values.malayalamTitle?.trim() || "",
+        title: values.title?.trim() || undefined,
+        malayalamTitle: values.malayalamTitle?.trim(),
         urduTitle: values.urduTitle?.trim() || "",
         description: values.description?.trim() || "",
         malayalamDescription: values.malayalamDescription?.trim() || "",
@@ -622,11 +637,13 @@ const ArrivedManagement = () => {
 
           // Check required columns
           const firstRow = data[0];
-          const hasRequiredColumns = "id" in firstRow && "title" in firstRow;
+          const hasRequiredColumns =
+            "id" in firstRow &&
+            ("malayalam_title" in firstRow || "malayalamTitle" in firstRow);
 
           if (!hasRequiredColumns) {
             setUploadError(
-              "Excel file must have required columns: id and title"
+              "Excel file must have required columns: id and malayalam_title"
             );
             return;
           }
@@ -636,9 +653,9 @@ const ArrivedManagement = () => {
             const row = data[i];
             const rowNumber = i + 2;
 
-            if (!row.id || !row.title) {
+            if (!row.id || !(row.malayalam_title || row.malayalamTitle)) {
               setUploadError(
-                `Row ${rowNumber}: Missing required data. Each row must have id and title.`
+                `Row ${rowNumber}: Missing required data. Each row must have id and malayalam_title.`
               );
               return;
             }
@@ -700,7 +717,7 @@ const ArrivedManagement = () => {
   };
 
   // Table columns configuration
-  const columns = [
+  const arrivedColumns = [
     {
       key: "select",
       title: (
@@ -721,276 +738,161 @@ const ArrivedManagement = () => {
       ),
     },
     {
-      title: "ID",
-      dataIndex: "id",
       key: "id",
+      title: "ID",
+      render: (row) => (
+        <span className="truncate" title={row.id}>
+          {row.id}
+        </span>
+      ),
     },
     {
-      title: "Title",
-      dataIndex: "title",
       key: "title",
-      render: (text, record) => (
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900">{text}</div>
-          {record.malayalamTitle && (
-            <div
-              className="text-sm text-blue-600"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.malayalamTitle}
-            </div>
-          )}
-          {record.urduTitle && (
-            <div
-              className="text-sm text-green-600"
-              dir="rtl"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.urduTitle}
-            </div>
-          )}
-        </div>
+      title: "Title",
+      render: (row) => (
+        <span className="truncate" title={row.title}>
+          {row.title}
+        </span>
       ),
     },
     {
-      title: "Description",
-      dataIndex: "description",
+      key: "malayalamTitle",
+      title: "Ml Title",
+      render: (row) => (
+        <span className="truncate" title={row.malayalamTitle || "-"}>
+          {row.malayalamTitle || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "urduTitle",
+      title: "Ur Title",
+      render: (row) => (
+        <span className="truncate" title={row.urduTitle || "-"}>
+          {row.urduTitle || "-"}
+        </span>
+      ),
+    },
+    {
       key: "description",
-      render: (text, record) => (
-        <div className="space-y-1">
-          <div className="text-gray-900">{text || "-"}</div>
-          {record.malayalamDescription && (
-            <div
-              className="text-sm text-blue-600"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.malayalamDescription}
-            </div>
-          )}
-          {record.urduDescription && (
-            <div
-              className="text-sm text-green-600"
-              dir="rtl"
-              style={{ fontFamily: "Arial, sans-serif" }}
-            >
-              {record.urduDescription}
-            </div>
-          )}
-        </div>
+      title: "Description",
+      render: (row) => (
+        <span className="truncate" title={row.description || "-"}>
+          {row.description || "-"}
+        </span>
       ),
     },
     {
-      title: "Transport Options",
+      key: "malayalamDescription",
+      title: "Ml Description",
+      render: (row) => (
+        <span className="truncate" title={row.malayalamDescription || "-"}>
+          {row.malayalamDescription || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "urduDescription",
+      title: "Ur Description",
+      render: (row) => (
+        <span className="truncate" title={row.urduDescription || "-"}>
+          {row.urduDescription || "-"}
+        </span>
+      ),
+    },
+    {
       key: "transportationOptions",
-      render: (_, record) => (
-        <div className="space-y-2">
-          {record.transportationOptions?.map((option, index) => (
-            <div key={index} className="border rounded p-2 bg-blue-50">
-              <div className="font-medium text-gray-900">
-                {typeof option === "string" ? option : option.type}
-              </div>
-              {option.malayalamType && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {option.malayalamType}
-                </div>
-              )}
-              {option.urduType && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {option.urduType}
-                </div>
-              )}
-              {option.details && (
-                <div className="text-sm text-gray-600 mt-1">
-                  <strong>Details:</strong> {option.details}
-                </div>
-              )}
-              {option.malayalamDetails && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>വിശദാംശങ്ങൾ:</strong> {option.malayalamDetails}
-                </div>
-              )}
-              {option.urduDetails && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>تفصیلات:</strong> {option.urduDetails}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ),
+      title: "Transport",
+      render: (row) => {
+        const transportCount = row.transportationOptions?.length || 0;
+        const transportText =
+          transportCount > 0 ? `${transportCount} options` : "N/A";
+        return (
+          <span className="truncate" title={transportText}>
+            {transportText}
+          </span>
+        );
+      },
     },
     {
-      title: "Emergency Contacts",
       key: "emergencyContacts",
-      render: (_, record) => (
-        <div className="space-y-2">
-          {record.emergencyContacts?.map((contact, index) => (
-            <div key={index} className="border rounded p-2 bg-red-50">
-              <div className="font-medium text-gray-900">{contact.name}</div>
-              {contact.malayalamName && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {contact.malayalamName}
-                </div>
-              )}
-              {contact.urduName && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {contact.urduName}
-                </div>
-              )}
-              <div className="text-sm text-gray-600 mt-1">
-                <strong>Phone:</strong> {contact.phone}
-              </div>
-              <div className="text-sm text-gray-600">
-                <strong>Type:</strong> {contact.type}
-              </div>
-              {contact.malayalamType && (
-                <div
-                  className="text-sm text-blue-600"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>തരം:</strong> {contact.malayalamType}
-                </div>
-              )}
-              {contact.urduType && (
-                <div
-                  className="text-sm text-green-600"
-                  dir="rtl"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  <strong>قسم:</strong> {contact.urduType}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ),
+      title: "Emergency",
+      render: (row) => {
+        const contactCount = row.emergencyContacts?.length || 0;
+        const contactText =
+          contactCount > 0 ? `${contactCount} contacts` : "N/A";
+        return (
+          <span className="truncate" title={contactText}>
+            {contactText}
+          </span>
+        );
+      },
     },
     {
-      title: "Media",
       key: "media",
-      render: (_, record) => (
-        <Space direction="vertical" size="small">
-          {record.images && record.images.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Tag color="green" size="small">
-                Images ({record.images.length})
-              </Tag>
-              <div className="flex gap-1">
-                {record.images.slice(0, 3).map((img, index) => (
-                  <Image
-                    key={index}
-                    width={40}
-                    height={30}
-                    src={img}
-                    preview={{
-                      src: img,
-                      mask:
-                        index === 2 && record.images.length > 3
-                          ? `+${record.images.length - 3}`
-                          : false,
-                    }}
-                    style={{ objectFit: "cover", borderRadius: "4px" }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          {record.video && (
-            <div className="flex items-center gap-2">
-              <Tag color="purple" size="small">
-                Video
-              </Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.video, "_blank")}
-                className="p-0 h-auto text-red-600"
-                title="Open video"
-              >
-                ▶ Watch
-              </Button>
-            </div>
-          )}
-          {record.map && (
-            <div className="flex items-center gap-2">
-              <Tag color="orange" size="small">
-                Map
-              </Tag>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => window.open(record.map, "_blank")}
-                className="p-0 h-auto"
-              >
-                View Map
-              </Button>
-            </div>
-          )}
-        </Space>
-      ),
+      title: "Media",
+      render: (row) => {
+        const mediaItems = [];
+        if (row.images && row.images.length > 0) {
+          mediaItems.push(`Images (${row.images.length})`);
+        }
+        if (row.video) {
+          mediaItems.push("Video");
+        }
+        if (row.map) {
+          mediaItems.push("Map");
+        }
+        const mediaText = mediaItems.length > 0 ? mediaItems.join(", ") : "N/A";
+        return (
+          <span className="truncate" title={mediaText}>
+            {mediaText}
+          </span>
+        );
+      },
     },
     {
-      title: "Actions",
       key: "actions",
-      render: (_, record) => (
-        <Space>
+      title: "Actions",
+      render: (row) => (
+        <div className="flex gap-2">
           <button
             onClick={() => {
-              setEditingId(record._id);
-              const recordImages = record.images || [];
+              setEditingId(row._id);
+              const recordImages = row.images || [];
 
               setExistingImages(recordImages);
               form.setFieldsValue({
-                id: record.id,
-                title: record.title,
-                malayalamTitle: record.malayalamTitle || "",
-                urduTitle: record.urduTitle || "",
-                description: record.description || "",
-                malayalamDescription: record.malayalamDescription || "",
-                urduDescription: record.urduDescription || "",
+                id: row.id,
+                title: row.title,
+                malayalamTitle: row.malayalamTitle || "",
+                urduTitle: row.urduTitle || "",
+                description: row.description || "",
+                malayalamDescription: row.malayalamDescription || "",
+                urduDescription: row.urduDescription || "",
                 images: recordImages,
-                video: record.video || "",
-                map: record.map || "",
-                transportationOptions: record.transportationOptions || [],
-                emergencyContacts: record.emergencyContacts || [],
+                video: row.video || "",
+                map: row.map || "",
+                transportationOptions: row.transportationOptions || [],
+                emergencyContacts: row.emergencyContacts || [],
               });
 
               setUploadedFiles({ images: [], video: null });
               setFileList({ images: [], video: [] });
               setModalVisible(true);
             }}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
-            <Edit size={18} className="text-blue-500" />
+            <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(record._id)}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
-            <Trash2 size={18} className="text-red-500" />
+            <Trash2 size={16} />
           </button>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -1146,16 +1048,478 @@ const ArrivedManagement = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={filteredArrivedData}
-            rowKey="_id"
-            loading={loading}
-            pagination={pagination}
-          />
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {arrivedColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.key === "select"
+                        ? "w-12"
+                        : column.key === "id"
+                          ? "w-16"
+                          : column.key === "title"
+                            ? "w-24"
+                            : column.key === "malayalamTitle"
+                              ? "w-20"
+                              : column.key === "urduTitle"
+                                ? "w-20"
+                                : column.key === "description"
+                                  ? "w-32"
+                                  : column.key === "malayalamDescription"
+                                    ? "w-28"
+                                    : column.key === "urduDescription"
+                                      ? "w-28"
+                                      : column.key === "transportationOptions"
+                                        ? "w-20"
+                                        : column.key === "emergencyContacts"
+                                          ? "w-20"
+                                          : column.key === "media"
+                                            ? "w-20"
+                                            : column.key === "actions"
+                                              ? "w-20"
+                                              : ""
+                        }`}
+                    >
+                      {column.title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={arrivedColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredArrivedData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={arrivedColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
+                      No arrived entries found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredArrivedData.map((row) => (
+                    <tr
+                      key={row._id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
+                      {arrivedColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-2 py-2 text-sm text-gray-900 ${column.key === "id"
+                            ? "max-w-16 truncate"
+                            : column.key === "title"
+                              ? "max-w-24 truncate"
+                              : column.key === "malayalamTitle"
+                                ? "max-w-20 truncate"
+                                : column.key === "urduTitle"
+                                  ? "max-w-20 truncate"
+                                  : column.key === "description"
+                                    ? "max-w-32 truncate"
+                                    : column.key === "malayalamDescription"
+                                      ? "max-w-28 truncate"
+                                      : column.key === "urduDescription"
+                                        ? "max-w-28 truncate"
+                                        : column.key === "transportationOptions"
+                                          ? "max-w-20 truncate"
+                                          : column.key === "emergencyContacts"
+                                            ? "max-w-20 truncate"
+                                            : column.key === "media"
+                                              ? "max-w-20 truncate"
+                                              : column.key === "actions"
+                                                ? "whitespace-nowrap"
+                                                : "whitespace-nowrap"
+                            }`}
+                        >
+                          {column.render(row)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedArrived && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Arrived Details
+                  </h2>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Basic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          ID
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedArrived.id}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Title (English)
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedArrived.title || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Multilingual Titles */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Multilingual Titles
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Malayalam Title
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedArrived.malayalamTitle || "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Urdu Title
+                        </label>
+                        <p className="text-gray-900" dir="rtl">
+                          {selectedArrived.urduTitle || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Descriptions
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          English Description
+                        </label>
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {selectedArrived.description || "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Malayalam Description
+                        </label>
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {selectedArrived.malayalamDescription ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Urdu Description
+                        </label>
+                        <p
+                          className="text-gray-900 whitespace-pre-wrap"
+                          dir="rtl"
+                        >
+                          {selectedArrived.urduDescription || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transportation Options */}
+                  {selectedArrived.transportationOptions &&
+                    selectedArrived.transportationOptions.length > 0 && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                          Transportation Options
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedArrived.transportationOptions.map(
+                            (option, index) => (
+                              <div
+                                key={index}
+                                className="border-l-4 border-blue-500 pl-4"
+                              >
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      English
+                                    </label>
+                                    <p className="text-sm text-gray-900">
+                                      {option.type || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {option.details || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Malayalam
+                                    </label>
+                                    <p className="text-sm text-gray-900">
+                                      {option.malayalamType || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {option.malayalamDetails || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Urdu
+                                    </label>
+                                    <p
+                                      className="text-sm text-gray-900"
+                                      dir="rtl"
+                                    >
+                                      {option.urduType || "Not provided"}
+                                    </p>
+                                    <p
+                                      className="text-xs text-gray-600"
+                                      dir="rtl"
+                                    >
+                                      {option.urduDetails || ""}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Emergency Contacts */}
+                  {selectedArrived.emergencyContacts &&
+                    selectedArrived.emergencyContacts.length > 0 && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                          Emergency Contacts
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedArrived.emergencyContacts.map(
+                            (contact, index) => (
+                              <div
+                                key={index}
+                                className="border-l-4 border-red-500 pl-4"
+                              >
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      English
+                                    </label>
+                                    <p className="text-sm text-gray-900 font-medium">
+                                      {contact.name || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {contact.type || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Malayalam
+                                    </label>
+                                    <p className="text-sm text-gray-900 font-medium">
+                                      {contact.malayalamName || "Not provided"}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {contact.malayalamType || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Urdu
+                                    </label>
+                                    <p
+                                      className="text-sm text-gray-900 font-medium"
+                                      dir="rtl"
+                                    >
+                                      {contact.urduName || "Not provided"}
+                                    </p>
+                                    <p
+                                      className="text-xs text-gray-600"
+                                      dir="rtl"
+                                    >
+                                      {contact.urduType || ""}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500">
+                                      Phone
+                                    </label>
+                                    <a
+                                      href={`tel:${contact.phone}`}
+                                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                    >
+                                      {contact.phone}
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Media Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Media & Resources
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Images
+                        </label>
+                        {selectedArrived.images &&
+                          selectedArrived.images.length > 0 ? (
+                          <div className="grid grid-cols-4 gap-2 mt-2">
+                            {selectedArrived.images.map((imageUrl, index) => (
+                              <div key={index} className="relative">
+                                <img
+                                  src={imageUrl}
+                                  alt={`Image ${index + 1}`}
+                                  className="w-full h-20 object-cover rounded border"
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                    e.target.nextSibling.style.display = "flex";
+                                  }}
+                                />
+                                <div className="w-full h-20 hidden items-center justify-center text-xs text-gray-500 bg-gray-100 rounded border">
+                                  IMG {index + 1}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">No images available</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Video
+                        </label>
+                        {selectedArrived.video ? (
+                          <a
+                            href={selectedArrived.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                          >
+                            🎥 View Video
+                          </a>
+                        ) : (
+                          <p className="text-gray-500">No video available</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Map
+                        </label>
+                        {selectedArrived.map ? (
+                          <a
+                            href={selectedArrived.map}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                          >
+                            🗺 View Map
+                          </a>
+                        ) : (
+                          <p className="text-gray-500">No map available</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Metadata
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Created At
+                        </label>
+                        <p className="text-gray-900 text-sm">
+                          {selectedArrived.createdAt
+                            ? new Date(
+                              selectedArrived.createdAt
+                            ).toLocaleString()
+                            : "Not available"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Updated At
+                        </label>
+                        <p className="text-gray-900 text-sm">
+                          {selectedArrived.updatedAt
+                            ? new Date(
+                              selectedArrived.updatedAt
+                            ).toLocaleString()
+                            : "Not available"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Database ID
+                        </label>
+                        <p className="text-gray-900 text-sm font-mono">
+                          {selectedArrived._id}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Create/Edit Modal */}
         <Modal
@@ -1200,8 +1564,6 @@ const ArrivedManagement = () => {
                   name="title"
                   label="Title (English)"
                   rules={[
-                    { required: true, message: "Please enter title" },
-                    { min: 1, message: "Title cannot be empty" },
                     { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
@@ -1216,6 +1578,8 @@ const ArrivedManagement = () => {
                   name="malayalamTitle"
                   label="Title (Malayalam)"
                   rules={[
+                    { required: true, message: "Please enter Malayalam title" },
+                    { min: 1, message: "Malayalam title cannot be empty" },
                     {
                       max: 200,
                       message: "Malayalam title cannot exceed 200 characters",
@@ -1252,7 +1616,6 @@ const ArrivedManagement = () => {
               <TextArea
                 rows={4}
                 placeholder="Enter a detailed description in English..."
-                maxLength={500}
                 showCount
               />
             </Form.Item>
@@ -1266,7 +1629,6 @@ const ArrivedManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="മലയാളത്തിൽ വിശദമായ വിവരണം നൽകുക..."
-                    maxLength={500}
                     showCount
                     style={{ fontFamily: "Arial, sans-serif" }}
                   />
@@ -1277,7 +1639,6 @@ const ArrivedManagement = () => {
                   <TextArea
                     rows={4}
                     placeholder="اردو میں تفصیلی تفصیل درج کریں..."
-                    maxLength={500}
                     showCount
                     dir="rtl"
                     style={{ fontFamily: "Arial, sans-serif" }}
@@ -1290,9 +1651,8 @@ const ArrivedManagement = () => {
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  label={`Multiple Images Upload (${
-                    uploadedFiles.images?.length || 0
-                  }/20)`}
+                  label={`Multiple Images Upload (${uploadedFiles.images?.length || 0
+                    }/20)`}
                 >
                   <Dragger
                     {...uploadProps}
@@ -1325,142 +1685,142 @@ const ArrivedManagement = () => {
                     existingImages.length > 0) ||
                     (uploadedFiles.images &&
                       uploadedFiles.images.length > 0)) && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-sm font-medium text-gray-700">
-                          Images (
-                          {(existingImages?.length || 0) +
-                            (uploadedFiles.images?.length || 0)}
-                          /20)
-                          <span className="ml-2 text-xs text-gray-500">
-                            (Existing: {existingImages?.length || 0}, New:{" "}
-                            {uploadedFiles.images?.length || 0})
-                          </span>
+                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="text-sm font-medium text-gray-700">
+                            Images (
+                            {(existingImages?.length || 0) +
+                              (uploadedFiles.images?.length || 0)}
+                            /20)
+                            <span className="ml-2 text-xs text-gray-500">
+                              (Existing: {existingImages?.length || 0}, New:{" "}
+                              {uploadedFiles.images?.length || 0})
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            {editingId &&
+                              existingImages &&
+                              existingImages.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={clearAllExistingImages}
+                                  className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                                  title="Clear all existing images"
+                                >
+                                  Clear Existing
+                                </button>
+                              )}
+                            {uploadedFiles.images &&
+                              uploadedFiles.images.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={clearAllNewImages}
+                                  className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                                  title="Clear all new images"
+                                >
+                                  Clear New
+                                </button>
+                              )}
+                          </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="grid grid-cols-6 gap-2">
+                          {/* Existing images */}
                           {editingId &&
                             existingImages &&
-                            existingImages.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={clearAllExistingImages}
-                                className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                                title="Clear all existing images"
+                            existingImages.map((imageUrl, index) => (
+                              <div
+                                key={`existing-${index}`}
+                                className="relative group"
                               >
-                                Clear Existing
-                              </button>
-                            )}
-                          {uploadedFiles.images &&
-                            uploadedFiles.images.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={clearAllNewImages}
-                                className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                                title="Clear all new images"
-                              >
-                                Clear New
-                              </button>
-                            )}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-6 gap-2">
-                        {/* Existing images */}
-                        {editingId &&
-                          existingImages &&
-                          existingImages.map((imageUrl, index) => (
-                            <div
-                              key={`existing-${index}`}
-                              className="relative group"
-                            >
-                              <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
-                                <img
-                                  src={imageUrl}
-                                  alt={`Existing ${index + 1}`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                    e.target.nextSibling.style.display = "flex";
-                                  }}
-                                />
-                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                                  IMG
-                                </div>
-                                <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
-                                  E{index + 1}
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeExistingImage(index);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                title="Remove this existing image"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-
-                        {/* New images */}
-                        {uploadedFiles.images &&
-                          uploadedFiles.images.map((file, index) => (
-                            <div
-                              key={`new-${index}`}
-                              className="relative group"
-                            >
-                              <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
-                                {file && file.type?.startsWith("image/") ? (
+                                <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
                                   <img
-                                    src={URL.createObjectURL(file)}
-                                    alt={`New ${index + 1}`}
+                                    src={imageUrl}
+                                    alt={`Existing ${index + 1}`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       e.target.style.display = "none";
-                                      e.target.nextSibling.style.display =
-                                        "flex";
+                                      e.target.nextSibling.style.display = "flex";
                                     }}
                                   />
-                                ) : null}
-                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
-                                  IMG
+                                  <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                                    IMG
+                                  </div>
+                                  <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
+                                    E{index + 1}
+                                  </div>
                                 </div>
-                                <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
-                                  N{index + 1}
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    removeExistingImage(index);
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                  title="Remove this existing image"
+                                >
+                                  ×
+                                </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeImageFile(index);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                title="Remove this new image"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                      </div>
+                            ))}
 
-                      {/* Legend */}
-                      <div className="mt-2 flex gap-4 text-xs text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                          <span>Existing Images</span>
+                          {/* New images */}
+                          {uploadedFiles.images &&
+                            uploadedFiles.images.map((file, index) => (
+                              <div
+                                key={`new-${index}`}
+                                className="relative group"
+                              >
+                                <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                                  {file && file.type?.startsWith("image/") ? (
+                                    <img
+                                      src={URL.createObjectURL(file)}
+                                      alt={`New ${index + 1}`}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.style.display = "none";
+                                        e.target.nextSibling.style.display =
+                                          "flex";
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
+                                    IMG
+                                  </div>
+                                  <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
+                                    N{index + 1}
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    removeImageFile(index);
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                  title="Remove this new image"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-500 rounded"></div>
-                          <span>New Images</span>
+
+                        {/* Legend */}
+                        <div className="mt-2 flex gap-4 text-xs text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                            <span>Existing Images</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-green-500 rounded"></div>
+                            <span>New Images</span>
+                          </div>
+                          <div className="text-gray-500">Hover to delete</div>
                         </div>
-                        <div className="text-gray-500">Hover to delete</div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </Form.Item>
               </Col>
 
@@ -1518,12 +1878,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "type"]}
                             label="Type (English)"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Missing transportation type",
-                              },
-                            ]}
                           >
                             <Input placeholder="Transportation type in English" />
                           </Form.Item>
@@ -1533,6 +1887,13 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamType"]}
                             label="Type (Malayalam)"
+                            rules={[
+                              {
+                                required: true,
+                                message:
+                                  "Missing transportation type (Malayalam)",
+                              },
+                            ]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ ഗതാഗത തരം"
@@ -1560,9 +1921,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "details"]}
                             label="Details (English)"
-                            rules={[
-                              { required: true, message: "Missing details" },
-                            ]}
                           >
                             <Input placeholder="Details in English" />
                           </Form.Item>
@@ -1635,12 +1993,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "name"]}
                             label="Name (English)"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Missing contact name",
-                              },
-                            ]}
                           >
                             <Input placeholder="Contact name in English" />
                           </Form.Item>
@@ -1650,6 +2002,12 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamName"]}
                             label="Name (Malayalam)"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing contact name (Malayalam)",
+                              },
+                            ]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ കോൺടാക്റ്റ് പേര്"
@@ -1692,12 +2050,6 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "type"]}
                             label="Type (English)"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Missing contact type",
-                              },
-                            ]}
                           >
                             <Input placeholder="Type (e.g., Police, Hospital)" />
                           </Form.Item>
@@ -1707,6 +2059,12 @@ const ArrivedManagement = () => {
                             {...restField}
                             name={[name, "malayalamType"]}
                             label="Type (Malayalam)"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Missing contact type (Malayalam)",
+                              },
+                            ]}
                           >
                             <Input
                               placeholder="മലയാളത്തിൽ തരം (പോലീസ്, ആശുപത്രി)"

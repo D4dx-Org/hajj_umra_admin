@@ -34,6 +34,7 @@ const Countries = () => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
   const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
 
   // Custom styles for react-select
@@ -199,6 +200,7 @@ const Countries = () => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       )
@@ -206,12 +208,12 @@ const Countries = () => {
     {
       key: 'name',
       title: 'Name',
-      render: (row) => row.name
+      render: (row) => <span className="truncate" title={row.name}>{row.name}</span>
     },
     {
       key: 'arabicName',
       title: 'Arabic Name',
-      render: (row) => row.arabicName || 'N/A'
+      render: (row) => <span className="truncate" title={row.arabicName || 'N/A'}>{row.arabicName || 'N/A'}</span>
     },
     {
       key: 'flag',
@@ -226,14 +228,20 @@ const Countries = () => {
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
@@ -505,6 +513,16 @@ const Countries = () => {
     });
   };
 
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -686,6 +704,79 @@ const Countries = () => {
           </div>
         )}
 
+        {/* View Modal */}
+        {viewModal.show && viewModal.data && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Country Details</h3>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.name || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Arabic Name</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.arabicName || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.category || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Flag</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.flag ? (
+                        <img 
+                          src={viewModal.data.flag} 
+                          alt={`${viewModal.data.name} flag`} 
+                          className="w-16 h-12 object-cover rounded border"
+                        />
+                      ) : 'No flag available'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
+                    <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                      {viewModal.data._id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
@@ -694,11 +785,20 @@ const Countries = () => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {countryColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'name' ? 'w-24' :
+                          column.key === 'arabicName' ? 'w-24' :
+                          column.key === 'flag' ? 'w-16' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -709,7 +809,7 @@ const Countries = () => {
                     <tr>
                       <td
                         colSpan={countryColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No countries found
                       </td>
@@ -717,9 +817,20 @@ const Countries = () => {
                   ) : (
                     filteredCountryData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr 
+                          className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {countryColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'name' ? 'max-w-24 truncate' :
+                                column.key === 'arabicName' ? 'max-w-24 truncate' :
+                                column.key === 'flag' ? 'whitespace-nowrap' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}

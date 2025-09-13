@@ -1,12 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
-import Sidebar from '../../../components/Sidebar';
-import Navbar from '../../../components/Navbar';
-import axios from 'axios';
-import { read, utils, write } from 'xlsx';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Search,
+  AlertTriangle,
+  Download,
+  ArrowUpDown,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import Sidebar from "../../../components/Sidebar";
+import Navbar from "../../../components/Navbar";
+import axios from "axios";
+import { read, utils, write } from "xlsx";
 
 const UmrahHospital = ({ isOpen }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hospitalData, setHospitalData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,28 +22,37 @@ const UmrahHospital = ({ isOpen }) => {
   const [branches, setBranches] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [newHospital, setNewHospital] = useState({
-    name: '',
-    malayalamName: '',
-    urduName: '',
-    arabicName: '',
-    phone: '',
-    location: { lat: '', lng: '' },
-    branchRef: ''
+    name: "",
+    malayalamName: "",
+    urduName: "",
+    arabicName: "",
+    phone: "",
+    location: { lat: "", lng: "" },
+    branchRef: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
-  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedHospital, setSelectedHospital] = useState(null);
+  const [sortConfig, setSortConfig] = useState({
+    field: "name",
+    direction: "asc",
+    type: "alpha",
+  });
 
   // Define the table columns
   const hospitalColumns = [
     {
-      key: 'select',
+      key: "select",
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === hospitalData.length && hospitalData.length > 0}
+          checked={
+            selectedRows.length === hospitalData.length &&
+            hospitalData.length > 0
+          }
           onChange={(event) => handleSelectAll(event)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -48,62 +64,84 @@ const UmrahHospital = ({ isOpen }) => {
           onChange={() => handleSelectRow(row._id)}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-      )
-    },
-    { 
-      key: 'name', 
-      title: 'Name',
-      render: (row) => {
-        return row.name;
-      }
-    },
-    { 
-      key: 'malayalamName', 
-      title: 'Malayalam Name',
-      render: (row) => {
-        return row.malayalamName || '-';
-      }
-    },
-    { 
-      key: 'urduName', 
-      title: 'Urdu Name',
-      render: (row) => {
-        return row.urduName || '-';
-      }
-    },
-    { 
-      key: 'arabicName', 
-      title: 'Arabic Name',
-      render: (row) => {
-        return row.arabicName || 'N/A';
-      }
-    },
-    { 
-      key: 'phone', 
-      title: 'Phone',
-      render: (row) => {
-        return row.phone || 'N/A';
-      }
-    },
-    { 
-      key: 'location', 
-      title: 'Location',
-      render: (row) => {
-        return row.location ? `${row.location.lat}, ${row.location.lng}` : 'N/A';
-      }
-    },
-    { 
-      key: 'branchRef', 
-      title: 'Branch',
-      render: (row) => {
-        return row.branchRef?.name || 'N/A';
-      }
+      ),
     },
     {
-      key: 'actions',
-      title: 'Actions',
+      key: "name",
+      title: "Name",
       render: (row) => (
-        <div className="flex gap-2">
+        <span className="truncate" title={row.name}>
+          {row.name}
+        </span>
+      ),
+    },
+    {
+      key: "malayalamName",
+      title: "Malayalam Name",
+      render: (row) => (
+        <span className="truncate" title={row.malayalamName || "-"}>
+          {row.malayalamName || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "urduName",
+      title: "Urdu Name",
+      render: (row) => (
+        <span className="truncate" title={row.urduName || "-"}>
+          {row.urduName || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "arabicName",
+      title: "Arabic Name",
+      render: (row) => (
+        <span className="truncate" title={row.arabicName || "N/A"}>
+          {row.arabicName || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "phone",
+      title: "Phone",
+      render: (row) => (
+        <span className="truncate" title={row.phone || "N/A"}>
+          {row.phone || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "location",
+      title: "Location",
+      render: (row) => {
+        const locationText = row.location
+          ? `${row.location.lat}, ${row.location.lng}`
+          : "N/A";
+        return (
+          <span className="truncate" title={locationText}>
+            {locationText}
+          </span>
+        );
+      },
+    },
+    {
+      key: "branchRef",
+      title: "Branch",
+      render: (row) => {
+        const branchName = row.branchRef?.name || "N/A";
+        return (
+          <span className="truncate" title={branchName}>
+            {branchName}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      title: "Actions",
+      render: (row) => (
+        <div className="flex gap-2 action-buttons">
           <button
             onClick={() => handleEditClick(row)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -119,35 +157,109 @@ const UmrahHospital = ({ isOpen }) => {
             <Trash2 size={16} />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // Sorting options
   const sortOptions = [
-    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
-    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
-    { value: 'malayalamName-alpha-asc', label: 'Malayalam Name (A-Z)', field: 'malayalamName', direction: 'asc', type: 'alpha' },
-    { value: 'malayalamName-alpha-desc', label: 'Malayalam Name (Z-A)', field: 'malayalamName', direction: 'desc', type: 'alpha' },
-    { value: 'urduName-alpha-asc', label: 'Urdu Name (A-Z)', field: 'urduName', direction: 'asc', type: 'alpha' },
-    { value: 'urduName-alpha-desc', label: 'Urdu Name (Z-A)', field: 'urduName', direction: 'desc', type: 'alpha' },
-    { value: 'arabicName-alpha-asc', label: 'Arabic Name (A-Z)', field: 'arabicName', direction: 'asc', type: 'alpha' },
-    { value: 'arabicName-alpha-desc', label: 'Arabic Name (Z-A)', field: 'arabicName', direction: 'desc', type: 'alpha' },
-    { value: 'phone-alpha-asc', label: 'Phone (A-Z)', field: 'phone', direction: 'asc', type: 'alpha' },
-    { value: 'phone-alpha-desc', label: 'Phone (Z-A)', field: 'phone', direction: 'desc', type: 'alpha' },
-    { value: 'branchRef-alpha-asc', label: 'Branch (A-Z)', field: 'branchRef', direction: 'asc', type: 'alpha' },
-    { value: 'branchRef-alpha-desc', label: 'Branch (Z-A)', field: 'branchRef', direction: 'desc', type: 'alpha' }
+    {
+      value: "name-alpha-asc",
+      label: "Name (A-Z)",
+      field: "name",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "name-alpha-desc",
+      label: "Name (Z-A)",
+      field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-asc",
+      label: "Malayalam Name (A-Z)",
+      field: "malayalamName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "malayalamName-alpha-desc",
+      label: "Malayalam Name (Z-A)",
+      field: "malayalamName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-asc",
+      label: "Urdu Name (A-Z)",
+      field: "urduName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "urduName-alpha-desc",
+      label: "Urdu Name (Z-A)",
+      field: "urduName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "arabicName-alpha-asc",
+      label: "Arabic Name (A-Z)",
+      field: "arabicName",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "arabicName-alpha-desc",
+      label: "Arabic Name (Z-A)",
+      field: "arabicName",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "phone-alpha-asc",
+      label: "Phone (A-Z)",
+      field: "phone",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "phone-alpha-desc",
+      label: "Phone (Z-A)",
+      field: "phone",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "branchRef-alpha-asc",
+      label: "Branch (A-Z)",
+      field: "branchRef",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "branchRef-alpha-desc",
+      label: "Branch (Z-A)",
+      field: "branchRef",
+      direction: "desc",
+      type: "alpha",
+    },
   ];
 
   // Fetch hospitals data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah`
+        );
         setHospitalData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching umrah hospital data:', error);
+        console.error("Error fetching umrah hospital data:", error);
         setLoading(false);
       }
     };
@@ -159,10 +271,12 @@ const UmrahHospital = ({ isOpen }) => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/branch-umrah`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/branch-umrah`
+        );
         setBranches(response.data);
       } catch (error) {
-        console.error('Error fetching branches:', error);
+        console.error("Error fetching branches:", error);
       }
     };
 
@@ -171,25 +285,31 @@ const UmrahHospital = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setHospitalData(hospitalData.map(item => {
-      if (item._id === id) {
-        if (field === 'location') {
-          return { ...item, location: value };
+    setHospitalData(
+      hospitalData.map((item) => {
+        if (item._id === id) {
+          if (field === "location") {
+            return { ...item, location: value };
+          }
+          if (field === "branchRef") {
+            const selectedBranch = branches.find(
+              (branch) => branch._id === value
+            );
+            return {
+              ...item,
+              branchRef: selectedBranch
+                ? {
+                    _id: selectedBranch._id,
+                    name: selectedBranch.name,
+                  }
+                : value,
+            };
+          }
+          return { ...item, [field]: value };
         }
-        if (field === 'branchRef') {
-          const selectedBranch = branches.find(branch => branch._id === value);
-          return { 
-            ...item, 
-            branchRef: selectedBranch ? { 
-              _id: selectedBranch._id,
-              name: selectedBranch.name 
-            } : value 
-          };
-        }
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+        return item;
+      })
+    );
   };
 
   // Handle Save Edit
@@ -211,9 +331,11 @@ const UmrahHospital = ({ isOpen }) => {
         }
       );
 
-      setHospitalData(hospitalData.map(item => 
-        item._id === row._id ? { ...item, ...response.data } : item
-      ));
+      setHospitalData(
+        hospitalData.map((item) =>
+          item._id === row._id ? { ...item, ...response.data } : item
+        )
+      );
       setEditingId(null);
     } catch (error) {
       console.error("Error updating umrah hospital data:", error);
@@ -227,8 +349,10 @@ const UmrahHospital = ({ isOpen }) => {
 
   // Handle Delete Confirmation
   const handleDeleteConfirm = async () => {
-    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+    const ids = Array.isArray(deleteConfirm.id)
+      ? deleteConfirm.id
+      : [deleteConfirm.id];
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -236,19 +360,24 @@ const UmrahHospital = ({ isOpen }) => {
         return;
       }
 
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      ));
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(
+            `${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+        )
+      );
 
-      setHospitalData(hospitalData.filter(item => !ids.includes(item._id)));
+      setHospitalData(hospitalData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting umrah hospital data:', error);
+      console.error("Error deleting umrah hospital data:", error);
     }
   };
 
@@ -277,16 +406,18 @@ const UmrahHospital = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah`);
+        const updatedResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah`
+        );
         setHospitalData(updatedResponse.data);
-        setNewHospital({ 
-          name: '',
-          malayalamName: '',
-          urduName: '',
-          arabicName: '',
-          phone: '',
-          location: { lat: '', lng: '' },
-          branchRef: ''
+        setNewHospital({
+          name: "",
+          malayalamName: "",
+          urduName: "",
+          arabicName: "",
+          phone: "",
+          location: { lat: "", lng: "" },
+          branchRef: "",
         });
         setShowAddForm(false);
       }
@@ -300,12 +431,14 @@ const UmrahHospital = ({ isOpen }) => {
 
   // Handle sort change
   const handleSortChange = (event) => {
-    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    const selectedOption = sortOptions.find(
+      (option) => option.value === event.target.value
+    );
     if (selectedOption) {
       setSortConfig({
         field: selectedOption.field,
         direction: selectedOption.direction,
-        type: selectedOption.type
+        type: selectedOption.type,
       });
     }
   };
@@ -313,13 +446,19 @@ const UmrahHospital = ({ isOpen }) => {
   // Sort function
   const sortData = (data) => {
     return [...data].sort((a, b) => {
-      let aValue = sortConfig.field === 'branchRef' ? a[sortConfig.field]?.name || '' : a[sortConfig.field] || '';
-      let bValue = sortConfig.field === 'branchRef' ? b[sortConfig.field]?.name || '' : b[sortConfig.field] || '';
-      
+      let aValue =
+        sortConfig.field === "branchRef"
+          ? a[sortConfig.field]?.name || ""
+          : a[sortConfig.field] || "";
+      let bValue =
+        sortConfig.field === "branchRef"
+          ? b[sortConfig.field]?.name || ""
+          : b[sortConfig.field] || "";
+
       aValue = aValue.toLowerCase();
       bValue = bValue.toLowerCase();
-      
-      if (sortConfig.direction === 'asc') {
+
+      if (sortConfig.direction === "asc") {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -331,21 +470,24 @@ const UmrahHospital = ({ isOpen }) => {
   const filteredHospitalData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     let filtered = hospitalData;
-    
+
     if (lowerCaseSearch) {
       filtered = hospitalData.filter((item) => {
-        const branchName = item.branchRef?.name || '';
+        const branchName = item.branchRef?.name || "";
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.malayalamName && item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.urduName && item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.arabicName && item.arabicName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.malayalamName &&
+            item.malayalamName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.urduName &&
+            item.urduName.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.arabicName &&
+            item.arabicName.toLowerCase().includes(lowerCaseSearch)) ||
           (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
           branchName.toLowerCase().includes(lowerCaseSearch)
         );
       });
     }
-    
+
     return sortData(filtered);
   }, [hospitalData, searchTerm, sortConfig]);
 
@@ -357,9 +499,9 @@ const UmrahHospital = ({ isOpen }) => {
 
   // Cancel button click handler
   const handleCancelEdit = () => {
-    setHospitalData(hospitalData.map(item => 
-      item._id === editingId ? originalData : item
-    ));
+    setHospitalData(
+      hospitalData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
   };
@@ -369,36 +511,42 @@ const UmrahHospital = ({ isOpen }) => {
     try {
       const sampleData = [
         {
-          name: 'Sample Hospital',
-          malayalam_name: 'ആശുപത്രി സാമ്പിൾ',
-          urdu_name: 'نمونہ ہسپتال',
-          arabicName: 'مستشفى عينة',
-          branch_name: 'Sample Branch',
-          phone: '+966123456789',
-          latitude: '21.4225',
-          longitude: '39.8262'
-        }
+          name: "Sample Hospital",
+          malayalam_name: "ആശുപത്രി സാമ്പിൾ",
+          urdu_name: "نمونہ ہسپتال",
+          arabicName: "مستشفى عينة",
+          branch_name: "Sample Branch",
+          phone: "+966123456789",
+          latitude: "21.4225",
+          longitude: "39.8262",
+        },
       ];
 
       const ws = utils.json_to_sheet([]);
-      
-      utils.sheet_add_aoa(ws, [[
-        'name',
-        'malayalam_name',
-        'urdu_name',
-        'arabicName',
-        'branch_name',
-        'phone',
-        'latitude',
-        'longitude'
-      ]], { origin: 'A1' });
 
-      utils.sheet_add_json(ws, sampleData, { 
-        origin: 'A2',
-        skipHeader: true
+      utils.sheet_add_aoa(
+        ws,
+        [
+          [
+            "name",
+            "malayalam_name",
+            "urdu_name",
+            "arabicName",
+            "branch_name",
+            "phone",
+            "latitude",
+            "longitude",
+          ],
+        ],
+        { origin: "A1" }
+      );
+
+      utils.sheet_add_json(ws, sampleData, {
+        origin: "A2",
+        skipHeader: true,
       });
 
-      ws['!cols'] = [
+      ws["!cols"] = [
         { wch: 25 }, // name
         { wch: 25 }, // malayalam_name
         { wch: 25 }, // urdu_name
@@ -406,26 +554,25 @@ const UmrahHospital = ({ isOpen }) => {
         { wch: 20 }, // branch_name
         { wch: 20 }, // phone
         { wch: 15 }, // latitude
-        { wch: 15 }  // longitude
+        { wch: 15 }, // longitude
       ];
 
       const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
+      utils.book_append_sheet(wb, ws, "Template");
 
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      
+      const blob = new Blob([write(wb, { bookType: "xlsx", type: "array" })], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'umrah_hospital_upload_template.xlsx';
+      link.download = "umrah_hospital_upload_template.xlsx";
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
+      console.error("Error creating template:", error);
+      setUploadError("Failed to download template. Please try again.");
     }
   };
 
@@ -435,17 +582,17 @@ const UmrahHospital = ({ isOpen }) => {
       const file = event.target.files[0];
       if (!file) return;
 
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        setUploadError("Please upload an Excel file (.xlsx or .xls)");
         return;
       }
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const token = localStorage.getItem("token");
       if (!token) {
-        setUploadError('Authentication token not found. Please log in again.');
+        setUploadError("Authentication token not found. Please log in again.");
         return;
       }
 
@@ -455,23 +602,30 @@ const UmrahHospital = ({ isOpen }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      setUploadSuccess(`Successfully uploaded ${response.data.count} hospitals`);
+      setUploadSuccess(
+        `Successfully uploaded ${response.data.count} hospitals`
+      );
       setUploadError(null);
 
       // Refresh the data
-      const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah`);
+      const updatedResponse = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL_V2}/hospital-umrah`
+      );
       setHospitalData(updatedResponse.data);
-      
+
       // Reset the file input
-      event.target.value = '';
+      event.target.value = "";
     } catch (error) {
-      console.error('File upload error:', error);
-      setUploadError(error.response?.data?.message || 'Error processing file. Please try again.');
+      console.error("File upload error:", error);
+      setUploadError(
+        error.response?.data?.message ||
+          "Error processing file. Please try again."
+      );
       setUploadSuccess(null);
     }
   };
@@ -479,7 +633,7 @@ const UmrahHospital = ({ isOpen }) => {
   // Handle select all
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(filteredHospitalData.map(row => row._id));
+      setSelectedRows(filteredHospitalData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -487,9 +641,9 @@ const UmrahHospital = ({ isOpen }) => {
 
   // Handle select row
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -499,12 +653,26 @@ const UmrahHospital = ({ isOpen }) => {
   // Handle bulk delete
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0) return;
-    
-    setDeleteConfirm({ 
-      show: true, 
+
+    setDeleteConfirm({
+      show: true,
       id: selectedRows,
-      isBulk: true 
+      isBulk: true,
     });
+  };
+
+  // Handle row click to show details
+  const handleRowClick = (hospital, event) => {
+    // Prevent row click when clicking on checkboxes or action buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest(".action-buttons")
+    ) {
+      return;
+    }
+    setSelectedHospital(hospital);
+    setShowDetailsModal(true);
   };
 
   if (loading) {
@@ -524,7 +692,7 @@ const UmrahHospital = ({ isOpen }) => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">Umrah Hospital Management</h1>
@@ -565,7 +733,7 @@ const UmrahHospital = ({ isOpen }) => {
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add Hospital'}
+              {showAddForm ? "Cancel" : "Add Hospital"}
             </button>
           </div>
         </div>
@@ -592,17 +760,26 @@ const UmrahHospital = ({ isOpen }) => {
                 <input
                   type="text"
                   value={newHospital.name}
-                  onChange={(e) => setNewHospital({ ...newHospital, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewHospital({ ...newHospital, name: e.target.value })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium">Malayalam Name</label>
+                <label className="block text-sm font-medium">
+                  Malayalam Name
+                </label>
                 <input
                   type="text"
                   value={newHospital.malayalamName}
-                  onChange={(e) => setNewHospital({ ...newHospital, malayalamName: e.target.value })}
+                  onChange={(e) =>
+                    setNewHospital({
+                      ...newHospital,
+                      malayalamName: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="ആശുപത്രി"
                 />
@@ -612,7 +789,9 @@ const UmrahHospital = ({ isOpen }) => {
                 <input
                   type="text"
                   value={newHospital.urduName}
-                  onChange={(e) => setNewHospital({ ...newHospital, urduName: e.target.value })}
+                  onChange={(e) =>
+                    setNewHospital({ ...newHospital, urduName: e.target.value })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="ہسپتال"
                   dir="rtl"
@@ -623,7 +802,12 @@ const UmrahHospital = ({ isOpen }) => {
                 <input
                   type="text"
                   value={newHospital.arabicName}
-                  onChange={(e) => setNewHospital({ ...newHospital, arabicName: e.target.value })}
+                  onChange={(e) =>
+                    setNewHospital({
+                      ...newHospital,
+                      arabicName: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="مستشفى"
                   dir="rtl"
@@ -633,11 +817,16 @@ const UmrahHospital = ({ isOpen }) => {
                 <label className="block text-sm font-medium">Branch</label>
                 <select
                   value={newHospital.branchRef}
-                  onChange={(e) => setNewHospital({ ...newHospital, branchRef: e.target.value })}
+                  onChange={(e) =>
+                    setNewHospital({
+                      ...newHospital,
+                      branchRef: e.target.value,
+                    })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                 >
                   <option value="">Select Branch</option>
-                  {branches.map(branch => (
+                  {branches.map((branch) => (
                     <option key={branch._id} value={branch._id}>
                       {branch.name}
                     </option>
@@ -649,31 +838,45 @@ const UmrahHospital = ({ isOpen }) => {
                 <input
                   type="text"
                   value={newHospital.phone}
-                  onChange={(e) => setNewHospital({ ...newHospital, phone: e.target.value })}
+                  onChange={(e) =>
+                    setNewHospital({ ...newHospital, phone: e.target.value })
+                  }
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   placeholder="+966123456789"
                 />
               </div>
               <div className="mb-4 md:col-span-2">
-                <label className="block text-sm font-medium">Location (Optional)</label>
+                <label className="block text-sm font-medium">
+                  Location (Optional)
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     value={newHospital.location.lat}
-                    onChange={(e) => setNewHospital({
-                      ...newHospital,
-                      location: { ...newHospital.location, lat: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewHospital({
+                        ...newHospital,
+                        location: {
+                          ...newHospital.location,
+                          lat: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="Latitude"
                     className="mt-1 block w-1/2 border border-gray-300 rounded-md p-2"
                   />
                   <input
                     type="number"
                     value={newHospital.location.lng}
-                    onChange={(e) => setNewHospital({
-                      ...newHospital,
-                      location: { ...newHospital.location, lng: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewHospital({
+                        ...newHospital,
+                        location: {
+                          ...newHospital.location,
+                          lng: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="Longitude"
                     className="mt-1 block w-1/2 border border-gray-300 rounded-md p-2"
                   />
@@ -701,7 +904,10 @@ const UmrahHospital = ({ isOpen }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               />
-              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-3.5 text-gray-400"
+              />
             </div>
             <div className="flex items-center gap-2">
               <ArrowUpDown size={20} className="text-gray-400" />
@@ -710,7 +916,7 @@ const UmrahHospital = ({ isOpen }) => {
                 value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
                 className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               >
-                {sortOptions.map(option => (
+                {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -723,13 +929,33 @@ const UmrahHospital = ({ isOpen }) => {
         {/* Data Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full full text-sm divide-y divide-gray-200">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
                   {hospitalColumns.map((column) => (
                     <th
                       key={column.key}
-                      className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === "select"
+                          ? "w-12"
+                          : column.key === "name"
+                          ? "w-24"
+                          : column.key === "malayalamName"
+                          ? "w-24"
+                          : column.key === "urduName"
+                          ? "w-24"
+                          : column.key === "arabicName"
+                          ? "w-24"
+                          : column.key === "phone"
+                          ? "w-20"
+                          : column.key === "location"
+                          ? "w-28"
+                          : column.key === "branchRef"
+                          ? "w-24"
+                          : column.key === "actions"
+                          ? "w-20"
+                          : ""
+                      }`}
                     >
                       {column.title}
                     </th>
@@ -739,183 +965,228 @@ const UmrahHospital = ({ isOpen }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredHospitalData.length === 0 ? (
                   <tr>
-                    <td colSpan={hospitalColumns.length} className="px-4 py-1 text-center text-gray-500">
+                    <td
+                      colSpan={hospitalColumns.length}
+                      className="px-2 py-2 text-center text-gray-500"
+                    >
                       No hospitals found
                     </td>
                   </tr>
                 ) : (
                   filteredHospitalData.map((row) => (
                     <React.Fragment key={row._id}>
-                      <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                      <tr
+                        className={`hover:bg-gray-50 cursor-pointer ${
+                          editingId === row._id ? "bg-blue-50" : ""
+                        }`}
+                        onClick={(event) => handleRowClick(row, event)}
+                      >
                         {hospitalColumns.map((column) => (
-                          <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td
+                            key={column.key}
+                            className={`px-2 py-2 text-sm text-gray-900 ${
+                              column.key === "name"
+                                ? "max-w-24 truncate"
+                                : column.key === "malayalamName"
+                                ? "max-w-24 truncate"
+                                : column.key === "urduName"
+                                ? "max-w-24 truncate"
+                                : column.key === "arabicName"
+                                ? "max-w-24 truncate"
+                                : column.key === "phone"
+                                ? "max-w-20 truncate"
+                                : column.key === "location"
+                                ? "max-w-28 truncate"
+                                : column.key === "branchRef"
+                                ? "max-w-24 truncate"
+                                : column.key === "actions"
+                                ? "whitespace-nowrap"
+                                : "whitespace-nowrap"
+                            }`}
+                          >
                             {column.render(row)}
                           </td>
                         ))}
                       </tr>
                       {editingId === row._id && (
                         <tr>
-                          <td colSpan={hospitalColumns.length} className="p-0">
-                            <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                              <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Edit Hospital</h3>
-                                <div className="flex gap-3">
-                                  <button
-                                    onClick={() => handleSaveEdit(row)}
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                          <td colSpan={hospitalColumns.length} className="p-4">
+                            <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                              <h2 className="text-lg font-bold mb-4">
+                                Edit Hospital
+                              </h2>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Name *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.name || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(
+                                        row._id,
+                                        "name",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Hospital name"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Malayalam Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.malayalamName || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(
+                                        row._id,
+                                        "malayalamName",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="മലയാളം പേര്"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Urdu Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.urduName || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(
+                                        row._id,
+                                        "urduName",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="اردو نام"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    dir="rtl"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Arabic Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.arabicName || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(
+                                        row._id,
+                                        "arabicName",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="اسم عربي"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    dir="rtl"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Phone
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={row.phone || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(
+                                        row._id,
+                                        "phone",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Phone number"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Branch
+                                  </label>
+                                  <select
+                                    value={
+                                      row.branchRef?._id || row.branchRef || ""
+                                    }
+                                    onChange={(e) =>
+                                      handleEditChange(
+                                        row._id,
+                                        "branchRef",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                   >
-                                    Save Changes
-                                  </button>
-                                  <button
-                                    onClick={handleCancelEdit}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
+                                    <option value="">Select Branch</option>
+                                    {branches.map((branch) => (
+                                      <option
+                                        key={branch._id}
+                                        value={branch._id}
+                                      >
+                                        {branch.name}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
                               </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Basic Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Name *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.name || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "name", e.target.value)
-                                      }
-                                      placeholder="Hospital name"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      required
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Malayalam Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.malayalamName || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "malayalamName", e.target.value)
-                                      }
-                                      placeholder="മലയാളം പേര്"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Urdu Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.urduName || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "urduName", e.target.value)
-                                      }
-                                      placeholder="اردو نام"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      dir="rtl"
-                                    />
-                                  </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Latitude
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={row.location?.lat || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "location", {
+                                        ...row.location,
+                                        lat: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Enter latitude"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
                                 </div>
-
-                                {/* Contact and Location Information */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium text-gray-700">Contact & Location</h4>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Arabic Name
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.arabicName || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "arabicName", e.target.value)
-                                      }
-                                      placeholder="اسم عربي"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      dir="rtl"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Phone
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={row.phone || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "phone", e.target.value)
-                                      }
-                                      placeholder="Phone number"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Branch
-                                    </label>
-                                    <select
-                                      value={row.branchRef?._id || row.branchRef || ""}
-                                      onChange={(e) => handleEditChange(row._id, "branchRef", e.target.value)}
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                      <option value="">Select Branch</option>
-                                      {branches.map(branch => (
-                                        <option key={branch._id} value={branch._id}>
-                                          {branch.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Longitude
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={row.location?.lng || ""}
+                                    onChange={(e) =>
+                                      handleEditChange(row._id, "location", {
+                                        ...row.location,
+                                        lng: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Enter longitude"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                  />
                                 </div>
                               </div>
-
-                              {/* Location - Full Width */}
-                              <div className="mt-6">
-                                <h4 className="font-medium text-gray-700 mb-4">Location Information</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Latitude
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={row.location?.lat || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "location", {
-                                          ...row.location,
-                                          lat: e.target.value,
-                                        })
-                                      }
-                                      placeholder="Enter latitude"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                      Longitude
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={row.location?.lng || ""}
-                                      onChange={(e) =>
-                                        handleEditChange(row._id, "location", {
-                                          ...row.location,
-                                          lng: e.target.value,
-                                        })
-                                      }
-                                      placeholder="Enter longitude"
-                                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-                                </div>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleSaveEdit(row)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
                               </div>
                             </div>
                           </td>
@@ -929,6 +1200,123 @@ const UmrahHospital = ({ isOpen }) => {
           </div>
         </div>
 
+        {/* Hospital Details Modal */}
+        {showDetailsModal && selectedHospital && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full border border-gray-300 mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold">Hospital Details</h3>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.name || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Malayalam Name
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.malayalamName || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urdu Name
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.urduName || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Arabic Name
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.arabicName || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.phone || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Branch
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.branchRef?.name || "N/A"}
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.location &&
+                    selectedHospital.location.lat &&
+                    selectedHospital.location.lng
+                      ? `Lat: ${selectedHospital.location.lat}, Lng: ${selectedHospital.location.lng}`
+                      : "N/A"}
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Created At
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.createdAt
+                      ? new Date(selectedHospital.createdAt).toLocaleString()
+                      : "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Updated At
+                  </label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedHospital.updatedAt
+                      ? new Date(selectedHospital.updatedAt).toLocaleString()
+                      : "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Delete Confirmation Modal */}
         {deleteConfirm.show && (
           <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
@@ -938,10 +1326,10 @@ const UmrahHospital = ({ isOpen }) => {
                 <h3 className="text-lg font-semibold">Confirm Delete</h3>
               </div>
               <p className="text-gray-600 mb-6">
-                {Array.isArray(deleteConfirm.id) 
+                {Array.isArray(deleteConfirm.id)
                   ? `Are you sure you want to delete ${deleteConfirm.id.length} selected hospitals?`
-                  : 'Are you sure you want to delete this hospital?'
-                } This action cannot be undone.
+                  : "Are you sure you want to delete this hospital?"}{" "}
+                This action cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
                 <button

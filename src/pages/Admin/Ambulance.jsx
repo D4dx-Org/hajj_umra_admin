@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from "lucide-react";
+import {
+  Search,
+  AlertTriangle,
+  Download,
+  ArrowUpDown,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
@@ -27,6 +34,7 @@ const Ambulance = ({ isOpen }) => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
   const [sortConfig, setSortConfig] = useState({
     field: "category",
     direction: "asc",
@@ -72,6 +80,7 @@ const Ambulance = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -83,32 +92,57 @@ const Ambulance = ({ isOpen }) => {
         const category = ambulanceCategories.categories.find(
           (cat) => cat.value === row.category
         );
-        return category ? category.label : row.category;
+        const categoryText = category ? category.label : row.category;
+        return (
+          <span className="truncate" title={categoryText}>
+            {categoryText}
+          </span>
+        );
       },
     },
     {
       key: "center",
       title: "Center",
-      render: (row) => row.center,
+      render: (row) => (
+        <span className="truncate" title={row.center || "N/A"}>
+          {row.center || "N/A"}
+        </span>
+      ),
     },
     {
       key: "poll",
       title: "Poll",
-      render: (row) => row.poll,
+      render: (row) => (
+        <span className="truncate" title={row.poll || "N/A"}>
+          {row.poll || "N/A"}
+        </span>
+      ),
     },
     {
       key: "location",
       title: "Location",
       render: (row) => {
-        return row.location
+        const locationText = row.location
           ? `${row.location.lat}, ${row.location.lng}`
           : "N/A";
+        return (
+          <span className="truncate" title={locationText}>
+            {locationText}
+          </span>
+        );
       },
     },
     {
       key: "locationRef",
       title: "Location Reference",
-      render: (row) => row.locationRef?.name || "N/A",
+      render: (row) => {
+        const locationName = row.locationRef?.name || "N/A";
+        return (
+          <span className="truncate" title={locationName}>
+            {locationName}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -116,14 +150,20 @@ const Ambulance = ({ isOpen }) => {
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
@@ -420,6 +460,16 @@ const Ambulance = ({ isOpen }) => {
 
     return sortData(filtered);
   }, [ambulanceData, searchTerm, sortConfig]);
+
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
+  };
 
   // Modify the edit button click handler
   const handleEditClick = (row) => {
@@ -923,6 +973,104 @@ const Ambulance = ({ isOpen }) => {
           </div>
         )}
 
+        {/* View Modal */}
+        {viewModal.show && viewModal.data && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Ambulance Details
+                </h3>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {(() => {
+                        const category = ambulanceCategories.categories.find(
+                          (cat) => cat.value === viewModal.data.category
+                        );
+                        return category
+                          ? category.label
+                          : viewModal.data.category || "N/A";
+                      })()}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Center
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.center || "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Poll
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.poll || "N/A"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Location Reference
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.locationRef?.name || "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Coordinates
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.location?.lat &&
+                      viewModal.data.location?.lng
+                        ? `${viewModal.data.location.lat}, ${viewModal.data.location.lng}`
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ID
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                      {viewModal.data._id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Table Component */}
         {loading ? (
           <p className="text-center">Loading...</p>
@@ -931,13 +1079,29 @@ const Ambulance = ({ isOpen }) => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {ambulanceColumns.map((column) => (
                       <th
                         key={column.key}
-                        className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === "select"
+                            ? "w-12"
+                            : column.key === "category"
+                            ? "w-24"
+                            : column.key === "center"
+                            ? "w-24"
+                            : column.key === "poll"
+                            ? "w-20"
+                            : column.key === "location"
+                            ? "w-28"
+                            : column.key === "locationRef"
+                            ? "w-24"
+                            : column.key === "actions"
+                            ? "w-20"
+                            : ""
+                        }`}
                       >
                         {column.title}
                       </th>
@@ -949,7 +1113,7 @@ const Ambulance = ({ isOpen }) => {
                     <tr>
                       <td
                         colSpan={ambulanceColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No ambulances found
                       </td>
@@ -957,11 +1121,30 @@ const Ambulance = ({ isOpen }) => {
                   ) : (
                     filteredAmbulanceData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            editingId === row._id ? "bg-blue-50" : ""
+                          }`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {ambulanceColumns.map((column) => (
                             <td
                               key={column.key}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === "category"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "center"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "poll"
+                                  ? "max-w-20 truncate"
+                                  : column.key === "location"
+                                  ? "max-w-28 truncate"
+                                  : column.key === "locationRef"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "actions"
+                                  ? "whitespace-nowrap"
+                                  : "whitespace-nowrap"
+                              }`}
                             >
                               {column.render(row)}
                             </td>
@@ -969,149 +1152,155 @@ const Ambulance = ({ isOpen }) => {
                         </tr>
                         {editingId === row._id && (
                           <tr>
-                            <td colSpan={ambulanceColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit Ambulance</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                                    >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
+                            <td
+                              colSpan={ambulanceColumns.length}
+                              className="p-4"
+                            >
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">
+                                  Edit Ambulance
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Category *
+                                    </label>
+                                    <Select
+                                      value={ambulanceCategories.categories.find(
+                                        (cat) => cat.value === row.category
+                                      )}
+                                      onChange={(selected) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "category",
+                                          selected.value
+                                        )
+                                      }
+                                      options={ambulanceCategories.categories}
+                                      styles={customStyles}
+                                      className="mt-1 block w-full"
+                                      isSearchable
+                                      placeholder="Select category..."
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Center *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.center || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "center",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Center name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Poll *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.poll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "poll",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Poll information"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                  {/* Category Fields */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Category Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Category *
-                                      </label>
-                                      <Select
-                                        value={ambulanceCategories.categories.find(
-                                          (cat) => cat.value === row.category
-                                        )}
-                                        onChange={(selected) =>
-                                          handleEditChange(row._id, "category", selected.value)
-                                        }
-                                        options={ambulanceCategories.categories}
-                                        styles={customStyles}
-                                        className="w-full"
-                                        isSearchable
-                                        placeholder="Select category..."
-                                      />
-                                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Latitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lat || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lat: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter latitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
                                   </div>
-
-                                  {/* Center Fields */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Center Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Center *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.center || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "center", e.target.value)
-                                        }
-                                        placeholder="Center name"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Longitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lng || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lng: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter longitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
                                   </div>
-
-                                  {/* Poll Fields */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Poll Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Poll *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.poll || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "poll", e.target.value)
-                                        }
-                                        placeholder="Poll information"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Location Reference
+                                    </label>
+                                    <select
+                                      value={
+                                        row.locationRef?._id ||
+                                        row.locationRef ||
+                                        ""
+                                      }
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "locationRef",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    >
+                                      <option value="">Select Location</option>
+                                      {locations.map((location) => (
+                                        <option
+                                          key={location._id}
+                                          value={location._id}
+                                        >
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
                                   </div>
                                 </div>
-
-                                {/* Location Fields - Full Width */}
-                                <div className="mt-6">
-                                  <h4 className="font-medium text-gray-700 mb-4">Location Information</h4>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Latitude
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={row.location?.lat || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "location", {
-                                            ...row.location,
-                                            lat: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter latitude"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Longitude
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={row.location?.lng || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "location", {
-                                            ...row.location,
-                                            lng: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter longitude"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Location Reference
-                                      </label>
-                                      <select
-                                        value={row.locationRef?._id || row.locationRef || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "locationRef", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Location</option>
-                                        {locations.map((location) => (
-                                          <option key={location._id} value={location._id}>
-                                            {location.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
                             </td>

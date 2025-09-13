@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Table,
   Button,
   Space,
   Modal,
@@ -8,7 +7,6 @@ import {
   Input,
   Select,
   Badge,
-  Tag,
   message,
   Popconfirm,
   Card,
@@ -16,7 +14,6 @@ import {
   Col,
   Typography,
   Upload,
-  Image,
 } from "antd";
 import {
   MapPin,
@@ -66,6 +63,8 @@ const PlaceKSA = () => {
     video: [],
   });
   const [existingImages, setExistingImages] = useState([]);
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   // Fetch only locations
   const fetchLocations = async () => {
@@ -104,7 +103,7 @@ const PlaceKSA = () => {
       }
 
       // Fetch both places and locations in parallel
-             const [placesResponse, locationsResponse] = await Promise.all([
+      const [placesResponse, locationsResponse] = await Promise.all([
         axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/places`, {
           headers: { Authorization: `Bearer ${token}` },
           params: { page: 1, limit: 1000 },
@@ -126,7 +125,10 @@ const PlaceKSA = () => {
       setPlaces(placesResponse.data.placesKSA || []);
       setPagination({
         ...pagination,
-        total: placesResponse.data.total || (placesResponse.data.placesKSA?.length || 0),
+        total:
+          placesResponse.data.total ||
+          placesResponse.data.placesKSA?.length ||
+          0,
       });
 
       // Handle locations response - backend returns array directly
@@ -386,12 +388,12 @@ const PlaceKSA = () => {
 
       const placeData = {
         id: values.id.trim(),
-        title: values.title.trim(),
-        titleMalayalam: values.titleMalayalam?.trim() || '',
-        titleUrdu: values.titleUrdu?.trim() || '',
-        description: values.description?.trim() || '',
-        descriptionMalayalam: values.descriptionMalayalam?.trim() || '',
-        descriptionUrdu: values.descriptionUrdu?.trim() || '',
+        title: values.title?.trim() || "",
+        titleMalayalam: values.titleMalayalam?.trim() || "",
+        titleUrdu: values.titleUrdu?.trim() || "",
+        description: values.description?.trim() || "",
+        descriptionMalayalam: values.descriptionMalayalam?.trim() || "",
+        descriptionUrdu: values.descriptionUrdu?.trim() || "",
         images: imageUrls,
         video: values.video?.trim() || "", // YouTube URL
         map: values.map?.trim() || "", // Map link
@@ -556,19 +558,21 @@ const PlaceKSA = () => {
 
   // Filter data based on search
   const filteredPlaces = useMemo(() => {
-    return places.filter((item) => {
-      const searchStr = searchTerm.toLowerCase();
-      return (
-        item.title?.toLowerCase().includes(searchStr) ||
-        item.description?.toLowerCase().includes(searchStr) ||
-        item.id?.toLowerCase().includes(searchStr)
-      );
-    }).sort((a, b) => {
-      // Sort by ID number (extract numeric part and sort numerically)
-      const aId = parseInt(a.id?.replace(/\D/g, '')) || 0;
-      const bId = parseInt(b.id?.replace(/\D/g, '')) || 0;
-      return aId - bId;
-    });
+    return places
+      .filter((item) => {
+        const searchStr = searchTerm.toLowerCase();
+        return (
+          item.title?.toLowerCase().includes(searchStr) ||
+          item.description?.toLowerCase().includes(searchStr) ||
+          item.id?.toLowerCase().includes(searchStr)
+        );
+      })
+      .sort((a, b) => {
+        // Sort by ID number (extract numeric part and sort numerically)
+        const aId = parseInt(a.id?.replace(/\D/g, "")) || 0;
+        const bId = parseInt(b.id?.replace(/\D/g, "")) || 0;
+        return aId - bId;
+      });
   }, [places, searchTerm]);
 
   // Handle pagination change
@@ -585,13 +589,15 @@ const PlaceKSA = () => {
     const startIndex = (pagination.current - 1) * pagination.pageSize;
     const endIndex = startIndex + pagination.pageSize;
     const paginated = filteredPlaces.slice(startIndex, endIndex);
-    console.log(`Pagination: Page ${pagination.current}, showing ${paginated.length} of ${filteredPlaces.length} total items`);
+    console.log(
+      `Pagination: Page ${pagination.current}, showing ${paginated.length} of ${filteredPlaces.length} total items`
+    );
     return paginated;
   }, [filteredPlaces, pagination.current, pagination.pageSize]);
 
   // Reset to first page when search changes
   useEffect(() => {
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       current: 1,
       total: filteredPlaces.length,
@@ -618,14 +624,55 @@ const PlaceKSA = () => {
     });
   };
 
+  // Handle row click to view details
+  const handleRowClick = (place, event) => {
+    // Don't trigger if clicking on checkbox or action buttons
+    if (
+      event.target.type === "checkbox" ||
+      event.target.closest("button") ||
+      event.target.closest(".actions-cell")
+    ) {
+      return;
+    }
+    setSelectedPlace(place);
+    setViewModalVisible(true);
+  };
+
+  // Truncate text with read more functionality
+  const TruncatedText = ({ text, maxLength = 100, className = "" }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    if (!text || text.length <= maxLength) {
+      return <span className={className}>{text || "-"}</span>;
+    }
+
+    return (
+      <div className={className}>
+        <span>{isExpanded ? text : `${text.substring(0, maxLength)}...`}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className="ml-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          {isExpanded ? "Read Less" : "Read More"}
+        </button>
+      </div>
+    );
+  };
+
   // Table columns configuration
-  const columns = [
+  const placeColumns = [
     {
       key: "select",
       title: (
         <input
           type="checkbox"
-          checked={selectedRows.length === paginatedPlaces.length && paginatedPlaces.length > 0}
+          checked={
+            selectedRows.length === paginatedPlaces.length &&
+            paginatedPlaces.length > 0
+          }
           onChange={handleSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
@@ -640,151 +687,124 @@ const PlaceKSA = () => {
       ),
     },
     {
-      title: "ID",
-      dataIndex: "id",
       key: "id",
-      width: 120,
-      render: (text) => (
-        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-          {text}
+      title: "ID",
+      render: (row) => (
+        <span className="truncate" title={row.id || "-"}>
+          {row.id || "-"}
         </span>
       ),
     },
     {
-      title: "Title (Eng | Malayalam | Urdu)",
-      dataIndex: "title",
       key: "title",
-      width: 250,
-      ellipsis: { showTitle: false },
-      render: (_, row) => {
-        const values = [row.title, row.titleMalayalam, row.titleUrdu].filter(Boolean).join(' | ');
-        return <div title={values} className="font-medium text-sm">{values || '-'}</div>;
-      },
+      title: "Title",
+      render: (row) => (
+        <span className="truncate" title={row.title || "-"}>
+          {row.title || "-"}
+        </span>
+      ),
     },
     {
-      title: "Description (Eng | Malayalam | Urdu)",
-      dataIndex: "description",
+      key: "titleMalayalam",
+      title: "Ml Title",
+      render: (row) => (
+        <span className="truncate" title={row.titleMalayalam || "-"}>
+          {row.titleMalayalam || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "titleUrdu",
+      title: "Ur Title",
+      render: (row) => (
+        <span className="truncate" title={row.titleUrdu || "-"}>
+          {row.titleUrdu || "-"}
+        </span>
+      ),
+    },
+    {
       key: "description",
-      width: 300,
-      ellipsis: { showTitle: false },
-      render: (_, row) => {
-        const values = [row.description, row.descriptionMalayalam, row.descriptionUrdu].filter(Boolean).join(' | ');
+      title: "Description",
+      render: (row) => (
+        <span className="truncate" title={row.description || "-"}>
+          {row.description || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "descriptionMalayalam",
+      title: "Ml Description",
+      render: (row) => (
+        <span className="truncate" title={row.descriptionMalayalam || "-"}>
+          {row.descriptionMalayalam || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "descriptionUrdu",
+      title: "Ur Description",
+      render: (row) => (
+        <span className="truncate" title={row.descriptionUrdu || "-"}>
+          {row.descriptionUrdu || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "locationRef",
+      title: "Location",
+      render: (row) => {
+        const locationText =
+          row.locationRef?.title || row.locationRef?.name || "No location";
         return (
-          <div title={values} className="max-w-[300px]">
-            {values ? (
-              <span className="text-sm text-gray-700">{values.length > 80 ? `${values.substring(0, 80)}...` : values}</span>
-            ) : (
-              <span className="text-gray-400 text-sm">No description</span>
-            )}
-          </div>
+          <span className="truncate" title={locationText}>
+            {locationText}
+          </span>
         );
       },
     },
     {
-      title: "Location",
-      key: "location",
-      width: 150,
-      render: (_, record) => {
-        if (record.locationRef) {
-          return (
-            <Tag color="blue" size="small" className="text-xs">
-              📍 {record.locationRef.title || record.locationRef.name}
-            </Tag>
-          );
-        } else {
-          return (
-            <Tag color="gray" size="small" className="text-xs">
-              No location
-            </Tag>
-          );
-        }
+      key: "media",
+      title: "Media",
+      render: (row) => {
+        const imageCount = row.images?.length || 0;
+        const hasVideo = row.video ? 1 : 0;
+        const hasMap = row.map ? 1 : 0;
+        const totalMedia = imageCount + hasVideo + hasMap;
+        return (
+          <span
+            className="truncate"
+            title={`${imageCount} images, ${hasVideo} video, ${hasMap} map`}
+          >
+            {totalMedia} items
+          </span>
+        );
       },
     },
     {
-      title: "Media",
-      key: "media",
-      width: 200,
-      render: (_, record) => (
-        <div className="space-y-1">
-          {record.images && record.images.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Tag color="green" size="small">
-                📷 {record.images.length}
-              </Tag>
-              <div className="flex gap-1">
-                {record.images.slice(0, 2).map((img, index) => (
-                  <Image
-                    key={index}
-                    width={24}
-                    height={18}
-                    src={img}
-                    preview={{
-                      src: img,
-                      mask:
-                        index === 1 && record.images.length > 2
-                          ? `+${record.images.length - 2}`
-                          : false,
-                    }}
-                    style={{ objectFit: "cover", borderRadius: "2px" }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="flex gap-1">
-            {record.video && (
-              <Tag
-                color="purple"
-                size="small"
-                className="cursor-pointer"
-                onClick={() => window.open(record.video, "_blank")}
-                title="Open YouTube video"
-              >
-                🎥 Video
-              </Tag>
-            )}
-            {record.map && (
-              <Tag
-                color="orange"
-                size="small"
-                className="cursor-pointer"
-                onClick={() => window.open(record.map, "_blank")}
-                title="View map"
-              >
-                🗺️ Map
-              </Tag>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Actions",
       key: "actions",
-      width: 80,
-      fixed: "right",
-      render: (_, record) => (
-        <div className="flex gap-1">
+      title: "Actions",
+      render: (row) => (
+        <div className="flex gap-2">
           <button
             onClick={() => {
-              setEditingId(record._id);
-              const recordImages = record.images || [];
-              console.log("Setting up edit for record:", record);
+              setEditingId(row._id);
+              const recordImages = row.images || [];
+              console.log("Setting up edit for record:", row);
               console.log("Record images:", recordImages);
 
               setExistingImages(recordImages);
               form.setFieldsValue({
-                id: record.id,
-                title: record.title,
-                titleMalayalam: record.titleMalayalam || '',
-                titleUrdu: record.titleUrdu || '',
-                description: record.description || "",
-                descriptionMalayalam: record.descriptionMalayalam || '',
-                descriptionUrdu: record.descriptionUrdu || '',
+                id: row.id,
+                title: row.title,
+                titleMalayalam: row.titleMalayalam || "",
+                titleUrdu: row.titleUrdu || "",
+                description: row.description || "",
+                descriptionMalayalam: row.descriptionMalayalam || "",
+                descriptionUrdu: row.descriptionUrdu || "",
                 images: recordImages,
-                video: record.video || "",
-                map: record.map || "",
-                locationRef: record.locationRef?._id || undefined,
+                video: row.video || "",
+                map: row.map || "",
+                locationRef: row.locationRef?._id || undefined,
               });
 
               // Reset upload state for editing
@@ -792,15 +812,15 @@ const PlaceKSA = () => {
               setFileList({ images: [], video: [] });
               setModalVisible(true);
             }}
-            className="p-1 hover:bg-blue-50 rounded text-blue-500"
-            title="Edit place"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(record._id)}
-            className="p-1 hover:bg-red-50 rounded text-red-500"
-            title="Delete place"
+            onClick={() => handleDelete(row._id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            title="Delete"
           >
             <Trash2 size={16} />
           </button>
@@ -920,28 +940,562 @@ const PlaceKSA = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={paginatedPlaces}
-            rowKey="_id"
-            loading={loading}
-            pagination={{
-              ...pagination,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} places`,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              style: { marginRight: '16px' },
-              onChange: handlePaginationChange,
-              onShowSizeChange: handlePaginationChange,
-            }}
-            size="small"
-            scroll={{ x: "max-content" }}
-          />
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {placeColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        column.key === "select"
+                          ? "w-12"
+                          : column.key === "id"
+                          ? "w-16"
+                          : column.key === "title"
+                          ? "w-24"
+                          : column.key === "titleMalayalam"
+                          ? "w-20"
+                          : column.key === "titleUrdu"
+                          ? "w-20"
+                          : column.key === "description"
+                          ? "w-32"
+                          : column.key === "descriptionMalayalam"
+                          ? "w-28"
+                          : column.key === "descriptionUrdu"
+                          ? "w-28"
+                          : column.key === "locationRef"
+                          ? "w-20"
+                          : column.key === "media"
+                          ? "w-16"
+                          : column.key === "actions"
+                          ? "w-20"
+                          : ""
+                      }`}
+                    >
+                      {column.title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={placeColumns.length}
+                      className="px-2 py-4 text-center text-gray-500"
+                    >
+                      Loading...
+                    </td>
+                  </tr>
+                ) : paginatedPlaces.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={placeColumns.length}
+                      className="px-2 py-4 text-center text-gray-500"
+                    >
+                      No places found
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedPlaces.map((row) => (
+                    <tr
+                      key={row._id}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={(e) => handleRowClick(row, e)}
+                    >
+                      {placeColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-2 py-2 text-sm text-gray-900 ${
+                            column.key === "select"
+                              ? "w-12"
+                              : column.key === "id"
+                              ? "w-16 max-w-16 truncate"
+                              : column.key === "title"
+                              ? "w-24 max-w-24 truncate"
+                              : column.key === "titleMalayalam"
+                              ? "w-20 max-w-20 truncate"
+                              : column.key === "titleUrdu"
+                              ? "w-20 max-w-20 truncate"
+                              : column.key === "description"
+                              ? "w-32 max-w-32 truncate"
+                              : column.key === "descriptionMalayalam"
+                              ? "w-28 max-w-28 truncate"
+                              : column.key === "descriptionUrdu"
+                              ? "w-28 max-w-28 truncate"
+                              : column.key === "locationRef"
+                              ? "w-20 max-w-20 truncate"
+                              : column.key === "media"
+                              ? "w-16 max-w-16 truncate"
+                              : column.key === "actions"
+                              ? "w-20 actions-cell"
+                              : ""
+                          }`}
+                        >
+                          {column.render ? column.render(row) : row[column.key]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* Pagination Controls */}
+        {filteredPlaces.length > 0 && (
+          <div className="bg-white rounded-lg shadow mt-4 p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {(pagination.current - 1) * pagination.pageSize + 1} to{" "}
+                {Math.min(
+                  pagination.current * pagination.pageSize,
+                  filteredPlaces.length
+                )}{" "}
+                of {filteredPlaces.length} places
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Page Size Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Show:</span>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={(e) => {
+                      const newPageSize = parseInt(e.target.value);
+                      setPagination({
+                        ...pagination,
+                        pageSize: newPageSize,
+                        current: 1, // Reset to first page when changing page size
+                      });
+                    }}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span className="text-sm text-gray-600">per page</span>
+                </div>
+
+                {/* Pagination Buttons */}
+                <div className="flex items-center gap-1">
+                  {/* First Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(1, pagination.pageSize)
+                    }
+                    disabled={pagination.current === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="First page"
+                  >
+                    ««
+                  </button>
+
+                  {/* Previous Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(
+                        pagination.current - 1,
+                        pagination.pageSize
+                      )
+                    }
+                    disabled={pagination.current === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Previous page"
+                  >
+                    ‹
+                  </button>
+
+                  {/* Page Numbers */}
+                  {(() => {
+                    const totalPages = Math.ceil(
+                      filteredPlaces.length / pagination.pageSize
+                    );
+                    const currentPage = pagination.current;
+                    const pages = [];
+
+                    // Calculate page range to show
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, currentPage + 2);
+
+                    // Adjust range if we're near the beginning or end
+                    if (endPage - startPage < 4) {
+                      if (startPage === 1) {
+                        endPage = Math.min(totalPages, startPage + 4);
+                      } else if (endPage === totalPages) {
+                        startPage = Math.max(1, endPage - 4);
+                      }
+                    }
+
+                    // Add first page if not in range
+                    if (startPage > 1) {
+                      pages.push(
+                        <button
+                          key={1}
+                          onClick={() =>
+                            handlePaginationChange(1, pagination.pageSize)
+                          }
+                          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                          1
+                        </button>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <span
+                            key="start-ellipsis"
+                            className="px-2 text-gray-500"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                    }
+
+                    // Add page numbers in range
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() =>
+                            handlePaginationChange(i, pagination.pageSize)
+                          }
+                          className={`px-3 py-1 text-sm border rounded ${
+                            i === currentPage
+                              ? "bg-blue-500 text-white border-blue-500"
+                              : "border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+
+                    // Add last page if not in range
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <span
+                            key="end-ellipsis"
+                            className="px-2 text-gray-500"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          onClick={() =>
+                            handlePaginationChange(
+                              totalPages,
+                              pagination.pageSize
+                            )
+                          }
+                          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
+
+                  {/* Next Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(
+                        pagination.current + 1,
+                        pagination.pageSize
+                      )
+                    }
+                    disabled={
+                      pagination.current >=
+                      Math.ceil(filteredPlaces.length / pagination.pageSize)
+                    }
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Next page"
+                  >
+                    ›
+                  </button>
+
+                  {/* Last Page */}
+                  <button
+                    onClick={() =>
+                      handlePaginationChange(
+                        Math.ceil(filteredPlaces.length / pagination.pageSize),
+                        pagination.pageSize
+                      )
+                    }
+                    disabled={
+                      pagination.current >=
+                      Math.ceil(filteredPlaces.length / pagination.pageSize)
+                    }
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Last page"
+                  >
+                    »»
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Details Modal */}
+        <Modal
+          title={
+            <div className="flex items-center gap-2">
+              <MapPin size={20} />
+              <span>Place Details</span>
+            </div>
+          }
+          open={viewModalVisible}
+          onCancel={() => {
+            setViewModalVisible(false);
+            setSelectedPlace(null);
+          }}
+          footer={[
+            <Button
+              key="close"
+              onClick={() => {
+                setViewModalVisible(false);
+                setSelectedPlace(null);
+              }}
+            >
+              Close
+            </Button>,
+            // <Button
+            //   key="edit"
+            //   type="primary"
+            //   icon={<Edit size={16} />}
+            //   onClick={() => {
+            //     if (selectedPlace) {
+            //       setEditingId(selectedPlace._id);
+            //       const recordImages = selectedPlace.images || [];
+
+            //       setExistingImages(recordImages);
+            //       form.setFieldsValue({
+            //         id: selectedPlace.id,
+            //         title: selectedPlace.title,
+            //         titleMalayalam: selectedPlace.titleMalayalam || "",
+            //         titleUrdu: selectedPlace.titleUrdu || "",
+            //         description: selectedPlace.description || "",
+            //         descriptionMalayalam:
+            //           selectedPlace.descriptionMalayalam || "",
+            //         descriptionUrdu: selectedPlace.descriptionUrdu || "",
+            //         images: recordImages,
+            //         video: selectedPlace.video || "",
+            //         map: selectedPlace.map || "",
+            //         locationRef: selectedPlace.locationRef?._id || undefined,
+            //       });
+
+            //       setUploadedFiles({ images: [], video: null });
+            //       setFileList({ images: [], video: [] });
+            //       setViewModalVisible(false);
+            //       setModalVisible(true);
+            //     }
+            //   }}
+            // >
+            //   Edit Place
+            // </Button>,
+          ]}
+          width={1000}
+        >
+          {selectedPlace && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Basic Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Place ID
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.id || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Title (English)
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.title || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Title (Malayalam)
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.titleMalayalam || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Title (Urdu)
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm" dir="rtl">
+                        {selectedPlace.titleUrdu || "-"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Location & Media
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Location
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.locationRef?.title ||
+                          selectedPlace.locationRef?.name ||
+                          "No location assigned"}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Media Count
+                      </label>
+                      <div className="p-2 bg-gray-50 rounded border text-sm">
+                        {selectedPlace.images?.length || 0} images,
+                        {selectedPlace.video ? " 1 video," : " 0 videos,"}
+                        {selectedPlace.map ? " 1 map" : " 0 maps"}
+                      </div>
+                    </div>
+                    {selectedPlace.video && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Video URL
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded border text-sm">
+                          <a
+                            href={selectedPlace.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 break-all"
+                          >
+                            {selectedPlace.video}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {selectedPlace.map && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Map URL
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded border text-sm">
+                          <a
+                            href={selectedPlace.map}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 break-all"
+                          >
+                            {selectedPlace.map}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Descriptions */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                  Descriptions
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Description (English)
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                      <TruncatedText
+                        text={selectedPlace.description}
+                        maxLength={200}
+                        className="text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Description (Malayalam)
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                      <TruncatedText
+                        text={selectedPlace.descriptionMalayalam}
+                        maxLength={200}
+                        className="text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Description (Urdu)
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                      <TruncatedText
+                        text={selectedPlace.descriptionUrdu}
+                        maxLength={200}
+                        className="text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Images Gallery */}
+              {selectedPlace.images && selectedPlace.images.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Images ({selectedPlace.images.length})
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {selectedPlace.images.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={imageUrl}
+                            alt={`Place image ${index + 1}`}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              e.target.nextSibling.style.display = "flex";
+                            }}
+                          />
+                          <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                            Image {index + 1}
+                          </div>
+                        </div>
+                        <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal>
 
         {/* Create/Edit Modal */}
         <Modal
@@ -984,18 +1538,28 @@ const PlaceKSA = () => {
                   name="title"
                   label="Title (English)"
                   rules={[
-                    { required: true, message: "Please enter title" },
-                    { min: 1, message: "Title cannot be empty" },
                     { max: 200, message: "Title cannot exceed 200 characters" },
                   ]}
                 >
-                  <Input placeholder="Enter place title in English" />
+                  <Input placeholder="Enter place title in English (optional)" />
                 </Form.Item>
-                <Form.Item name="titleMalayalam" label="Title (Malayalam)">
+                <Form.Item
+                  name="titleMalayalam"
+                  label="Title (Malayalam) *"
+                  rules={[
+                    { required: true, message: "Please enter Malayalam title" },
+                    { min: 1, message: "Malayalam title cannot be empty" },
+                    {
+                      max: 200,
+                      message: "Malayalam title cannot exceed 200 characters",
+                    },
+                  ]}
+                >
                   <Input placeholder="Enter place title in Malayalam" />
                 </Form.Item>
                 <Form.Item name="titleUrdu" label="Title (Urdu)">
-                  <Input placeholder="Enter place title in Urdu" />
+                  <Input className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left " placeholder="Enter place title in Urdu" dir="rtl" 
+                  style={{ textAlign: 'right' }} />
                 </Form.Item>
               </Col>
             </Row>
@@ -1004,15 +1568,28 @@ const PlaceKSA = () => {
               <TextArea
                 rows={2}
                 placeholder="Enter a detailed description of the place in English..."
-                maxLength={500}
                 showCount
               />
             </Form.Item>
-            <Form.Item name="descriptionMalayalam" label="Description (Malayalam)">
-              <TextArea rows={2} placeholder="Enter description in Malayalam..." maxLength={500} />
+            <Form.Item
+              name="descriptionMalayalam"
+              label="Description (Malayalam) *"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter Malayalam description",
+                },
+                { min: 1, message: "Malayalam description cannot be empty" },
+              ]}
+            >
+              <TextArea
+                rows={2}
+                placeholder="Enter description in Malayalam..."
+              />
             </Form.Item>
             <Form.Item name="descriptionUrdu" label="Description (Urdu)">
-              <TextArea rows={2} placeholder="Enter description in Urdu..." maxLength={500} />
+              <TextArea rows={2} className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left " placeholder="Enter description in Urdu" dir="rtl" 
+                  style={{ textAlign: 'right' }} />
             </Form.Item>
 
             {/* File Upload Sections */}
@@ -1290,10 +1867,14 @@ const PlaceKSA = () => {
                     {[
                       location.title,
                       location.titleMalayalam,
-                      location.titleUrdu
-                    ].filter(Boolean).join(' | ')}
+                      location.titleUrdu,
+                    ]
+                      .filter(Boolean)
+                      .join(" | ")}
                     {location.id && (
-                      <span className="text-gray-500 ml-2">({location.id})</span>
+                      <span className="text-gray-500 ml-2">
+                        ({location.id})
+                      </span>
                     )}
                   </Option>
                 ))}

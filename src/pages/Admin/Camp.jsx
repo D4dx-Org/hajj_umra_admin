@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from "lucide-react";
+import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2, X, CheckCircle } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
@@ -30,7 +30,10 @@ const Camp = ({ isOpen }) => {
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
   const [countries, setCountries] = useState([]); // Add state for countries
+  const [selectedCamp, setSelectedCamp] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     field: "maktab",
     direction: "asc",
@@ -242,6 +245,7 @@ const Camp = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       ),
@@ -261,10 +265,10 @@ const Camp = ({ isOpen }) => {
       title: "Country",
       render: (row) => {
         if (row.otherCountry) {
-          return <span>{row.otherCountry} (Other)</span>;
+          return <span className="truncate" title={row.otherCountry + " (Other)"}>{row.otherCountry} (Other)</span>;
         }
         return row.country ? (
-          <div className="flex items-center gap-2">
+          <div className="truncate" title={`${row.country.name} ${row.country.arabicName ? `(${row.country.arabicName})` : ''}`}>
             <span>{row.country.name}</span>
             {row.country.arabicName && (
               <span className="text-gray-500">({row.country.arabicName})</span>
@@ -286,20 +290,24 @@ const Camp = ({ isOpen }) => {
       render: (row) => {
         const lat = row.location?.lat;
         const lng = row.location?.lng;
-        if (lat === undefined && lng === undefined) return "N/A";
-        if (
+        let locationText = "";
+        if (lat === undefined && lng === undefined) locationText = "N/A";
+        else if (
           (lat === undefined || lat === "") &&
           lng !== undefined &&
           lng !== ""
         )
-          return `N/A, ${lng}`;
-        if (
+          locationText = `N/A, ${lng}`;
+        else if (
           (lng === undefined || lng === "") &&
           lat !== undefined &&
           lat !== ""
         )
-          return `${lat}, N/A`;
-        return `${lat ?? "N/A"}, ${lng ?? "N/A"}`;
+          locationText = `${lat}, N/A`;
+        else
+          locationText = `${lat ?? "N/A"}, ${lng ?? "N/A"}`;
+        
+        return <span className="truncate" title={locationText}>{locationText}</span>;
       },
     },
     {
@@ -310,7 +318,7 @@ const Camp = ({ isOpen }) => {
           row.ref?.name ||
           locations.find((loc) => loc._id === row.ref)?.name ||
           "N/A";
-        return locationName;
+        return <span className="truncate" title={locationName}>{locationName}</span>;
       },
     },
     {
@@ -329,14 +337,20 @@ const Camp = ({ isOpen }) => {
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
@@ -788,6 +802,26 @@ const Camp = ({ isOpen }) => {
     });
   };
 
+  // Handle row click to show details
+  const handleRowClick = (camp, event) => {
+    // Prevent row click when clicking on buttons or checkboxes
+    if (event.target.closest('button') || event.target.closest('input[type="checkbox"]')) {
+      return;
+    }
+    setSelectedCamp(camp);
+    setShowDetailModal(true);
+  };
+
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
+  };
+
   return (
     <div>
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
@@ -1060,13 +1094,24 @@ const Camp = ({ isOpen }) => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {campColumns.map((column) => (
                       <th
                         key={column.key}
-                        className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === 'select' ? 'w-12' :
+                          column.key === 'maktab' ? 'w-20' :
+                          column.key === 'zone' ? 'w-16' :
+                          column.key === 'country' ? 'w-32' :
+                          column.key === 'poll' ? 'w-20' :
+                          column.key === 'location' ? 'w-28' :
+                          column.key === 'ref' ? 'w-24' :
+                          column.key === 'road' ? 'w-20' :
+                          column.key === 'tent' ? 'w-20' :
+                          column.key === 'actions' ? 'w-20' : ''
+                        }`}
                       >
                         {column.title}
                       </th>
@@ -1078,7 +1123,7 @@ const Camp = ({ isOpen }) => {
                     <tr>
                       <td
                         colSpan={campColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No camps found
                       </td>
@@ -1086,11 +1131,19 @@ const Camp = ({ isOpen }) => {
                   ) : (
                     filteredCampData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr 
+                          className={`hover:bg-gray-50 cursor-pointer ${editingId === row._id ? 'bg-blue-50' : ''}`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {campColumns.map((column) => (
                             <td
                               key={column.key}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === 'country' ? 'max-w-32 truncate' :
+                                column.key === 'location' ? 'max-w-28 truncate' :
+                                column.key === 'ref' ? 'max-w-24 truncate' :
+                                column.key === 'actions' ? 'whitespace-nowrap' : 'whitespace-nowrap'
+                              }`}
                             >
                               {column.render(row)}
                             </td>
@@ -1098,195 +1151,163 @@ const Camp = ({ isOpen }) => {
                         </tr>
                         {editingId === row._id && (
                           <tr>
-                            <td colSpan={campColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit Camp</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                            <td colSpan={campColumns.length} className="p-4">
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">Edit Camp</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">Maktab *</label>
+                                    <input
+                                      type="text"
+                                      value={row.maktab || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "maktab", e.target.value)
+                                      }
+                                      placeholder="Maktab name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Zone</label>
+                                    <input
+                                      type="text"
+                                      value={row.zone || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "zone", e.target.value)
+                                      }
+                                      placeholder="Zone"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Poll</label>
+                                    <input
+                                      type="text"
+                                      value={row.poll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "poll", e.target.value)
+                                      }
+                                      placeholder="Poll"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Location Reference</label>
+                                    <select
+                                      value={row.ref?._id || row.ref || ""}
+                                      onChange={(e) => handleEditChange(row._id, "ref", e.target.value)}
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                      <option value="">Select Location</option>
+                                      {locations.map((location) => (
+                                        <option key={location._id} value={location._id}>
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Road</label>
+                                    <input
+                                      type="text"
+                                      value={row.road || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "road", e.target.value)
+                                      }
+                                      placeholder="Road"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Tent</label>
+                                    <input
+                                      type="text"
+                                      value={row.tent || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "tent", e.target.value)
+                                      }
+                                      placeholder="Tent"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Country</label>
+                                    <select
+                                      value={row.country?._id || row.country || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "country", e.target.value)
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Cancel
-                                    </button>
+                                      <option value="">Select Country</option>
+                                      <option value="others">Others</option>
+                                      {countries.map((country) => (
+                                        <option key={country._id} value={country._id}>
+                                          {country.name}{" "}
+                                          {country.arabicName ? `(${country.arabicName})` : ""}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Other Country</label>
+                                    <input
+                                      type="text"
+                                      value={row.otherCountry || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "otherCountry", e.target.value)
+                                      }
+                                      placeholder="Enter other country name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                  {/* Basic Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Maktab *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.maktab || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "maktab", e.target.value)
-                                        }
-                                        placeholder="Maktab name"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Zone
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.zone || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "zone", e.target.value)
-                                        }
-                                        placeholder="Zone"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Poll
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.poll || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "poll", e.target.value)
-                                        }
-                                        placeholder="Poll"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">Latitude</label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lat || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lat: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter latitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
                                   </div>
-
-                                  {/* Location Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Location Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Location Reference
-                                      </label>
-                                      <select
-                                        value={row.ref?._id || row.ref || ""}
-                                        onChange={(e) => handleEditChange(row._id, "ref", e.target.value)}
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Location</option>
-                                        {locations.map((location) => (
-                                          <option key={location._id} value={location._id}>
-                                            {location.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Road
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.road || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "road", e.target.value)
-                                        }
-                                        placeholder="Road"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Tent
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.tent || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "tent", e.target.value)
-                                        }
-                                        placeholder="Tent"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">Longitude</label>
+                                    <input
+                                      type="number"
+                                      value={row.location?.lng || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lng: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter longitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
                                   </div>
-
-                                  {/* Country and Coordinates */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Country & Coordinates</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Country
-                                      </label>
-                                      <select
-                                        value={row.country?._id || row.country || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "country", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Country</option>
-                                        <option value="others">Others</option>
-                                        {countries.map((country) => (
-                                          <option key={country._id} value={country._id}>
-                                            {country.name}{" "}
-                                            {country.arabicName ? `(${country.arabicName})` : ""}
-                                          </option>
-                                        ))}
-                                      </select>
-                                      {(row.country === "others" || row.otherCountry) && (
-                                        <input
-                                          type="text"
-                                          value={row.otherCountry || ""}
-                                          onChange={(e) =>
-                                            handleEditChange(row._id, "otherCountry", e.target.value)
-                                          }
-                                          placeholder="Enter other country name"
-                                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-2"
-                                        />
-                                      )}
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Latitude
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={row.location?.lat || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "location", {
-                                            ...row.location,
-                                            lat: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter latitude"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Longitude
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={row.location?.lng || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "location", {
-                                            ...row.location,
-                                            lng: e.target.value,
-                                          })
-                                        }
-                                        placeholder="Enter longitude"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                  </div>
+                                </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
                             </td>
@@ -1326,6 +1347,112 @@ const Camp = ({ isOpen }) => {
                   className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Modal */}
+        {viewModal.show && viewModal.data && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Camp Details</h3>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Maktab</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.maktab || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.zone || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.otherCountry ? (
+                        <span>{viewModal.data.otherCountry} (Other)</span>
+                      ) : viewModal.data.country ? (
+                        <span>
+                          {viewModal.data.country.name}
+                          {viewModal.data.country.arabicName && (
+                            <span className="text-gray-500"> ({viewModal.data.country.arabicName})</span>
+                          )}
+                        </span>
+                      ) : 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Poll</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.poll || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Road</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.road || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tent</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.tent || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location Reference</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.ref?.name || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Coordinates</label>
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      {viewModal.data.location?.lat && viewModal.data.location?.lng
+                        ? `${viewModal.data.location.lat}, ${viewModal.data.location.lng}`
+                        : 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
+                    <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                      {viewModal.data._id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

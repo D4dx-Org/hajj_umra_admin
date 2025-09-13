@@ -409,7 +409,9 @@ const Notification = () => {
               name="contentUrdu"
               label="Text Content (Urdu)"
             >
-              <TextArea rows={4} placeholder="Enter your text content in Urdu" />
+              <TextArea rows={4} className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left " placeholder="Enter your text content in Urdu" dir="rtl" 
+                  style={{ textAlign: 'right' }}
+ />
             </Form.Item>
           </>
         );
@@ -738,7 +740,7 @@ const Notification = () => {
               name="titleUrdu"
               label="Title (Urdu)"
             >
-              <Input />
+              <Input dir="rtl" style={{ textAlign: 'right', direction: 'rtl' }} />
             </Form.Item>
             <Form.Item name="description" label="Description (English)">
               <TextArea rows={4} />
@@ -747,7 +749,8 @@ const Notification = () => {
               <TextArea rows={4} />
             </Form.Item>
             <Form.Item name="descriptionUrdu" label="Description (Urdu)">
-              <TextArea rows={4} />
+              <TextArea rows={4} dir="rtl"
+                style={{ textAlign: 'right', direction: 'rtl' }}/>
             </Form.Item>
             <Form.Item
               name="type"

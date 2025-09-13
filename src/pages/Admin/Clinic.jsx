@@ -1,12 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, AlertTriangle, Download, ArrowUpDown, Edit, Trash2 } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
-import axios from 'axios';
-import { read, utils, write } from 'xlsx';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Search,
+  AlertTriangle,
+  Download,
+  ArrowUpDown,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+import axios from "axios";
+import { read, utils, write } from "xlsx";
 
 const Clinic = ({ isOpen }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [clinicData, setClinicData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,37 +21,90 @@ const Clinic = ({ isOpen }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [locations, setLocations] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [newClinic, setNewClinic] = useState({ 
-    name: '', 
-    center: '',
-    poll: '',
-    location: { lat: '', lng: '' }, 
-    ref: '',
-    branchRef: ''
+  const [newClinic, setNewClinic] = useState({
+    name: "",
+    center: "",
+    poll: "",
+    location: { lat: "", lng: "" },
+    ref: "",
+    branchRef: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [viewModal, setViewModal] = useState({ show: false, data: null });
   const [branches, setBranches] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc', type: 'alpha' });
+  const [sortConfig, setSortConfig] = useState({
+    field: "name",
+    direction: "asc",
+    type: "alpha",
+  });
 
   // Add sorting options
   const sortOptions = [
-    { value: 'name-alpha-asc', label: 'Name (A-Z)', field: 'name', direction: 'asc', type: 'alpha' },
-    { value: 'name-alpha-desc', label: 'Name (Z-A)', field: 'name', direction: 'desc', type: 'alpha' },
-    { value: 'phone-alpha-asc', label: 'Phone (A-Z)', field: 'phone', direction: 'asc', type: 'alpha' },
-    { value: 'phone-alpha-desc', label: 'Phone (Z-A)', field: 'phone', direction: 'desc', type: 'alpha' },
-    { value: 'ref-alpha-asc', label: 'Location (A-Z)', field: 'ref', direction: 'asc', type: 'alpha' },
-    { value: 'ref-alpha-desc', label: 'Location (Z-A)', field: 'ref', direction: 'desc', type: 'alpha' },
-    { value: 'branchRef-alpha-asc', label: 'Branch (A-Z)', field: 'branchRef', direction: 'asc', type: 'alpha' },
-    { value: 'branchRef-alpha-desc', label: 'Branch (Z-A)', field: 'branchRef', direction: 'desc', type: 'alpha' }
+    {
+      value: "name-alpha-asc",
+      label: "Name (A-Z)",
+      field: "name",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "name-alpha-desc",
+      label: "Name (Z-A)",
+      field: "name",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "phone-alpha-asc",
+      label: "Phone (A-Z)",
+      field: "phone",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "phone-alpha-desc",
+      label: "Phone (Z-A)",
+      field: "phone",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "ref-alpha-asc",
+      label: "Location (A-Z)",
+      field: "ref",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "ref-alpha-desc",
+      label: "Location (Z-A)",
+      field: "ref",
+      direction: "desc",
+      type: "alpha",
+    },
+    {
+      value: "branchRef-alpha-asc",
+      label: "Branch (A-Z)",
+      field: "branchRef",
+      direction: "asc",
+      type: "alpha",
+    },
+    {
+      value: "branchRef-alpha-desc",
+      label: "Branch (Z-A)",
+      field: "branchRef",
+      direction: "desc",
+      type: "alpha",
+    },
   ];
 
   // Add handleSelectAll function
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedRows(clinicData.map(row => row._id));
+      setSelectedRows(clinicData.map((row) => row._id));
     } else {
       setSelectedRows([]);
     }
@@ -52,9 +112,9 @@ const Clinic = ({ isOpen }) => {
 
   // Add handleSelectRow function
   const handleSelectRow = (id) => {
-    setSelectedRows(prev => {
+    setSelectedRows((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(rowId => rowId !== id);
+        return prev.filter((rowId) => rowId !== id);
       } else {
         return [...prev, id];
       }
@@ -64,21 +124,33 @@ const Clinic = ({ isOpen }) => {
   // Add handleBulkDelete function
   const handleBulkDelete = () => {
     if (selectedRows.length === 0) return;
-    setDeleteConfirm({ 
-      show: true, 
+    setDeleteConfirm({
+      show: true,
       id: selectedRows,
-      isBulk: true 
+      isBulk: true,
     });
+  };
+
+  // Handle view button click
+  const handleViewClick = (row) => {
+    setViewModal({ show: true, data: row });
+  };
+
+  // Handle close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ show: false, data: null });
   };
 
   // Add handle sort change
   const handleSortChange = (event) => {
-    const selectedOption = sortOptions.find(option => option.value === event.target.value);
+    const selectedOption = sortOptions.find(
+      (option) => option.value === event.target.value
+    );
     if (selectedOption) {
       setSortConfig({
         field: selectedOption.field,
         direction: selectedOption.direction,
-        type: selectedOption.type
+        type: selectedOption.type,
       });
     }
   };
@@ -86,17 +158,19 @@ const Clinic = ({ isOpen }) => {
   // Add sort function
   const sortData = (data) => {
     return [...data].sort((a, b) => {
-      let aValue = sortConfig.field === 'ref' || sortConfig.field === 'branchRef'
-        ? a[sortConfig.field]?.name || ''
-        : a[sortConfig.field] || '';
-      let bValue = sortConfig.field === 'ref' || sortConfig.field === 'branchRef'
-        ? b[sortConfig.field]?.name || ''
-        : b[sortConfig.field] || '';
-      
+      let aValue =
+        sortConfig.field === "ref" || sortConfig.field === "branchRef"
+          ? a[sortConfig.field]?.name || ""
+          : a[sortConfig.field] || "";
+      let bValue =
+        sortConfig.field === "ref" || sortConfig.field === "branchRef"
+          ? b[sortConfig.field]?.name || ""
+          : b[sortConfig.field] || "";
+
       aValue = aValue.toLowerCase();
       bValue = bValue.toLowerCase();
-      
-      if (sortConfig.direction === 'asc') {
+
+      if (sortConfig.direction === "asc") {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -108,27 +182,29 @@ const Clinic = ({ isOpen }) => {
   const filteredClinicData = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     let filtered = clinicData;
-    
+
     if (lowerCaseSearch) {
       filtered = clinicData.filter((item) => {
-        const locationName = item.ref?.name || '';
-        const branchName = item.branchRef?.name || '';
+        const locationName = item.ref?.name || "";
+        const branchName = item.branchRef?.name || "";
         return (
           (item.name && item.name.toLowerCase().includes(lowerCaseSearch)) ||
-          (item.phone && item.phone.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.center &&
+            item.center.toLowerCase().includes(lowerCaseSearch)) ||
+          (item.poll && item.poll.toLowerCase().includes(lowerCaseSearch)) ||
           locationName.toLowerCase().includes(lowerCaseSearch) ||
           branchName.toLowerCase().includes(lowerCaseSearch)
         );
       });
     }
-    
+
     return sortData(filtered);
   }, [clinicData, searchTerm, sortConfig]);
 
   // Define the table columns
   const clinicColumns = [
     {
-      key: 'select',
+      key: "select",
       title: (
         <input
           type="checkbox"
@@ -142,63 +218,118 @@ const Clinic = ({ isOpen }) => {
           type="checkbox"
           checked={selectedRows.includes(row._id)}
           onChange={(event) => handleSelectRow(row._id)}
+          onClick={(e) => e.stopPropagation()}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-      )
+      ),
     },
     {
-      key: 'name',
-      title: 'Name',
-      render: (row) => row.name
+      key: "name",
+      title: "Name",
+      render: (row) => (
+        <span className="truncate" title={row.name}>
+          {row.name}
+        </span>
+      ),
     },
     {
-      key: 'phone',
-      title: 'Phone',
-      render: (row) => row.phone
+      key: "center",
+      title: "Center",
+      render: (row) => (
+        <span className="truncate" title={row.center || "N/A"}>
+          {row.center || "N/A"}
+        </span>
+      ),
     },
     {
-      key: 'ref',
-      title: 'Location Reference',
-      render: (row) => row.ref?.name || 'N/A'
+      key: "poll",
+      title: "Poll",
+      render: (row) => (
+        <span className="truncate" title={row.poll || "N/A"}>
+          {row.poll || "N/A"}
+        </span>
+      ),
     },
     {
-      key: 'branchRef',
-      title: 'Branch Reference',
-      render: (row) => row.branchRef?.name || 'N/A'
+      key: "location",
+      title: "Coordinates",
+      render: (row) => {
+        if (row.location && row.location.lat && row.location.lng) {
+          const coords = `${row.location.lat}, ${row.location.lng}`;
+          return (
+            <span className="truncate text-xs" title={coords}>
+              {coords}
+            </span>
+          );
+        }
+        return <span className="text-gray-400">N/A</span>;
+      },
     },
     {
-      key: 'actions',
-      title: 'Actions',
+      key: "ref",
+      title: "Location Reference",
+      render: (row) => {
+        const locationName = row.ref?.name || "N/A";
+        return (
+          <span className="truncate" title={locationName}>
+            {locationName}
+          </span>
+        );
+      },
+    },
+    {
+      key: "branchRef",
+      title: "Branch Reference",
+      render: (row) => {
+        const branchName = row.branchRef?.name || "N/A";
+        return (
+          <span className="truncate" title={branchName}>
+            {branchName}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      title: "Actions",
       render: (row) => (
         <div className="flex gap-2">
           <button
-            onClick={() => handleEditClick(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(row);
+            }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
             <Edit size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
             <Trash2 size={16} />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // Fetch data from API using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/clinic`
+        );
         setClinicData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching clinic data:', error);
+        console.error("Error fetching clinic data:", error);
         setLoading(false);
       }
     };
@@ -210,10 +341,12 @@ const Clinic = ({ isOpen }) => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/location`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/location`
+        );
         setLocations(response.data);
       } catch (error) {
-        console.error('Error fetching locations:', error);
+        console.error("Error fetching locations:", error);
       }
     };
 
@@ -224,10 +357,12 @@ const Clinic = ({ isOpen }) => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/branch`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/branch`
+        );
         setBranches(response.data);
       } catch (error) {
-        console.error('Error fetching branches:', error);
+        console.error("Error fetching branches:", error);
       }
     };
 
@@ -236,35 +371,43 @@ const Clinic = ({ isOpen }) => {
 
   // Handle edit change in table row
   const handleEditChange = (id, field, value) => {
-    setClinicData(clinicData.map(item => {
-      if (item._id === id) {
-        if (field === 'location') {
-          return { ...item, location: value };
+    setClinicData(
+      clinicData.map((item) => {
+        if (item._id === id) {
+          if (field === "location") {
+            return { ...item, location: value };
+          }
+          if (field === "ref") {
+            const selectedLocation = locations.find((loc) => loc._id === value);
+            return {
+              ...item,
+              ref: selectedLocation
+                ? {
+                    _id: selectedLocation._id,
+                    name: selectedLocation.name,
+                  }
+                : value,
+            };
+          }
+          if (field === "branchRef") {
+            const selectedBranch = branches.find(
+              (branch) => branch._id === value
+            );
+            return {
+              ...item,
+              branchRef: selectedBranch
+                ? {
+                    _id: selectedBranch._id,
+                    name: selectedBranch.name,
+                  }
+                : value,
+            };
+          }
+          return { ...item, [field]: value };
         }
-        if (field === 'ref') {
-          const selectedLocation = locations.find(loc => loc._id === value);
-          return { 
-            ...item, 
-            ref: selectedLocation ? { 
-              _id: selectedLocation._id,
-              name: selectedLocation.name 
-            } : value 
-          };
-        }
-        if (field === 'branchRef') {
-          const selectedBranch = branches.find(branch => branch._id === value);
-          return { 
-            ...item, 
-            branchRef: selectedBranch ? { 
-              _id: selectedBranch._id,
-              name: selectedBranch.name 
-            } : value 
-          };
-        }
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+        return item;
+      })
+    );
   };
 
   // Handle Save Edit
@@ -286,9 +429,11 @@ const Clinic = ({ isOpen }) => {
         }
       );
 
-      setClinicData(clinicData.map(item => 
-        item._id === row._id ? { ...item, ...response.data } : item
-      ));
+      setClinicData(
+        clinicData.map((item) =>
+          item._id === row._id ? { ...item, ...response.data } : item
+        )
+      );
       setEditingId(null);
     } catch (error) {
       console.error("Error updating clinic data:", error);
@@ -302,8 +447,10 @@ const Clinic = ({ isOpen }) => {
 
   // Add handleDeleteConfirm
   const handleDeleteConfirm = async () => {
-    const ids = Array.isArray(deleteConfirm.id) ? deleteConfirm.id : [deleteConfirm.id];
-    
+    const ids = Array.isArray(deleteConfirm.id)
+      ? deleteConfirm.id
+      : [deleteConfirm.id];
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -312,19 +459,21 @@ const Clinic = ({ isOpen }) => {
       }
 
       // Delete all selected items
-      await Promise.all(ids.map(id => 
-        axios.delete(`${import.meta.env.VITE_BACKEND_URL}/clinic/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      ));
+      await Promise.all(
+        ids.map((id) =>
+          axios.delete(`${import.meta.env.VITE_BACKEND_URL}/clinic/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
 
-      setClinicData(clinicData.filter(item => !ids.includes(item._id)));
+      setClinicData(clinicData.filter((item) => !ids.includes(item._id)));
       setSelectedRows([]);
       setDeleteConfirm({ show: false, id: null });
     } catch (error) {
-      console.error('Error deleting clinic data:', error);
+      console.error("Error deleting clinic data:", error);
     }
   };
 
@@ -353,15 +502,17 @@ const Clinic = ({ isOpen }) => {
       );
 
       if (response.status === 201) {
-        const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
+        const updatedResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/clinic`
+        );
         setClinicData(updatedResponse.data);
-        setNewClinic({ 
-          name: '', 
-          center: '',
-          poll: '',
-          location: { lat: '', lng: '' }, 
-          ref: '',
-          branchRef: ''
+        setNewClinic({
+          name: "",
+          center: "",
+          poll: "",
+          location: { lat: "", lng: "" },
+          ref: "",
+          branchRef: "",
         });
         setShowAddForm(false);
       }
@@ -378,9 +529,9 @@ const Clinic = ({ isOpen }) => {
 
   // Modify the cancel button click handler
   const handleCancelEdit = () => {
-    setClinicData(clinicData.map(item => 
-      item._id === editingId ? originalData : item
-    ));
+    setClinicData(
+      clinicData.map((item) => (item._id === editingId ? originalData : item))
+    );
     setEditingId(null);
     setOriginalData(null);
   };
@@ -391,29 +542,34 @@ const Clinic = ({ isOpen }) => {
       const file = event.target.files[0];
       if (!file) return;
 
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        setUploadError("Please upload an Excel file (.xlsx or .xls)");
         return;
       }
 
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          const workbook = read(e.target.result, { type: 'array' });
+          const workbook = read(e.target.result, { type: "array" });
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const data = utils.sheet_to_json(worksheet);
 
           if (data.length === 0) {
-            setUploadError('The Excel file is empty. Please add some data.');
+            setUploadError("The Excel file is empty. Please add some data.");
             return;
           }
 
           // Check the first row to understand the column structure
           const firstRow = data[0];
-          const hasRequiredColumns = 'name' in firstRow && 'location_name' in firstRow && 'branch_name' in firstRow;
-          
+          const hasRequiredColumns =
+            "name" in firstRow &&
+            "location_name" in firstRow &&
+            "branch_name" in firstRow;
+
           if (!hasRequiredColumns) {
-            setUploadError('Excel file must have required columns: name, location_name, and branch_name');
+            setUploadError(
+              "Excel file must have required columns: name, location_name, and branch_name"
+            );
             return;
           }
 
@@ -424,31 +580,45 @@ const Clinic = ({ isOpen }) => {
 
             // Check required fields
             if (!row.name || !row.location_name || !row.branch_name) {
-              setUploadError(`Row ${rowNumber}: Missing required data. Each row must have name, location_name, and branch_name.`);
+              setUploadError(
+                `Row ${rowNumber}: Missing required data. Each row must have name, location_name, and branch_name.`
+              );
               return;
             }
 
             // Validate location_name exists
-            const locationExists = locations.some(location => location.name.toLowerCase() === row.location_name.toLowerCase());
+            const locationExists = locations.some(
+              (location) =>
+                location.name.toLowerCase() === row.location_name.toLowerCase()
+            );
             if (!locationExists) {
-              setUploadError(`Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`);
+              setUploadError(
+                `Row ${rowNumber}: Invalid location name "${row.location_name}". Please use a valid location name.`
+              );
               return;
             }
 
             // Validate branch_name exists
-            const branchExists = branches.some(branch => branch.name.toLowerCase() === row.branch_name.toLowerCase());
+            const branchExists = branches.some(
+              (branch) =>
+                branch.name.toLowerCase() === row.branch_name.toLowerCase()
+            );
             if (!branchExists) {
-              setUploadError(`Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`);
+              setUploadError(
+                `Row ${rowNumber}: Invalid branch name "${row.branch_name}". Please use a valid branch name.`
+              );
               return;
             }
           }
 
           const formData = new FormData();
-          formData.append('file', file);
+          formData.append("file", file);
 
           const token = localStorage.getItem("token");
           if (!token) {
-            setUploadError('Authentication token not found. Please log in again.');
+            setUploadError(
+              "Authentication token not found. Please log in again."
+            );
             return;
           }
 
@@ -458,22 +628,29 @@ const Clinic = ({ isOpen }) => {
             {
               headers: {
                 Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
+                "Content-Type": "multipart/form-data",
               },
             }
           );
 
           if (response.data) {
-            setUploadSuccess(`Successfully uploaded ${response.data.count} clinics`);
+            setUploadSuccess(
+              `Successfully uploaded ${response.data.count} clinics`
+            );
             setUploadError(null);
 
             // Refresh the clinic list
-            const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/clinic`);
+            const updatedResponse = await axios.get(
+              `${import.meta.env.VITE_BACKEND_URL}/clinic`
+            );
             setClinicData(updatedResponse.data);
           }
         } catch (error) {
-          console.error('Excel processing error:', error);
-          const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Error processing the Excel file';
+          console.error("Excel processing error:", error);
+          const errorMessage =
+            error.response?.data?.message ||
+            error.response?.data?.error ||
+            "Error processing the Excel file";
           setUploadError(`Upload failed: ${errorMessage}`);
           setUploadSuccess(null);
         }
@@ -481,8 +658,8 @@ const Clinic = ({ isOpen }) => {
 
       reader.readAsArrayBuffer(file);
     } catch (error) {
-      console.error('File upload error:', error);
-      setUploadError('Error processing file. Please try again.');
+      console.error("File upload error:", error);
+      setUploadError("Error processing file. Please try again.");
       setUploadSuccess(null);
     }
   };
@@ -493,64 +670,69 @@ const Clinic = ({ isOpen }) => {
       // Create sample data
       const sampleData = [
         {
-          name: 'Medical Dispensary - 01 (Required)',
-          location_name: 'Azizia',
-          branch_name: 'Branch 1',
-          center: 'Center A (Optional)',
-          poll: 'Poll 1 (Optional)',
-          latitude: '21.4225',
-          longitude: '39.8262'
-        }
+          name: "Medical Dispensary - 01 (Required)",
+          location_name: "Azizia",
+          branch_name: "Branch 1",
+          center: "Center A (Optional)",
+          poll: "Poll 1 (Optional)",
+          latitude: "21.4225",
+          longitude: "39.8262",
+        },
       ];
 
       // Create worksheet
       const ws = utils.json_to_sheet([]);
-      
+
       // Add headers with required/optional indicators
-      utils.sheet_add_aoa(ws, [[
-        'name',
-        'location_name',
-        'branch_name',
-        'center',
-        'poll',
-        'latitude',
-        'longitude'
-      ]], { origin: 'A1' });
+      utils.sheet_add_aoa(
+        ws,
+        [
+          [
+            "name",
+            "location_name",
+            "branch_name",
+            "center",
+            "poll",
+            "latitude",
+            "longitude",
+          ],
+        ],
+        { origin: "A1" }
+      );
 
       // Add sample data
-      utils.sheet_add_json(ws, sampleData, { 
-        origin: 'A2',
-        skipHeader: true
+      utils.sheet_add_json(ws, sampleData, {
+        origin: "A2",
+        skipHeader: true,
       });
 
       // Add column widths
-      ws['!cols'] = [
+      ws["!cols"] = [
         { wch: 30 }, // name
         { wch: 30 }, // location_name
         { wch: 30 }, // branch_name
         { wch: 20 }, // center
         { wch: 20 }, // poll
         { wch: 20 }, // latitude
-        { wch: 20 }  // longitude
+        { wch: 20 }, // longitude
       ];
 
       const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Template');
+      utils.book_append_sheet(wb, ws, "Template");
 
-      const blob = new Blob(
-        [write(wb, { bookType: 'xlsx', type: 'array' })], 
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-      
+      const blob = new Blob([write(wb, { bookType: "xlsx", type: "array" })], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'clinic_upload_template.xlsx';
+      link.download = "clinic_upload_template.xlsx";
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error creating template:', error);
-      setUploadError('Failed to download template. Please try again.');
+      console.error("Error creating template:", error);
+      setUploadError("Failed to download template. Please try again.");
     }
   };
 
@@ -563,10 +745,10 @@ const Clinic = ({ isOpen }) => {
         className="md:px-6 px-4"
       />
 
-      <div className={`${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
           <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Clinic Management</h1>
+            <h1 className="text-2xl font-bold">Clinic Management</h1>
             <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
               Total: {filteredClinicData.length} clinics
             </div>
@@ -600,11 +782,11 @@ const Clinic = ({ isOpen }) => {
             >
               Upload Excel
             </label>
-            <button 
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
             >
-              {showAddForm ? 'Cancel' : 'Add More'}
+              {showAddForm ? "Cancel" : "Add More"}
             </button>
           </div>
         </div>
@@ -628,7 +810,9 @@ const Clinic = ({ isOpen }) => {
               <input
                 type="text"
                 value={newClinic.name}
-                onChange={(e) => setNewClinic({ ...newClinic, name: e.target.value })}
+                onChange={(e) =>
+                  setNewClinic({ ...newClinic, name: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -637,7 +821,9 @@ const Clinic = ({ isOpen }) => {
               <input
                 type="text"
                 value={newClinic.center}
-                onChange={(e) => setNewClinic({ ...newClinic, center: e.target.value })}
+                onChange={(e) =>
+                  setNewClinic({ ...newClinic, center: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -646,7 +832,9 @@ const Clinic = ({ isOpen }) => {
               <input
                 type="text"
                 value={newClinic.poll}
-                onChange={(e) => setNewClinic({ ...newClinic, poll: e.target.value })}
+                onChange={(e) =>
+                  setNewClinic({ ...newClinic, poll: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             </div>
@@ -654,27 +842,41 @@ const Clinic = ({ isOpen }) => {
               <label className="block text-sm font-medium">Location</label>
               <div className="flex gap-4">
                 <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Latitude</label>
+                  <label className="block text-xs text-gray-500">
+                    Latitude
+                  </label>
                   <input
                     type="number"
                     value={newClinic.location.lat}
-                    onChange={(e) => setNewClinic({
-                      ...newClinic,
-                      location: { ...newClinic.location, lat: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewClinic({
+                        ...newClinic,
+                        location: {
+                          ...newClinic.location,
+                          lat: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="Enter latitude"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
                 </div>
                 <div className="w-1/2">
-                  <label className="block text-xs text-gray-500">Longitude</label>
+                  <label className="block text-xs text-gray-500">
+                    Longitude
+                  </label>
                   <input
                     type="number"
                     value={newClinic.location.lng}
-                    onChange={(e) => setNewClinic({
-                      ...newClinic,
-                      location: { ...newClinic.location, lng: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setNewClinic({
+                        ...newClinic,
+                        location: {
+                          ...newClinic.location,
+                          lng: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="Enter longitude"
                     className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   />
@@ -682,14 +884,18 @@ const Clinic = ({ isOpen }) => {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Location Reference</label>
+              <label className="block text-sm font-medium">
+                Location Reference
+              </label>
               <select
                 value={newClinic.ref}
-                onChange={(e) => setNewClinic({ ...newClinic, ref: e.target.value })}
+                onChange={(e) =>
+                  setNewClinic({ ...newClinic, ref: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Location</option>
-                {locations.map(location => (
+                {locations.map((location) => (
                   <option key={location._id} value={location._id}>
                     {location.name}
                   </option>
@@ -697,14 +903,18 @@ const Clinic = ({ isOpen }) => {
               </select>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium">Branch Reference</label>
+              <label className="block text-sm font-medium">
+                Branch Reference
+              </label>
               <select
                 value={newClinic.branchRef}
-                onChange={(e) => setNewClinic({ ...newClinic, branchRef: e.target.value })}
+                onChange={(e) =>
+                  setNewClinic({ ...newClinic, branchRef: e.target.value })
+                }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select Branch</option>
-                {branches.map(branch => (
+                {branches.map((branch) => (
                   <option key={branch._id} value={branch._id}>
                     {branch.name}
                   </option>
@@ -730,7 +940,10 @@ const Clinic = ({ isOpen }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               />
-              <Search size={20} className="absolute left-3 top-3.5 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-3.5 text-gray-400"
+              />
             </div>
             <div className="flex items-center gap-2">
               <ArrowUpDown size={20} className="text-gray-400" />
@@ -739,7 +952,7 @@ const Clinic = ({ isOpen }) => {
                 value={`${sortConfig.field}-${sortConfig.type}-${sortConfig.direction}`}
                 className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
               >
-                {sortOptions.map(option => (
+                {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -757,11 +970,32 @@ const Clinic = ({ isOpen }) => {
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
+              <table className="w-full text-sm divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
                     {clinicColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        key={column.key}
+                        className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          column.key === "select"
+                            ? "w-12"
+                            : column.key === "name"
+                            ? "w-24"
+                            : column.key === "center"
+                            ? "w-20"
+                            : column.key === "poll"
+                            ? "w-20"
+                            : column.key === "location"
+                            ? "w-32"
+                            : column.key === "ref"
+                            ? "w-24"
+                            : column.key === "branchRef"
+                            ? "w-24"
+                            : column.key === "actions"
+                            ? "w-20"
+                            : ""
+                        }`}
+                      >
                         {column.title}
                       </th>
                     ))}
@@ -772,7 +1006,7 @@ const Clinic = ({ isOpen }) => {
                     <tr>
                       <td
                         colSpan={clinicColumns.length}
-                        className="px-4 py-1 text-center text-gray-500"
+                        className="px-2 py-2 text-center text-gray-500"
                       >
                         No clinics found
                       </td>
@@ -780,112 +1014,206 @@ const Clinic = ({ isOpen }) => {
                   ) : (
                     filteredClinicData.map((row) => (
                       <React.Fragment key={row._id}>
-                        <tr className={`hover:bg-gray-50 ${editingId === row._id ? 'bg-blue-50' : ''}`}>
+                        <tr
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            editingId === row._id ? "bg-blue-50" : ""
+                          }`}
+                          onClick={() => handleViewClick(row)}
+                        >
                           {clinicColumns.map((column) => (
-                            <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td
+                              key={column.key}
+                              className={`px-2 py-2 text-sm text-gray-900 ${
+                                column.key === "name"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "center"
+                                  ? "max-w-20 truncate"
+                                  : column.key === "poll"
+                                  ? "max-w-20 truncate"
+                                  : column.key === "location"
+                                  ? "max-w-32 truncate"
+                                  : column.key === "ref"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "branchRef"
+                                  ? "max-w-24 truncate"
+                                  : column.key === "actions"
+                                  ? "whitespace-nowrap"
+                                  : "whitespace-nowrap"
+                              }`}
+                            >
                               {column.render(row)}
                             </td>
                           ))}
                         </tr>
                         {editingId === row._id && (
                           <tr>
-                            <td colSpan={clinicColumns.length} className="p-0">
-                              <div className="bg-gray-50 border-t border-b border-blue-200 p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                  <h3 className="text-lg font-semibold text-gray-900">Edit Clinic</h3>
-                                  <div className="flex gap-3">
-                                    <button
-                                      onClick={() => handleSaveEdit(row)}
-                                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                            <td colSpan={clinicColumns.length} className="p-4">
+                              <div className="bg-white rounded-lg shadow p-4 mb-6 max-w-4xl mx-auto">
+                                <h2 className="text-lg font-bold mb-4">
+                                  Edit Clinic
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.name || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "name",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Clinic name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Center
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.center || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "center",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Center name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Poll
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={row.poll || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "poll",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Poll name"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Latitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      value={row.location?.lat || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lat: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter latitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Longitude
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      value={row.location?.lng || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(row._id, "location", {
+                                          ...row.location,
+                                          lng: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter longitude"
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Location Reference
+                                    </label>
+                                    <select
+                                      value={row.ref?._id || row.ref || ""}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "ref",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Save Changes
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                                      <option value="">Select Location</option>
+                                      {locations.map((location) => (
+                                        <option
+                                          key={location._id}
+                                          value={location._id}
+                                        >
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium">
+                                      Branch Reference
+                                    </label>
+                                    <select
+                                      value={
+                                        row.branchRef?._id ||
+                                        row.branchRef ||
+                                        ""
+                                      }
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          row._id,
+                                          "branchRef",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     >
-                                      Cancel
-                                    </button>
+                                      <option value="">Select Branch</option>
+                                      {branches.map((branch) => (
+                                        <option
+                                          key={branch._id}
+                                          value={branch._id}
+                                        >
+                                          {branch.name}
+                                        </option>
+                                      ))}
+                                    </select>
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  {/* Basic Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Basic Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Name *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.name || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "name", e.target.value)
-                                        }
-                                        placeholder="Clinic name"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Phone
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={row.phone || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "phone", e.target.value)
-                                        }
-                                        placeholder="Phone number"
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Location Information */}
-                                  <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">Location Information</h4>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Location Reference
-                                      </label>
-                                      <select
-                                        value={row.ref?._id || row.ref || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "ref", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Location</option>
-                                        {locations.map(location => (
-                                          <option key={location._id} value={location._id}>
-                                            {location.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Branch Reference
-                                      </label>
-                                      <select
-                                        value={row.branchRef?._id || row.branchRef || ""}
-                                        onChange={(e) =>
-                                          handleEditChange(row._id, "branchRef", e.target.value)
-                                        }
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      >
-                                        <option value="">Select Branch</option>
-                                        {branches.map(branch => (
-                                          <option key={branch._id} value={branch._id}>
-                                            {branch.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleSaveEdit(row)}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                                  >
+                                    Cancel
+                                  </button>
                                 </div>
                               </div>
                             </td>
@@ -910,9 +1238,9 @@ const Clinic = ({ isOpen }) => {
               <h3 className="text-lg font-semibold">Confirm Deletion</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              {Array.isArray(deleteConfirm.id) 
+              {Array.isArray(deleteConfirm.id)
                 ? `Are you sure you want to delete ${deleteConfirm.id.length} selected clinics? This action cannot be undone.`
-                : 'Are you sure you want to delete this clinic? This action cannot be undone.'}
+                : "Are you sure you want to delete this clinic? This action cannot be undone."}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -926,6 +1254,106 @@ const Clinic = ({ isOpen }) => {
                 className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {viewModal.show && viewModal.data && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">
+                Clinic Details
+              </h3>
+              <button
+                onClick={handleCloseViewModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {viewModal.data.name || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Center
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {viewModal.data.center || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Poll
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {viewModal.data.poll || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location Reference
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {viewModal.data.ref?.name || "N/A"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Branch Reference
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {viewModal.data.branchRef?.name || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Coordinates
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {viewModal.data.location?.lat &&
+                    viewModal.data.location?.lng
+                      ? `${viewModal.data.location.lat}, ${viewModal.data.location.lng}`
+                      : "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ID
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md text-sm font-mono">
+                    {viewModal.data._id}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleCloseViewModal}
+                className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>
