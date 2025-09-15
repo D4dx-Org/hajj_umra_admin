@@ -1,1 +1,136 @@
-[]
+[
+  {
+    "name": "test1",
+    "slug": "test1",
+    "route": "/umrah-test1",
+    "component": "Test1.jsx",
+    "fields": [
+      {
+        "fieldName": "title",
+        "type": "string"
+      }
+    ],
+    "modelFile": "Test1.js",
+    "routeFile": "Test1.js"
+  },
+  {
+    "name": "Hotels",
+    "slug": "hotels",
+    "route": "/umrah-hotels",
+    "component": "Hotels.jsx",
+    "fields": [
+      {
+        "fieldName": "hotelName",
+        "type": "string"
+      },
+      {
+        "fieldName": "location",
+        "type": "string"
+      }
+    ],
+    "modelFile": "Hotels.js",
+    "routeFile": "Hotels.js"
+  },
+  {
+    "name": "Umrah Steps",
+    "slug": "umrah-steps",
+    "route": "/umrah-umrah-steps",
+    "component": "UmrahSteps.jsx",
+    "fields": [
+      {
+        "fieldName": "title",
+        "type": "string"
+      },
+      {
+        "fieldName": "stepNumber",
+        "type": "int"
+      },
+      {
+        "fieldName": "description",
+        "type": "text"
+      },
+      {
+        "fieldName": "dua",
+        "type": "text"
+      },
+      {
+        "fieldName": "image",
+        "type": "image"
+      },
+      {
+        "fieldName": "videoUrl",
+        "type": "video"
+      },
+      {
+        "fieldName": "locationMap",
+        "type": "map"
+      }
+    ],
+    "modelFile": "UmrahSteps.js",
+    "routeFile": "UmrahSteps.js"
+  },
+  {
+    "name": "Umrah Guidelines",
+    "slug": "umrah-guidelines",
+    "route": "/umrah-umrah-guidelines",
+    "component": "UmrahGuidelines.jsx",
+    "fields": [
+      {
+        "fieldName": "title",
+        "type": "string"
+      },
+      {
+        "fieldName": "rules",
+        "type": "text"
+      },
+      {
+        "fieldName": "doAndDonts",
+        "type": "text"
+      },
+      {
+        "fieldName": "referenceLink",
+        "type": "url"
+      },
+      {
+        "fieldName": "image",
+        "type": "image"
+      }
+    ],
+    "modelFile": "UmrahGuidelines.js",
+    "routeFile": "UmrahGuidelines.js"
+  },
+  {
+    "name": "Umrah Packages",
+    "slug": "umrah-packages",
+    "route": "/umrah-umrah-packages",
+    "component": "UmrahPackages.jsx",
+    "fields": [
+      {
+        "fieldName": "packageName",
+        "type": "string"
+      },
+      {
+        "fieldName": "price",
+        "type": "int"
+      },
+      {
+        "fieldName": "duration",
+        "type": "string"
+      },
+      {
+        "fieldName": "description",
+        "type": "text"
+      },
+      {
+        "fieldName": "image",
+        "type": "image"
+      },
+      {
+        "fieldName": "inclusions",
+        "type": "text"
+      }
+    ],
+    "modelFile": "UmrahPackages.js",
+    "routeFile": "UmrahPackages.js"
+  }
+]

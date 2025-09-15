@@ -25,10 +25,12 @@ import {
   UploadCloud,
   X,
   RotateCcw,
+  Download,
 } from "lucide-react";
 import { UploadOutlined, InboxOutlined } from "@ant-design/icons";
 import axios from "axios";
 import moment from "moment";
+import { read, utils, write } from "xlsx";
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
 
@@ -47,6 +49,8 @@ const PlaceKSA = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -539,6 +543,136 @@ const PlaceKSA = () => {
     setDeleteConfirm({ show: false, id: null });
   };
 
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const workbook = read(e.target.result, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = utils.sheet_to_json(worksheet);
+
+          const isValid = data.every(row => row.title && row.titleMalayalam && row.titleUrdu);
+          if (!isValid) {
+            setUploadError('Invalid data format. Please ensure all required fields (title, titleMalayalam, titleUrdu) are present.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL_V2}/places/bulk-upload`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+
+          setUploadSuccess(`Successfully uploaded ${response.data.count} places`);
+          setUploadError(null);
+          fetchData();
+        } catch (error) {
+          setUploadError(error.response?.data?.message || 'Error uploading file');
+          setUploadSuccess(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      setUploadError('Error processing file');
+      setUploadSuccess(null);
+    }
+  };
+
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          title: 'Sample Place',
+          titleMalayalam: 'Sample Malayalam',
+          titleUrdu: 'Sample Urdu',
+          description: 'Sample Description',
+          descriptionMalayalam: 'Sample Malayalam Description',
+          descriptionUrdu: 'Sample Urdu Description',
+          location: 'Sample Location Name'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers
+      utils.sheet_add_aoa(ws, [[
+        'title',
+        'titleMalayalam',
+        'titleUrdu',
+        'description',
+        'descriptionMalayalam',
+        'descriptionUrdu',
+        'location'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 25 }, // title
+        { wch: 25 }, // titleMalayalam
+        { wch: 25 }, // titleUrdu
+        { wch: 30 }, // description
+        { wch: 30 }, // descriptionMalayalam
+        { wch: 30 }, // descriptionUrdu
+        { wch: 25 }  // location
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'place_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
+  };
+
   // Handle bulk actions
   const handleBulkAction = async (action) => {
     if (selectedRows.length === 0) return;
@@ -861,6 +995,35 @@ const PlaceKSA = () => {
               </Button>
             )}
             <Button
+              onClick={handleDownloadTemplate}
+              icon={<Download size={18} />}
+              style={{ backgroundColor: '#6B7280', borderColor: '#6B7280', color: 'white' }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#4B5563';
+                e.target.style.borderColor = '#4B5563';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#6B7280';
+                e.target.style.borderColor = '#6B7280';
+              }}
+            >
+              Download Template
+            </Button>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls"
+              className="hidden"
+              id="excel-upload"
+            />
+            <Button
+              onClick={() => document.getElementById('excel-upload').click()}
+              icon={<UploadCloud size={18} />}
+              className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+            >
+              Upload Excel
+            </Button>
+            <Button
               className="mr-4"
               type="primary"
               onClick={() => {
@@ -896,6 +1059,17 @@ const PlaceKSA = () => {
                         )}*/}
           </div>
         </div>
+
+        {uploadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {uploadError}
+          </div>
+        )}
+        {uploadSuccess && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {uploadSuccess}
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="bg-white rounded-lg shadow p-3 mb-4">

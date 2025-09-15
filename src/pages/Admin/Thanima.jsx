@@ -124,9 +124,9 @@ const Thanima = ({ isOpen }) => {
       key: "name",
       title: "Name",
       render: (row) => (
-        <RTLText className="truncate" title={row.name}>
+        <span className="truncate" title={row.name} dir="rtl" style={{ textAlign: 'right' }}>
           {row.name}
-        </RTLText>
+        </span>
       ),
     },
     {
@@ -558,13 +558,15 @@ const Thanima = ({ isOpen }) => {
             <h2 className="text-lg font-bold mb-4">Add New Thanima</h2>
             <div className="mb-4">
               <label className="block text-sm font-medium">Name</label>
-              <RTLInput
+              <input
                 type="text"
                 value={newThanima.name}
                 onChange={(e) =>
                   setNewThanima({ ...newThanima, name: e.target.value })
                 }
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                dir="rtl"
+                style={{ textAlign: 'right' }}
               />
             </div>
             <div className="mb-4">
@@ -721,7 +723,7 @@ const Thanima = ({ isOpen }) => {
                                     <label className="block text-sm font-medium">
                                       Name *
                                     </label>
-                                    <RTLInput
+                                    <input
                                       type="text"
                                       value={row.name || ""}
                                       onChange={(e) =>
@@ -733,6 +735,8 @@ const Thanima = ({ isOpen }) => {
                                       }
                                       placeholder="Thanima name"
                                       className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                      dir="rtl"
+                                      style={{ textAlign: 'right' }}
                                       required
                                     />
                                   </div>
@@ -855,7 +859,7 @@ const Thanima = ({ isOpen }) => {
                 <label className="block text-sm font-medium text-gray-700">
                   Name:
                 </label>
-                <RTLText className="text-sm text-gray-900">{selectedThanima.name}</RTLText>
+                <span className="text-sm text-gray-900" dir="rtl" style={{ textAlign: 'right' }}>{selectedThanima.name}</span>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">

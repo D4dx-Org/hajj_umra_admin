@@ -6,10 +6,12 @@ import {
   Trash2,
   X,
   CheckCircle,
+  Download,
 } from "lucide-react";
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
 import axios from "axios";
+import { read, utils, write } from "xlsx";
 
 const LocationKSA = ({ isOpen }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,6 +30,9 @@ const LocationKSA = ({ isOpen }) => {
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   // Define the table columns
   const locationColumns = [
@@ -264,6 +269,129 @@ const LocationKSA = ({ isOpen }) => {
     setOriginalData(null);
   };
 
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const workbook = read(e.target.result, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = utils.sheet_to_json(worksheet);
+
+          const isValid = data.every(row => row.id && row.title);
+          if (!isValid) {
+            setUploadError('Invalid data format. Please ensure all required fields (id, title) are present.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL_V2}/locations/bulk-upload`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+
+          setUploadSuccess(`Successfully uploaded ${response.data.count} locations`);
+          setUploadError(null);
+
+          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/locations`);
+          setLocationData(updatedResponse.data);
+        } catch (error) {
+          setUploadError(error.response?.data?.message || 'Error uploading file');
+          setUploadSuccess(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      setUploadError('Error processing file');
+      setUploadSuccess(null);
+    }
+  };
+
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          id: 'LOC001',
+          title: 'Sample Location',
+          title_malayalam: 'Sample Malayalam',
+          title_urdu: 'Sample Urdu'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers
+      utils.sheet_add_aoa(ws, [[
+        'id',
+        'title',
+        'title_malayalam',
+        'title_urdu'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 10 }, // id
+        { wch: 25 }, // title
+        { wch: 25 }, // title_malayalam
+        { wch: 25 }  // title_urdu
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'location_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
+  };
+
   // Handle row click to show details
   const handleRowClick = (location, event) => {
     // Prevent row click when clicking on buttons or checkboxes
@@ -288,14 +416,52 @@ const LocationKSA = ({ isOpen }) => {
 
       <div className={`${sidebarOpen ? "ml-72" : "ml-20"}`}>
         <div className="flex justify-between items-center mt-20 mb-6">
-          <h1 className="text-2xl font-bold">Location Management</h1>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md"
-          >
-            {showAddForm ? "Cancel" : "Add More"}
-          </button>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold">Location Management</h1>
+            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+              Total: {filteredLocationData.length} locations
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600"
+            >
+              <Download size={20} />
+              Download Template
+            </button>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls"
+              className="hidden"
+              id="excel-upload"
+            />
+            <label
+              htmlFor="excel-upload"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
+            >
+              Upload Excel
+            </label>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            >
+              {showAddForm ? "Cancel" : "Add More"}
+            </button>
+          </div>
         </div>
+
+        {uploadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {uploadError}
+          </div>
+        )}
+        {uploadSuccess && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {uploadSuccess}
+          </div>
+        )}
 
         {/* New Location Form - Only shown when showAddForm is true */}
         {showAddForm && (
