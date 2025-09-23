@@ -372,13 +372,15 @@ const News = () => {
                 <label className="block text-sm font-medium mb-1">
                   Description
                 </label>
-                <RTLTextarea
+                <textarea
                   value={newNews.description}
                   onChange={(e) =>
                     setNewNews({ ...newNews, description: e.target.value })
                   }
                   className="w-full p-2 border rounded"
                   rows="3"
+                  dir="rtl"
+                  style={{ textAlign: 'right' }}
                 />
               </div>
             </div>
@@ -527,7 +529,7 @@ const News = () => {
                                     <label className="block text-sm font-medium">
                                       Description
                                     </label>
-                                    <RTLTextarea
+                                    <textarea
                                       value={row.description || ""}
                                       onChange={(e) =>
                                         handleEditChange(
@@ -537,6 +539,8 @@ const News = () => {
                                         )
                                       }
                                       placeholder="News description (optional)"
+                                      dir="rtl"
+                                      style={{ textAlign: 'right' }}
                                       rows="4"
                                       className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                                     />

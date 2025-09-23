@@ -26,9 +26,11 @@ import {
   Edit,
   Plus,
   UploadCloud,
+  Download,
 } from "lucide-react";
 import axios from "axios";
 import moment from "moment";
+import { read, utils, write } from "xlsx";
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
 
@@ -48,6 +50,8 @@ const Notification = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -295,6 +299,130 @@ const Notification = () => {
   // Handle Delete Cancel
   const handleDeleteCancel = () => {
     setDeleteConfirm({ show: false, id: null });
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const workbook = read(e.target.result, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = utils.sheet_to_json(worksheet);
+
+          const isValid = data.every(row => row.title && row.message);
+          if (!isValid) {
+            setUploadError('Invalid data format. Please ensure all required fields (title, message) are present.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL_V2}/notifications/bulk-upload`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+
+          setUploadSuccess(`Successfully uploaded ${response.data.count} notifications`);
+          setUploadError(null);
+          fetchNotifications();
+        } catch (error) {
+          setUploadError(error.response?.data?.message || 'Error uploading file');
+          setUploadSuccess(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      setUploadError('Error processing file');
+      setUploadSuccess(null);
+    }
+  };
+
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          title: 'Sample Notification Title',
+          message: 'Sample notification message content',
+          type: 'text',
+          priority: 'normal',
+          targetAudience: 'all'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers
+      utils.sheet_add_aoa(ws, [[
+        'title',
+        'message',
+        'type',
+        'priority',
+        'targetAudience'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 25 }, // title
+        { wch: 40 }, // message
+        { wch: 15 }, // type
+        { wch: 15 }, // priority
+        { wch: 20 }  // targetAudience
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'notification_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
   };
 
   // Handle bulk actions
@@ -630,6 +758,27 @@ const Notification = () => {
               </Space>
             )}
             <Button
+              onClick={handleDownloadTemplate}
+              icon={<Download size={18} />}
+              className="bg-gray-500 text-white border-gray-500 hover:bg-gray-600"
+            >
+              Download Template
+            </Button>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls"
+              className="hidden"
+              id="excel-upload"
+            />
+            <Button
+              onClick={() => document.getElementById('excel-upload').click()}
+              icon={<UploadCloud size={18} />}
+              className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+            >
+              Upload Excel
+            </Button>
+            <Button
               className="mr-4"
               type="primary"
               onClick={() => {
@@ -642,6 +791,17 @@ const Notification = () => {
             </Button>
           </div>
         </div>
+
+        {uploadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {uploadError}
+          </div>
+        )}
+        {uploadSuccess && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {uploadSuccess}
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">

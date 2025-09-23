@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import { Search, AlertTriangle, Edit, Trash2, Download } from "lucide-react";
 import Sidebar from "../../../components/Sidebar";
 import Navbar from "../../../components/Navbar";
 import axios from "axios";
+import { read, utils, write } from "xlsx";
 
 const News = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +32,8 @@ const News = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   // Changed: Make expandedDescriptions more specific to each news item and field
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
 
   // Handle select all
   const handleSelectAll = (event) => {
@@ -380,6 +383,138 @@ const News = () => {
     setOriginalData(null);
   };
 
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        setUploadError('Please upload an Excel file (.xlsx or .xls)');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const workbook = read(e.target.result, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = utils.sheet_to_json(worksheet);
+
+          const isValid = data.every(row => row.titleEnglish && row.link);
+          if (!isValid) {
+            setUploadError('Invalid data format. Please ensure all required fields (titleEnglish, link) are present.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL_V2}/news/bulk-upload`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+
+          setUploadSuccess(`Successfully uploaded ${response.data.count} news items`);
+          setUploadError(null);
+
+          const updatedResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_V2}/news`);
+          setNewsData(updatedResponse.data);
+        } catch (error) {
+          setUploadError(error.response?.data?.message || 'Error uploading file');
+          setUploadSuccess(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      setUploadError('Error processing file');
+      setUploadSuccess(null);
+    }
+  };
+
+  // Add download template function
+  const handleDownloadTemplate = () => {
+    try {
+      // Create sample data
+      const sampleData = [
+        {
+          titleEnglish: 'Sample News Title',
+          titleMalayalam: 'Sample Malayalam Title',
+          titleUrdu: 'Sample Urdu Title',
+          link: 'https://example.com/news',
+          descriptionEnglish: 'Sample Description',
+          descriptionMalayalam: 'Sample Malayalam Description',
+          descriptionUrdu: 'Sample Urdu Description'
+        }
+      ];
+
+      // Create worksheet
+      const ws = utils.json_to_sheet([]);
+      
+      // Add headers
+      utils.sheet_add_aoa(ws, [[
+        'titleEnglish',
+        'titleMalayalam',
+        'titleUrdu',
+        'link',
+        'descriptionEnglish',
+        'descriptionMalayalam',
+        'descriptionUrdu'
+      ]], { origin: 'A1' });
+
+      // Add sample data
+      utils.sheet_add_json(ws, sampleData, { 
+        origin: 'A2',
+        skipHeader: true
+      });
+
+      // Add column widths
+      ws['!cols'] = [
+        { wch: 25 }, // titleEnglish
+        { wch: 25 }, // titleMalayalam
+        { wch: 25 }, // titleUrdu
+        { wch: 30 }, // link
+        { wch: 30 }, // descriptionEnglish
+        { wch: 30 }, // descriptionMalayalam
+        { wch: 30 }  // descriptionUrdu
+      ];
+
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Template');
+
+      // Generate Excel file
+      write(wb, { 
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      // Convert to blob and download
+      const blob = new Blob(
+        [write(wb, { bookType: 'xlsx', type: 'array' })], 
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'news_upload_template.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      setUploadError('Failed to download template. Please try again.');
+    }
+  };
+
   // Handle row click to show details
   const handleRowClick = (newsItem, event) => {
     // Don't trigger if clicking on checkbox, edit, or delete buttons
@@ -466,13 +601,44 @@ const News = () => {
               </button>
             )}
             <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-gray-600"
+            >
+              <Download size={20} />
+              Download Template
+            </button>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls"
+              className="hidden"
+              id="excel-upload"
+            />
+            <label
+              htmlFor="excel-upload"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
+            >
+              Upload Excel
+            </label>
+            <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-green-500 text-white px-4 py-2 mr-4 rounded-md hover:bg-green-600"
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
             >
               {showAddForm ? "Cancel" : "Add New"}
             </button>
           </div>
         </div>
+
+        {uploadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {uploadError}
+          </div>
+        )}
+        {uploadSuccess && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {uploadSuccess}
+          </div>
+        )}
 
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-4 mb-6">

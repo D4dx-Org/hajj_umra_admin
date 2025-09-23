@@ -122,7 +122,7 @@ const Thanima = ({ isOpen }) => {
     { 
       key: 'nameUrdu', 
       title: 'Name (Urdu)',
-      render: (row) => <RTLText className="truncate" title={row.nameUrdu || '-'}>{row.nameUrdu || '-'}</RTLText>
+      render: (row) => <span className="truncate" title={row.nameUrdu || '-'} dir="rtl" style={{ textAlign: 'right' }}>{row.nameUrdu || '-'}</span>
     },
     { 
       key: 'phone', 
@@ -695,7 +695,7 @@ const Thanima = ({ isOpen }) => {
                               </div>
                               <div>
                                 <label className="block text-sm font-medium">Name (Urdu)</label>
-                                <RTLInput
+                                <input
                                   type="text"
                                   value={row.nameUrdu || ""}
                                   onChange={(e) => handleEditChange(row._id, 'nameUrdu', e.target.value)}
