@@ -539,7 +539,7 @@ const handleDeletePage = async () => {
   const categoriesUmrahMenuItems = [
     {
       id: "umrah-preparation",
-      label: "Preparation",
+      label: "Guide",
       icon: <Calendar size={16} />,
       path: "/umrah-preparation",
     },

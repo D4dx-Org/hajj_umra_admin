@@ -402,7 +402,13 @@ const PreparationManagement = () => {
         images: imageUrls,
         video: values.video?.trim() || "",
         map: values.map?.trim() || "",
+        isHajj: Boolean(values.isHajj),
       };
+
+      console.log('Form values:', values);
+      console.log('isHajj value from form:', values.isHajj);
+      console.log('isHajj boolean conversion:', Boolean(values.isHajj));
+      console.log('Final preparation data:', preparationData);
 
       if (editingId) {
         // Update existing preparation data
@@ -623,6 +629,7 @@ const PreparationManagement = () => {
           urdu_description: "تیاری کے مواد کے لیے نمونہ تفصیل",
           video: "https://www.youtube.com/watch?v=sample_video_id",
           map: "https://maps.google.com/sample_map_link",
+          is_hajj: false,
         },
       ];
 
@@ -642,6 +649,7 @@ const PreparationManagement = () => {
             "urdu_description",
             "video",
             "map",
+            "is_hajj",
           ],
         ],
         { origin: "A1" }
@@ -664,6 +672,7 @@ const PreparationManagement = () => {
         { wch: 35 }, // urdu_description
         { wch: 50 }, // video
         { wch: 50 }, // map
+        { wch: 12 }, // is_hajj
       ];
 
       const wb = utils.book_new();
@@ -888,6 +897,23 @@ const PreparationManagement = () => {
       },
     },
     {
+      key: "isHajj",
+      title: "Hajj",
+      render: (row) => (
+        <span className="inline-flex items-center">
+          {row.isHajj ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              ✓ Hajj
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              Umrah
+            </span>
+          )}
+        </span>
+      ),
+    },
+    {
       key: "actions",
       title: "Actions",
       render: (row) => (
@@ -908,6 +934,7 @@ const PreparationManagement = () => {
                 images: recordImages,
                 video: row.video || "",
                 map: row.map || "",
+                isHajj: row.isHajj || false,
               });
               setUploadedFiles({ images: [], video: null });
               setFileList({ images: [], video: [] });
@@ -1118,6 +1145,8 @@ const PreparationManagement = () => {
                           ? "w-28"
                           : column.key === "media"
                           ? "w-20"
+                          : column.key === "isHajj"
+                          ? "w-16"
                           : column.key === "actions"
                           ? "w-20"
                           : ""
@@ -1174,6 +1203,8 @@ const PreparationManagement = () => {
                               ? "max-w-28 truncate"
                               : column.key === "media"
                               ? "max-w-20 truncate"
+                              : column.key === "isHajj"
+                              ? "max-w-16 whitespace-nowrap"
                               : column.key === "actions"
                               ? "whitespace-nowrap"
                               : "whitespace-nowrap"
@@ -1217,6 +1248,20 @@ const PreparationManagement = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Title (English)</label>
                         <p className="text-gray-900 font-medium">{selectedPreparation.title || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Type</label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedPreparation.isHajj ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✓ Hajj Preparation
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Umrah Preparation
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1839,6 +1884,22 @@ const PreparationManagement = () => {
                 placeholder="https://maps.google.com/... or any map URL"
                 addonBefore="🗺"
               />
+            </Form.Item>
+
+            <Form.Item
+              name="isHajj"
+              label="Is Hajj Related"
+              valuePropName="checked"
+            >
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Check if this preparation is specifically for Hajj
+                </span>
+              </div>
             </Form.Item>
 
             <Form.Item>

@@ -14,24 +14,6 @@
     "routeFile": "Test1.js"
   },
   {
-    "name": "Hotels",
-    "slug": "hotels",
-    "route": "/umrah-hotels",
-    "component": "Hotels.jsx",
-    "fields": [
-      {
-        "fieldName": "hotelName",
-        "type": "string"
-      },
-      {
-        "fieldName": "location",
-        "type": "string"
-      }
-    ],
-    "modelFile": "Hotels.js",
-    "routeFile": "Hotels.js"
-  },
-  {
     "name": "Umrah Steps",
     "slug": "umrah-steps",
     "route": "/umrah-umrah-steps",
