@@ -362,6 +362,31 @@ const PreparationManagement = () => {
     }
   };
 
+  // Check if listingOrder is unique within the same category
+  const checkUniqueListingOrder = (listingOrder, isHajj, isCommon, editingId) => {
+    if (!listingOrder && listingOrder !== 0) return true; // Allow empty values
+    
+    let existingEntry;
+    if (isCommon) {
+      // For common entries, check uniqueness across all common entries
+      existingEntry = preparationData.find(entry => 
+        entry.isCommon === true && 
+        entry.listingOrder === Number(listingOrder) &&
+        entry._id !== editingId
+      );
+    } else {
+      // For specific category entries, check within that category
+      existingEntry = preparationData.find(entry => 
+        entry.isHajj === isHajj && 
+        entry.isCommon === false &&
+        entry.listingOrder === Number(listingOrder) &&
+        entry._id !== editingId
+      );
+    }
+    
+    return !existingEntry;
+  };
+
   // Handle form submission
   const handleSubmit = async (values) => {
     setSubmitting(true);
@@ -369,6 +394,14 @@ const PreparationManagement = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         message.error("No token found. Please log in again.");
+        return;
+      }
+
+      // Validate unique listingOrder within category
+      if (!checkUniqueListingOrder(values.listingOrder, values.isHajj, values.isCommon, editingId)) {
+        const category = values.isCommon ? 'Common' : (values.isHajj ? 'Hajj' : 'Umrah');
+        message.error(`Listing order ${values.listingOrder} already exists in ${category} category. Please use a different order number.`);
+        setSubmitting(false);
         return;
       }
 
@@ -403,6 +436,8 @@ const PreparationManagement = () => {
         video: values.video?.trim() || "",
         map: values.map?.trim() || "",
         isHajj: Boolean(values.isHajj),
+        isCommon: Boolean(values.isCommon),
+        listingOrder: values.listingOrder || 0,
       };
 
       console.log('Form values:', values);
@@ -630,6 +665,8 @@ const PreparationManagement = () => {
           video: "https://www.youtube.com/watch?v=sample_video_id",
           map: "https://maps.google.com/sample_map_link",
           is_hajj: false,
+          is_common: false,
+          listing_order: 1,
         },
       ];
 
@@ -650,6 +687,8 @@ const PreparationManagement = () => {
             "video",
             "map",
             "is_hajj",
+            "is_common",
+            "listing_order",
           ],
         ],
         { origin: "A1" }
@@ -673,6 +712,8 @@ const PreparationManagement = () => {
         { wch: 50 }, // video
         { wch: 50 }, // map
         { wch: 12 }, // is_hajj
+        { wch: 12 }, // is_common
+        { wch: 15 }, // listing_order
       ];
 
       const wb = utils.book_new();
@@ -897,11 +938,15 @@ const PreparationManagement = () => {
       },
     },
     {
-      key: "isHajj",
-      title: "Hajj",
+      key: "category",
+      title: "Category",
       render: (row) => (
         <span className="inline-flex items-center">
-          {row.isHajj ? (
+          {row.isCommon ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              ✓ Common
+            </span>
+          ) : row.isHajj ? (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
               ✓ Hajj
             </span>
@@ -910,6 +955,15 @@ const PreparationManagement = () => {
               Umrah
             </span>
           )}
+        </span>
+      ),
+    },
+    {
+      key: "listingOrder",
+      title: "Order",
+      render: (row) => (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          {row.listingOrder || 0}
         </span>
       ),
     },
@@ -935,6 +989,8 @@ const PreparationManagement = () => {
                 video: row.video || "",
                 map: row.map || "",
                 isHajj: row.isHajj || false,
+                isCommon: row.isCommon || false,
+                listingOrder: row.listingOrder || 0,
               });
               setUploadedFiles({ images: [], video: null });
               setFileList({ images: [], video: [] });
@@ -1145,7 +1201,9 @@ const PreparationManagement = () => {
                           ? "w-28"
                           : column.key === "media"
                           ? "w-20"
-                          : column.key === "isHajj"
+                          : column.key === "category"
+                          ? "w-20"
+                          : column.key === "listingOrder"
                           ? "w-16"
                           : column.key === "actions"
                           ? "w-20"
@@ -1203,7 +1261,9 @@ const PreparationManagement = () => {
                               ? "max-w-28 truncate"
                               : column.key === "media"
                               ? "max-w-20 truncate"
-                              : column.key === "isHajj"
+                              : column.key === "category"
+                              ? "max-w-20 whitespace-nowrap"
+                              : column.key === "listingOrder"
                               ? "max-w-16 whitespace-nowrap"
                               : column.key === "actions"
                               ? "whitespace-nowrap"
@@ -1261,6 +1321,28 @@ const PreparationManagement = () => {
                               Umrah Preparation
                             </span>
                           )}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Common Status</label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedPreparation.isCommon ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              ✓ Common for Both
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Category Specific
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Listing Order</label>
+                        <p className="text-gray-900 font-medium">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {selectedPreparation.listingOrder || 0}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -1886,21 +1968,93 @@ const PreparationManagement = () => {
               />
             </Form.Item>
 
-            <Form.Item
-              name="isHajj"
-              label="Is Hajj Related"
-              valuePropName="checked"
-            >
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Check if this preparation is specifically for Hajj
-                </span>
-              </div>
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  name="isHajj"
+                  label="Is Hajj Related"
+                  valuePropName="checked"
+                >
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      onChange={(e) => {
+                        // Re-validate listingOrder when isHajj changes
+                        setTimeout(() => {
+                          form.validateFields(['listingOrder']);
+                        }, 100);
+                      }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Check if this preparation is specifically for Hajj
+                    </span>
+                  </div>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  name="isCommon"
+                  label="Is Common for Both"
+                  valuePropName="checked"
+                >
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                      onChange={(e) => {
+                        // Re-validate listingOrder when isCommon changes
+                        setTimeout(() => {
+                          form.validateFields(['listingOrder']);
+                        }, 100);
+                      }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Check if this preparation is common for both Hajj and Umrah
+                    </span>
+                  </div>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  name="listingOrder"
+                  label="Listing Order"
+                  rules={[
+                    { 
+                      validator: (_, value) => {
+                        if (value === undefined || value === null || value === '') {
+                          return Promise.resolve();
+                        }
+                        const num = Number(value);
+                        if (isNaN(num)) {
+                          return Promise.reject(new Error('Please enter a valid number'));
+                        }
+                        if (num < 0) {
+                          return Promise.reject(new Error('Listing order must be 0 or greater'));
+                        }
+                        
+                        // Check for uniqueness within category
+                        const isHajjValue = form.getFieldValue('isHajj');
+                        const isCommonValue = form.getFieldValue('isCommon');
+                        if (!checkUniqueListingOrder(value, isHajjValue, isCommonValue, editingId)) {
+                          const category = isCommonValue ? 'Common' : (isHajjValue ? 'Hajj' : 'Umrah');
+                          return Promise.reject(new Error(`Order ${value} already exists in ${category} category`));
+                        }
+                        
+                        return Promise.resolve();
+                      }
+                    },
+                  ]}
+                >
+                  <Input
+                    type="number"
+                    placeholder="Enter listing order (0 for default)"
+                    min="0"
+                    addonBefore="🔢"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
             <Form.Item>
               <Space>

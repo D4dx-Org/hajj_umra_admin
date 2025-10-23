@@ -400,7 +400,7 @@ const PlaceKSA = () => {
         descriptionMalayalam: values.descriptionMalayalam?.trim() || "",
         descriptionUrdu: values.descriptionUrdu?.trim() || "",
         images: imageUrls,
-        video: values.video?.trim() || "", // YouTube URL
+        video: values.video?.trim() || "", // Video URL (YouTube, Facebook, Instagram, X)
         map: values.map?.trim() || "", // Map link
         locationRef: values.locationRef || null,
       };
@@ -1562,7 +1562,7 @@ const PlaceKSA = () => {
                     {selectedPlace.video && (
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">
-                          Video URL
+                          Video URL (YouTube, Facebook, Instagram, X)
                         </label>
                         <div className="p-2 bg-gray-50 rounded border text-sm">
                           <a
@@ -1962,17 +1962,17 @@ const PlaceKSA = () => {
               <Col span={12}>
                 <Form.Item
                   name="video"
-                  label="YouTube Video URL"
+                  label="Video URL (YouTube, Facebook, Instagram, X)"
                   rules={[
                     {
                       pattern:
-                        /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/,
-                      message: "Please enter a valid YouTube URL",
+                        /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.com|instagram\.com|twitter\.com|x\.com)\/.+/,
+                      message: "Please enter a valid URL from YouTube, Facebook, Instagram, or X",
                     },
                   ]}
                 >
                   <Input
-                    placeholder="https://www.youtube.com/watch?v=..."
+                    placeholder="https://www.youtube.com/watch?v=... or https://www.facebook.com/... or https://www.instagram.com/... or https://x.com/..."
                     addonBefore="🎥"
                   />
                 </Form.Item>
