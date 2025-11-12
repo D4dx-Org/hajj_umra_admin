@@ -60,13 +60,16 @@ const PlaceKSA = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState({
     images: [],
-    video: null,
   });
   const [fileList, setFileList] = useState({
     images: [],
-    video: [],
   });
-  const [existingImages, setExistingImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]); // Array of { url, title }
+  const [imageTitles, setImageTitles] = useState({}); // { index: title } for new images
+  const [videos, setVideos] = useState(Array(20).fill(null).map(() => ({ url: '', title: '', tags: [] }))); // 20 video slots
+  const [coverImage, setCoverImage] = useState(null); // Cover image file (for upload)
+  const [existingCoverImage, setExistingCoverImage] = useState(""); // Existing cover image URL
+  const [coverImageFileList, setCoverImageFileList] = useState([]); // For Ant Design Upload component
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
@@ -224,6 +227,15 @@ const PlaceKSA = () => {
         .map((item) => item.originFileObj || item)
         .filter(Boolean);
 
+      // Initialize titles for new images
+      const newTitles = {};
+      files.forEach((_, index) => {
+        const existingIndex = uploadedFiles.images.length + index;
+        if (!imageTitles[existingIndex]) {
+          newTitles[existingIndex] = '';
+        }
+      });
+
       // Completely replace images - don't merge with existing state
       setUploadedFiles((prev) => ({
         ...prev,
@@ -233,40 +245,44 @@ const PlaceKSA = () => {
         ...prev,
         images: limitedFileList,
       }));
-    } else {
-      // Handle single file (video)
-      const { file } = info;
-      if (file) {
-        setUploadedFiles((prev) => ({
-          ...prev,
-          [fileType]: file,
-        }));
-        setFileList((prev) => ({
-          ...prev,
-          [fileType]: [file],
-        }));
-      }
+      setImageTitles((prev) => ({ ...prev, ...newTitles }));
     }
   };
 
-  // Remove uploaded file
-  const removeFile = (fileType) => {
-    setUploadedFiles((prev) => ({
-      ...prev,
-      [fileType]: fileType === "images" ? [] : null,
-    }));
-    setFileList((prev) => ({
-      ...prev,
-      [fileType]: [],
-    }));
+  // Update image title
+  const updateImageTitle = (index, title, isExisting = false) => {
+    if (isExisting) {
+      const updated = [...existingImages];
+      updated[index] = { ...updated[index], title };
+      setExistingImages(updated);
+    } else {
+      setImageTitles((prev) => ({ ...prev, [index]: title }));
+    }
+  };
+
+  // Update video data
+  const updateVideo = (index, field, value) => {
+    const updated = [...videos];
+    if (field === 'tags') {
+      // Handle tags as comma-separated string or array
+      const tagArray = typeof value === 'string' 
+        ? value.split(',').map(tag => tag.trim()).filter(tag => tag)
+        : value;
+      updated[index] = { ...updated[index], tags: tagArray };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
+    setVideos(updated);
   };
 
   // Remove specific image from multiple images
   const removeImageFile = (index) => {
     console.log("Removing new image at index:", index);
+    const baseIndex = existingImages.length;
+    const actualIndex = baseIndex + index;
+    
     setUploadedFiles((prev) => {
       const newImages = prev.images.filter((_, i) => i !== index);
-      console.log("Updated uploaded files:", newImages);
       return {
         ...prev,
         images: newImages,
@@ -274,11 +290,26 @@ const PlaceKSA = () => {
     });
     setFileList((prev) => {
       const newFileList = prev.images.filter((_, i) => i !== index);
-      console.log("Updated file list:", newFileList);
       return {
         ...prev,
         images: newFileList,
       };
+    });
+    // Remove title for this image
+    setImageTitles((prev) => {
+      const newTitles = { ...prev };
+      delete newTitles[actualIndex];
+      // Reindex remaining titles
+      const reindexed = {};
+      Object.keys(newTitles).forEach((key) => {
+        const keyNum = parseInt(key);
+        if (keyNum > actualIndex) {
+          reindexed[keyNum - 1] = newTitles[key];
+        } else if (keyNum < actualIndex) {
+          reindexed[key] = newTitles[key];
+        }
+      });
+      return reindexed;
     });
     message.success("Image removed successfully");
   };
@@ -307,6 +338,7 @@ const PlaceKSA = () => {
       ...prev,
       images: [],
     }));
+    setImageTitles({});
     message.success("All new images cleared");
   };
 
@@ -372,9 +404,15 @@ const PlaceKSA = () => {
         return;
       }
 
-      let imageUrls = existingImages || []; // Keep existing URLs if editing
+      // Prepare existing images with titles
+      let imageObjects = existingImages.map((img, index) => {
+        if (typeof img === 'string') {
+          return { url: img, title: '' };
+        }
+        return { url: img.url || img, title: img.title || '' };
+      });
 
-      // Upload multiple images if they exist
+      // Upload multiple images if they exist and combine with titles
       if (uploadedFiles.images && uploadedFiles.images.length > 0) {
         try {
           message.loading("Uploading images...", 0);
@@ -382,11 +420,46 @@ const PlaceKSA = () => {
             uploadFileToServer(file, "image")
           );
           const uploadedUrls = await Promise.all(uploadPromises);
-          imageUrls = [...imageUrls, ...uploadedUrls.filter((url) => url)];
+          
+          // Combine uploaded URLs with their titles
+          uploadedUrls.forEach((url, index) => {
+            if (url) {
+              const baseIndex = existingImages.length;
+              const title = imageTitles[baseIndex + index] || '';
+              imageObjects.push({ url, title });
+            }
+          });
           message.destroy();
         } catch (error) {
           message.destroy();
           message.error("Failed to upload images");
+          return;
+        }
+      }
+
+      // Prepare videos array (filter out empty ones)
+      const videoObjects = videos
+        .filter(video => video.url && video.url.trim())
+        .map(video => ({
+          url: video.url.trim(),
+          title: video.title?.trim() || '',
+          tags: Array.isArray(video.tags) 
+            ? video.tags.filter(tag => tag && tag.trim())
+            : (typeof video.tags === 'string' 
+                ? video.tags.split(',').map(t => t.trim()).filter(t => t)
+                : [])
+        }));
+
+      // Upload cover image if a new one was selected
+      let coverImageUrl = existingCoverImage || "";
+      if (coverImage) {
+        try {
+          message.loading("Uploading cover image...", 0);
+          coverImageUrl = await uploadFileToServer(coverImage, "image");
+          message.destroy();
+        } catch (error) {
+          message.destroy();
+          message.error("Failed to upload cover image");
           return;
         }
       }
@@ -399,8 +472,9 @@ const PlaceKSA = () => {
         description: values.description?.trim() || "",
         descriptionMalayalam: values.descriptionMalayalam?.trim() || "",
         descriptionUrdu: values.descriptionUrdu?.trim() || "",
-        images: imageUrls,
-        video: values.video?.trim() || "", // Video URL (YouTube, Facebook, Instagram, X)
+        images: imageObjects,
+        videos: videoObjects,
+        coverImage: coverImageUrl,
         map: values.map?.trim() || "", // Map link
         locationRef: values.locationRef || null,
       };
@@ -479,9 +553,14 @@ const PlaceKSA = () => {
     setEditingId(null);
     setSubmitting(false);
     form.resetFields();
-    setUploadedFiles({ images: [], video: null });
-    setFileList({ images: [], video: [] });
+    setUploadedFiles({ images: [] });
+    setFileList({ images: [] });
     setExistingImages([]);
+    setImageTitles({});
+    setVideos(Array(20).fill(null).map(() => ({ url: '', title: '', tags: [] })));
+    setCoverImage(null);
+    setExistingCoverImage("");
+    setCoverImageFileList([]);
   };
 
   // Handle place deletion
@@ -902,13 +981,13 @@ const PlaceKSA = () => {
       title: "Media",
       render: (row) => {
         const imageCount = row.images?.length || 0;
-        const hasVideo = row.video ? 1 : 0;
+        const videoCount = row.videos?.length || (row.video ? 1 : 0);
         const hasMap = row.map ? 1 : 0;
-        const totalMedia = imageCount + hasVideo + hasMap;
+        const totalMedia = imageCount + videoCount + hasMap;
         return (
           <span
             className="truncate"
-            title={`${imageCount} images, ${hasVideo} video, ${hasMap} map`}
+            title={`${imageCount} images, ${videoCount} videos, ${hasMap} map`}
           >
             {totalMedia} items
           </span>
@@ -923,11 +1002,46 @@ const PlaceKSA = () => {
           <button
             onClick={() => {
               setEditingId(row._id);
-              const recordImages = row.images || [];
+              
+              // Handle images - convert to objects if needed
+              let recordImages = row.images || [];
+              if (recordImages.length > 0 && typeof recordImages[0] === 'string') {
+                recordImages = recordImages.map(url => ({ url, title: '' }));
+              }
+              
+              // Handle videos - convert to array if needed
+              let recordVideos = row.videos || [];
+              if (row.video && typeof row.video === 'string' && recordVideos.length === 0) {
+                recordVideos = [{ url: row.video, title: '', tags: [] }];
+              }
+              // Ensure we have 20 slots
+              const videoSlots = Array(20).fill(null).map(() => ({ url: '', title: '', tags: [] }));
+              recordVideos.forEach((video, index) => {
+                if (index < 20) {
+                  videoSlots[index] = {
+                    url: typeof video === 'string' ? video : (video.url || ''),
+                    title: typeof video === 'string' ? '' : (video.title || ''),
+                    tags: typeof video === 'string' ? [] : (Array.isArray(video.tags) ? video.tags : [])
+                  };
+                }
+              });
+
               console.log("Setting up edit for record:", row);
               console.log("Record images:", recordImages);
+              console.log("Record videos:", recordVideos);
 
               setExistingImages(recordImages);
+              setVideos(videoSlots);
+              setImageTitles({});
+              setExistingCoverImage(row.coverImage || "");
+              setCoverImage(null);
+              setCoverImageFileList(row.coverImage ? [{
+                uid: '-1',
+                name: 'cover-image.png',
+                status: 'done',
+                url: row.coverImage,
+              }] : []);
+              
               form.setFieldsValue({
                 id: row.id,
                 title: row.title,
@@ -937,14 +1051,13 @@ const PlaceKSA = () => {
                 descriptionMalayalam: row.descriptionMalayalam || "",
                 descriptionUrdu: row.descriptionUrdu || "",
                 images: recordImages,
-                video: row.video || "",
                 map: row.map || "",
                 locationRef: row.locationRef?._id || undefined,
               });
 
               // Reset upload state for editing
-              setUploadedFiles({ images: [], video: null });
-              setFileList({ images: [], video: [] });
+              setUploadedFiles({ images: [] });
+              setFileList({ images: [] });
               setModalVisible(true);
             }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
@@ -1030,9 +1143,14 @@ const PlaceKSA = () => {
                 setEditingId(null);
                 // Reset form and file states when adding new entry
                 form.resetFields();
-                setUploadedFiles({ images: [], video: null });
-                setFileList({ images: [], video: [] });
+                setUploadedFiles({ images: [] });
+                setFileList({ images: [] });
                 setExistingImages([]);
+                setImageTitles({});
+                setVideos(Array(20).fill(null).map(() => ({ url: '', title: '', tags: [] })));
+                setCoverImage(null);
+                setExistingCoverImage("");
+                setCoverImageFileList([]);
                 setModalVisible(true);
               }}
               icon={<Plus size={18} />}
@@ -1555,11 +1673,66 @@ const PlaceKSA = () => {
                       </label>
                       <div className="p-2 bg-gray-50 rounded border text-sm">
                         {selectedPlace.images?.length || 0} images,
-                        {selectedPlace.video ? " 1 video," : " 0 videos,"}
+                        {selectedPlace.videos?.length || (selectedPlace.video ? 1 : 0)} videos,
                         {selectedPlace.map ? " 1 map" : " 0 maps"}
+                        {selectedPlace.coverImage && ", 1 cover image"}
                       </div>
                     </div>
-                    {selectedPlace.video && (
+                    {selectedPlace.coverImage && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Cover Image
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded border">
+                          <img
+                            src={selectedPlace.coverImage}
+                            alt="Cover"
+                            className="w-full max-w-xs h-auto object-cover rounded"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {selectedPlace.videos && selectedPlace.videos.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Videos ({selectedPlace.videos.length})
+                        </label>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {selectedPlace.videos.map((video, idx) => {
+                            const videoUrl = typeof video === 'string' ? video : video.url;
+                            const videoTitle = typeof video === 'string' ? '' : (video.title || '');
+                            const videoTags = typeof video === 'string' ? [] : (video.tags || []);
+                            if (!videoUrl) return null;
+                            return (
+                              <div key={idx} className="p-2 bg-gray-50 rounded border text-sm">
+                                <div className="font-medium mb-1">{videoTitle || `Video ${idx + 1}`}</div>
+                                <a
+                                  href={videoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 break-all text-xs"
+                                >
+                                  {videoUrl}
+                                </a>
+                                {videoTags.length > 0 && (
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {videoTags.map((tag, tagIdx) => (
+                                      <span key={tagIdx} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {selectedPlace.video && !selectedPlace.videos && (
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">
                           Video URL (YouTube, Facebook, Instagram, X)
@@ -1649,27 +1822,36 @@ const PlaceKSA = () => {
                     Images ({selectedPlace.images.length})
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {selectedPlace.images.map((imageUrl, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-100">
-                          <img
-                            src={imageUrl}
-                            alt={`Place image ${index + 1}`}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                              e.target.nextSibling.style.display = "flex";
-                            }}
-                          />
-                          <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                            Image {index + 1}
+                    {selectedPlace.images.map((image, index) => {
+                      const imageUrl = typeof image === 'string' ? image : image.url;
+                      const imageTitle = typeof image === 'string' ? '' : (image.title || '');
+                      return (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-100">
+                            <img
+                              src={imageUrl}
+                              alt={imageTitle || `Place image ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.nextSibling.style.display = "flex";
+                              }}
+                            />
+                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                              Image {index + 1}
+                            </div>
                           </div>
+                          <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                            {index + 1}
+                          </div>
+                          {imageTitle && (
+                            <div className="mt-1 text-xs text-gray-600 truncate" title={imageTitle}>
+                              {imageTitle}
+                            </div>
+                          )}
                         </div>
-                        <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-                          {index + 1}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1772,6 +1954,115 @@ const PlaceKSA = () => {
                   style={{ textAlign: 'right' }} />
             </Form.Item>
 
+            {/* Cover Image Upload */}
+            <Form.Item
+              label="Cover Image (Optional)"
+              help="Upload a cover image for this place"
+            >
+              <Upload
+                accept="image/*"
+                listType="picture-card"
+                fileList={coverImageFileList}
+                beforeUpload={(file) => {
+                  const isValidType = file.type.startsWith("image/");
+                  if (!isValidType) {
+                    message.error("Please upload a valid image file!");
+                    return Upload.LIST_IGNORE;
+                  }
+                  const isValidSize = file.size / 1024 / 1024 < 5; // 5MB
+                  if (!isValidSize) {
+                    message.error("Image must be smaller than 5MB!");
+                    return Upload.LIST_IGNORE;
+                  }
+                  return false; // Prevent automatic upload
+                }}
+                onChange={(info) => {
+                  const { fileList } = info;
+                  
+                  // Handle file removal
+                  if (fileList.length === 0) {
+                    // Revoke object URL to free memory
+                    if (coverImageFileList[0]?.url && coverImageFileList[0].url.startsWith('blob:')) {
+                      URL.revokeObjectURL(coverImageFileList[0].url);
+                    }
+                    setCoverImage(null);
+                    setCoverImageFileList([]);
+                    setExistingCoverImage("");
+                    return;
+                  }
+                  
+                  // Handle file addition
+                  const file = fileList[fileList.length - 1];
+                  if (file.originFileObj) {
+                    // Create object URL for preview
+                    const objectUrl = URL.createObjectURL(file.originFileObj);
+                    
+                    const fileObj = {
+                      ...file,
+                      uid: file.uid || `-${Date.now()}`,
+                      status: 'done',
+                      url: objectUrl,
+                      thumbUrl: objectUrl,
+                    };
+                    
+                    setCoverImage(file.originFileObj);
+                    setCoverImageFileList([fileObj]);
+                  } else if (file.url && !file.url.startsWith('blob:')) {
+                    // Existing file from server
+                    setCoverImageFileList([file]);
+                  }
+                }}
+                onRemove={() => {
+                  // Revoke object URL to free memory
+                  if (coverImageFileList[0]?.url && coverImageFileList[0].url.startsWith('blob:')) {
+                    URL.revokeObjectURL(coverImageFileList[0].url);
+                  }
+                  setCoverImage(null);
+                  setCoverImageFileList([]);
+                  setExistingCoverImage("");
+                  return true;
+                }}
+                maxCount={1}
+                showUploadList={{
+                  showPreviewIcon: true,
+                  showRemoveIcon: true,
+                }}
+              >
+                {coverImageFileList.length < 1 && (
+                  <div>
+                    <UploadCloud size={24} className="mx-auto text-blue-500 mb-2" />
+                    <div className="text-xs text-gray-500">Upload Cover Image</div>
+                  </div>
+                )}
+              </Upload>
+              {existingCoverImage && !coverImage && coverImageFileList.length === 0 && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-600 mb-1">Current cover image:</div>
+                  <div className="relative inline-block">
+                    <img
+                      src={existingCoverImage}
+                      alt="Cover"
+                      className="w-32 h-32 object-cover rounded border border-gray-300"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExistingCoverImage("");
+                        setCoverImageFileList([]);
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg"
+                      title="Remove cover image"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              )}
+            </Form.Item>
+
             {/* File Upload Sections */}
             <Row gutter={16}>
               <Col span={12}>
@@ -1850,96 +2141,108 @@ const PlaceKSA = () => {
                             )}
                         </div>
                       </div>
-                      <div className="grid grid-cols-6 gap-2">
-                        {/* Existing images */}
+                      <div className="space-y-3">
+                        {/* Existing images with titles */}
                         {editingId &&
                           existingImages &&
-                          existingImages.map((imageUrl, index) => (
-                            <div
-                              key={`existing-${index}`}
-                              className="relative group"
-                            >
-                              <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
-                                <img
-                                  src={imageUrl}
-                                  alt={`Existing ${index + 1}`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                    e.target.nextSibling.style.display = "flex";
-                                  }}
-                                />
-                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                                  IMG
-                                </div>
-                                <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
-                                  E{index + 1}
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  console.log(
-                                    "Clicked remove existing image button for index:",
-                                    index
-                                  );
-                                  removeExistingImage(index);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                title="Remove this existing image"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-
-                        {/* New images */}
-                        {uploadedFiles.images &&
-                          uploadedFiles.images.map((file, index) => (
-                            <div
-                              key={`new-${index}`}
-                              className="relative group"
-                            >
-                              <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
-                                {file && file.type?.startsWith("image/") ? (
-                                  <img
-                                    src={URL.createObjectURL(file)}
-                                    alt={`New ${index + 1}`}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.style.display = "none";
-                                      e.target.nextSibling.style.display =
-                                        "flex";
+                          existingImages.map((image, index) => {
+                            const imageUrl = typeof image === 'string' ? image : image.url;
+                            const currentTitle = typeof image === 'string' ? '' : (image.title || '');
+                            return (
+                              <div key={`existing-${index}`} className="flex gap-2 items-start">
+                                <div className="relative group flex-shrink-0">
+                                  <div className="relative w-16 h-16 border-2 border-blue-200 rounded-lg overflow-hidden bg-blue-50">
+                                    <img
+                                      src={imageUrl}
+                                      alt={`Existing ${index + 1}`}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.style.display = "none";
+                                        e.target.nextSibling.style.display = "flex";
+                                      }}
+                                    />
+                                    <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
+                                      IMG
+                                    </div>
+                                    <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
+                                      E{index + 1}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      removeExistingImage(index);
                                     }}
-                                  />
-                                ) : null}
-                                <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
-                                  IMG
+                                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                    title="Remove this existing image"
+                                  >
+                                    ×
+                                  </button>
                                 </div>
-                                <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
-                                  N{index + 1}
-                                </div>
+                                <Input
+                                  placeholder={`Image ${index + 1} title`}
+                                  value={currentTitle}
+                                  onChange={(e) => updateImageTitle(index, e.target.value, true)}
+                                  className="flex-1"
+                                  size="small"
+                                />
                               </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  console.log(
-                                    "Clicked remove new image button for index:",
-                                    index
-                                  );
-                                  removeImageFile(index);
-                                }}
-                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
-                                title="Remove this new image"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
+
+                        {/* New images with titles */}
+                        {uploadedFiles.images &&
+                          uploadedFiles.images.map((file, index) => {
+                            const baseIndex = existingImages.length;
+                            const titleIndex = baseIndex + index;
+                            const currentTitle = imageTitles[titleIndex] || '';
+                            return (
+                              <div key={`new-${index}`} className="flex gap-2 items-start">
+                                <div className="relative group flex-shrink-0">
+                                  <div className="relative w-16 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                                    {file && file.type?.startsWith("image/") ? (
+                                      <img
+                                        src={URL.createObjectURL(file)}
+                                        alt={`New ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.target.style.display = "none";
+                                          e.target.nextSibling.style.display = "flex";
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500">
+                                      IMG
+                                    </div>
+                                    <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-1 rounded-br">
+                                      N{index + 1}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      removeImageFile(index);
+                                    }}
+                                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 z-20 opacity-90 hover:opacity-100"
+                                    title="Remove this new image"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                                <Input
+                                  placeholder={`Image ${titleIndex + 1} title`}
+                                  value={currentTitle}
+                                  onChange={(e) => updateImageTitle(titleIndex, e.target.value, false)}
+                                  className="flex-1"
+                                  size="small"
+                                />
+                              </div>
+                            );
+                          })}
                       </div>
 
                       {/* Legend */}
@@ -1961,20 +2264,40 @@ const PlaceKSA = () => {
 
               <Col span={12}>
                 <Form.Item
-                  name="video"
-                  label="Video URL (YouTube, Facebook, Instagram, X)"
-                  rules={[
-                    {
-                      pattern:
-                        /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.com|instagram\.com|twitter\.com|x\.com)\/.+/,
-                      message: "Please enter a valid URL from YouTube, Facebook, Instagram, or X",
-                    },
-                  ]}
+                  label="Videos (up to 20)"
+                  help="Add video URLs with titles and tags"
                 >
-                  <Input
-                    placeholder="https://www.youtube.com/watch?v=... or https://www.facebook.com/... or https://www.instagram.com/... or https://x.com/..."
-                    addonBefore="🎥"
-                  />
+                  <div className="space-y-3 max-h-96 overflow-y-auto p-2 border border-gray-200 rounded">
+                    {videos.map((video, index) => (
+                      <div key={index} className="p-3 bg-gray-50 rounded border border-gray-200">
+                        <div className="text-xs font-medium text-gray-600 mb-2">
+                          Video {index + 1}
+                        </div>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Video URL (YouTube, Facebook, Instagram, X)"
+                            value={video.url}
+                            onChange={(e) => updateVideo(index, 'url', e.target.value)}
+                            addonBefore="🎥"
+                            size="small"
+                            status={video.url && !/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.com|instagram\.com|twitter\.com|x\.com)\/.+/.test(video.url) ? 'error' : ''}
+                          />
+                          <Input
+                            placeholder="Video title (optional)"
+                            value={video.title}
+                            onChange={(e) => updateVideo(index, 'title', e.target.value)}
+                            size="small"
+                          />
+                          <Input
+                            placeholder="Tags (comma-separated, optional)"
+                            value={Array.isArray(video.tags) ? video.tags.join(', ') : (video.tags || '')}
+                            onChange={(e) => updateVideo(index, 'tags', e.target.value)}
+                            size="small"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </Form.Item>
               </Col>
             </Row>
