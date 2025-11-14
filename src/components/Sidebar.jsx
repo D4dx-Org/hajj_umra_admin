@@ -22,6 +22,7 @@ import {
   BookOpen,
   Video,
   PlaneTakeoff,
+  Images,
   ChevronDown,
   ChevronRight,
   Plus,
@@ -78,6 +79,7 @@ const Sidebar = ({ isOpen }) => {
   const [expandedSections, setExpandedSections] = useState({
     hajj: true,
     umrah: false,
+    "rituals-culture": false,
     "explore-ksa": false,
   });
   const [expandedUmrahSections, setExpandedUmrahSections] = useState({
@@ -147,6 +149,7 @@ const Sidebar = ({ isOpen }) => {
     setExpandedSections({
       hajj: false,
       umrah: true,
+      "rituals-culture": false,
       "explore-ksa": false,
     });
     setExpandedUmrahSections({
@@ -332,11 +335,14 @@ const handleDeletePage = async () => {
       "/locationKSA",
     ];
 
+    const ritualsCultureRoutes = ["/umrah-rituals-culture"];
+
     if (ksaRoutes.includes(location.pathname)) {
       setActiveTab("explore-ksa");
       setExpandedSections({
         hajj: false,
         umrah: false,
+        "rituals-culture": false,
         "explore-ksa": true,
       });
 
@@ -345,11 +351,24 @@ const handleDeletePage = async () => {
           essential: true,
         });
       }
+    } else if (ritualsCultureRoutes.includes(location.pathname)) {
+      setActiveTab("rituals-culture");
+      setExpandedSections({
+        hajj: false,
+        umrah: false,
+        "rituals-culture": true,
+        "explore-ksa": false,
+      });
+      setExpandedUmrahSections({
+        essential: false,
+        categories: false,
+      });
     } else if (umrahRoutes.includes(location.pathname)) {
       setActiveTab("umrah");
       setExpandedSections({
         hajj: false,
         umrah: true,
+        "rituals-culture": false,
         "explore-ksa": false,
       });
 
@@ -369,6 +388,7 @@ const handleDeletePage = async () => {
       setExpandedSections({
         hajj: true,
         umrah: false,
+        "rituals-culture": false,
         "explore-ksa": false,
       });
     }
@@ -576,6 +596,15 @@ const handleDeletePage = async () => {
     })),
   ];
 
+  const ritualsCultureMenuItems = [
+    {
+      id: "umrah-rituals-culture",
+      label: "Rituals & Culture",
+      icon: <Images size={16} />,
+      path: "/umrah-rituals-culture",
+    },
+  ];
+
   const essentialKsaMenuItems = [
     
     {
@@ -758,6 +787,7 @@ const handleDeletePage = async () => {
     setExpandedSections((prev) => ({
       hajj: sectionId === "hajj" ? !prev.hajj : false,
       umrah: sectionId === "umrah" ? !prev.umrah : false,
+      "rituals-culture": sectionId === "rituals-culture" ? !prev["rituals-culture"] : false,
       "explore-ksa": sectionId === "explore-ksa" ? !prev["explore-ksa"] : false,
     }));
   };
@@ -867,6 +897,7 @@ const handleDeletePage = async () => {
               <div className="space-y-1">
                 {renderDropdownSection("hajj", "Hajj Services", hajjMenuItems)}
                 {renderDropdownSection("umrah", "Umrah Services", [])}
+                {renderDropdownSection("rituals-culture", "Rituals & Culture", ritualsCultureMenuItems)}
                 {renderDropdownSection("explore-ksa", "Explore KSA", [])}
               </div>
             ) : (
@@ -876,6 +907,9 @@ const handleDeletePage = async () => {
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#357ABD] flex items-center justify-center mx-auto">
                   <span className="text-white font-bold text-xs">U</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#2563eb] flex items-center justify-center mx-auto">
+                  <span className="text-white font-bold text-xs">R</span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#2563eb] flex items-center justify-center mx-auto">
                   <span className="text-white font-bold text-xs">K</span>
