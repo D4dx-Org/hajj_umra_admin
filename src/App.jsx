@@ -53,6 +53,7 @@ import UmrahNews from "./pages/Admin/Umrah/UmrahNews";
 import UmrahNusuk from "./pages/Admin/Umrah/UmrahNusuk";
 import UmrahThanima from "./pages/Admin/Umrah/UmrahThanima";
 import UmrahNotification from "./pages/Admin/Umrah/UmrahNotification";
+import UmrahRitualsCulture from "./pages/Admin/UmrahRitualsCulture";
 
 import add from "../src/components/AddForm";
 
@@ -187,6 +188,7 @@ const App = () => {
         <Route path="/umrah-duas" element={<Duas />} />
         <Route path="/umrah-post" element={<Post />} />
         <Route path="/umrah-virtual-tour" element={<Tour />} />
+        <Route path="/umrah-rituals-culture" element={<UmrahRitualsCulture />} />
         <Route path="/umrah-ambulance" element={<UmrahAmbulance />} />
         <Route path="/umrah-branch" element={<UmrahBranch />} />
         <Route path="/umrah-building" element={<UmrahBuilding />} />
