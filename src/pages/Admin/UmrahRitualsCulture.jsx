@@ -132,20 +132,22 @@ const UmrahRitualsCulture = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const resetModalState = () => {
-    setModalVisible(false);
-    setEditingId(null);
-    setUploadedFiles([]);
-    setFileList([]);
-    setExistingImages([]);
-    setUploading(false);
-    form.resetFields();
-  };
+const resetModalState = () => {
+  setModalVisible(false);
+  setEditingId(null);
+  setUploadedFiles([]);
+  setFileList([]);
+  setExistingImages([]);
+  setUploading(false);
+  form.resetFields();
+  form.setFieldsValue({ videos: [{}] });
+};
 
   const openCreateModal = () => {
     console.log("Opening create modal for rituals & culture");
     setEditingId(null);
     form.resetFields();
+    form.setFieldsValue({ videos: [{}] });
     setUploadedFiles([]);
     setFileList([]);
     setExistingImages([]);
@@ -164,9 +166,14 @@ const UmrahRitualsCulture = () => {
       malayalamDescription: record.malayalamDescription,
       urduDescription: record.urduDescription,
       imageTitle: record.imageTitle,
-      video: record.video,
-      videoTitle: record.videoTitle,
       map: record.map,
+      videos:
+        Array.isArray(record.videos) && record.videos.length > 0
+          ? record.videos.map((videoItem) => ({
+              title: videoItem.title || "",
+              url: videoItem.url || "",
+            }))
+          : [],
     });
     setExistingImages(record.images || []);
     setUploadedFiles([]);
@@ -223,6 +230,15 @@ const UmrahRitualsCulture = () => {
     try {
       const values = await form.validateFields();
 
+      const cleanedVideos = Array.isArray(values.videos)
+        ? values.videos
+            .map((videoItem) => ({
+              title: videoItem?.title?.toString().trim() || "",
+              url: videoItem?.url?.toString().trim() || "",
+            }))
+            .filter((videoItem) => videoItem.title || videoItem.url)
+        : [];
+
       const payload = {
         id: values.id.trim(),
         title: values.title?.trim() || "",
@@ -232,8 +248,6 @@ const UmrahRitualsCulture = () => {
         malayalamDescription: values.malayalamDescription?.trim() || "",
         urduDescription: values.urduDescription?.trim() || "",
         imageTitle: values.imageTitle?.trim() || "",
-        video: values.video?.trim() || "",
-        videoTitle: values.videoTitle?.trim() || "",
         map: values.map?.trim() || "",
       };
 
@@ -261,6 +275,7 @@ const UmrahRitualsCulture = () => {
       }
 
       payload.images = combinedImages;
+      payload.videos = cleanedVideos;
 
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
@@ -456,29 +471,15 @@ const UmrahRitualsCulture = () => {
       responsive: ["lg"],
     },
     {
-      title: "Video",
-      dataIndex: "video",
-      key: "video",
-      render: (value) =>
-        value ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-600"
-          >
-            View
-          </a>
+      title: "Videos",
+      dataIndex: "videos",
+      key: "videos",
+      render: (videos = []) =>
+        videos.length > 0 ? (
+          <Tag color="purple">{videos.length} video(s)</Tag>
         ) : (
           <Tag>—</Tag>
         ),
-    },
-    {
-      title: "Video Title",
-      dataIndex: "videoTitle",
-      key: "videoTitle",
-      render: (value) => value || "—",
-      responsive: ["lg"],
     },
     {
       title: "Updated",
@@ -543,28 +544,10 @@ const UmrahRitualsCulture = () => {
                 Rituals & Culture
               </Title>
             </div>
-            <Text type="secondary">
-              Manage rituals and cultural references with multilingual support
-              and rich media assets.
-            </Text>
-            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm w-fit">
-              Total: {totalEntries} entries
-            </div>
           </div>
 
           <Space wrap>
-            <Button
-              icon={<RefreshCcw size={16} />}
-              onClick={() =>
-                fetchRecords(
-                  pagination.current,
-                  pagination.pageSize,
-                  searchTerm.trim()
-                )
-              }
-            >
-              Refresh
-            </Button>
+            
             {selectedRowKeys.length > 0 && (
               <Button
                 danger
@@ -643,9 +626,8 @@ const UmrahRitualsCulture = () => {
             malayalamDescription: "",
             urduDescription: "",
             imageTitle: "",
-            video: "",
-            videoTitle: "",
             map: "",
+            videos: [{}],
           }}
         >
           <Row gutter={16}>
@@ -703,8 +685,8 @@ const UmrahRitualsCulture = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="videoTitle" label="Video Title">
-                <Input placeholder="Enter video section title" />
+              <Form.Item name="map" label="Map URL">
+                <Input placeholder="https://maps.google.com/..." />
               </Form.Item>
             </Col>
           </Row>
@@ -725,18 +707,67 @@ const UmrahRitualsCulture = () => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="video" label="Video URL">
-                <Input placeholder="https://youtube.com/..." />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="map" label="Map URL">
-                <Input placeholder="https://maps.google.com/..." />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.List name="videos">
+            {(fields, { add, remove }) => (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm font-medium text-gray-700">Video Links</span>
+                  <Button
+                    type="dashed"
+                    icon={<Plus size={14} />}
+                    onClick={() => add({})}
+                  >
+                    Add Video
+                  </Button>
+                </div>
+
+                {fields.length === 0 && (
+                  <div className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-md p-3">
+                    No videos added yet. Use "Add Video" to include YouTube or other URLs with titles.
+                  </div>
+                )}
+
+                {fields.map((field, index) => (
+                  <Card
+                    key={field.key}
+                    size="small"
+                    className="border border-gray-200 bg-gray-50"
+                  >
+                    <Row gutter={16} align="middle">
+                      <Col span={11}>
+                        <Form.Item
+                          {...field}
+                          label="Video Title"
+                          name={[field.name, "title"]}
+                          fieldKey={[field.fieldKey, "title"]}
+                        >
+                          <Input placeholder="Enter video section title" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={11}>
+                        <Form.Item
+                          {...field}
+                          label="Video URL"
+                          name={[field.name, "url"]}
+                          fieldKey={[field.fieldKey, "url"]}
+                        >
+                          <Input placeholder="https://youtube.com/..." />
+                        </Form.Item>
+                      </Col>
+                      <Col span={2} className="flex justify-end">
+                        <Button
+                          danger
+                          type="text"
+                          icon={<Trash2 size={16} />}
+                          onClick={() => remove(field.name)}
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Form.List>
 
           <Row gutter={16}>
             <Col span={24}>
@@ -880,32 +911,6 @@ const UmrahRitualsCulture = () => {
                   <div>{detailModal.record.imageTitle || "—"}</div>
                 </Col>
                 <Col span={12}>
-                  <Text type="secondary">Video Title</Text>
-                  <div>{detailModal.record.videoTitle || "—"}</div>
-                </Col>
-              </Row>
-            </Card>
-
-            <Card size="small" bordered={false}>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Text type="secondary">Video</Text>
-                  <div>
-                    {detailModal.record.video ? (
-                      <a
-                        href={detailModal.record.video}
-                        className="text-blue-500"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Watch video
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </div>
-                </Col>
-                <Col span={12}>
                   <Text type="secondary">Map</Text>
                   <div>
                     {detailModal.record.map ? (
@@ -923,6 +928,43 @@ const UmrahRitualsCulture = () => {
                   </div>
                 </Col>
               </Row>
+            </Card>
+
+            <Card size="small" bordered={false}>
+              <Text type="secondary">Videos</Text>
+              {detailModal.record.videos && detailModal.record.videos.length > 0 ? (
+                <div className="mt-2 space-y-2">
+                  {detailModal.record.videos.map((videoItem, index) => (
+                    <div
+                      key={`${videoItem.title || "video"}-${index}`}
+                      className="flex items-start justify-between gap-3 rounded-md bg-gray-50 p-3 border border-gray-200"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {videoItem.title || `Video ${index + 1}`}
+                        </div>
+                        <div>
+                          {videoItem.url ? (
+                            <a
+                              href={videoItem.url}
+                              className="text-blue-500 text-sm"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Watch video
+                            </a>
+                          ) : (
+                            <span className="text-xs text-gray-500">No URL provided</span>
+                          )}
+                        </div>
+                      </div>
+                      <Tag color="purple">#{index + 1}</Tag>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 mt-1">No videos added.</div>
+              )}
             </Card>
 
             {detailModal.record.images?.length > 0 && (
