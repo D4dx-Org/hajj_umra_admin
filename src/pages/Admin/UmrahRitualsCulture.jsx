@@ -162,7 +162,7 @@ const resetModalState = () => {
       title: record.title,
       malayalamTitle: record.malayalamTitle,
       urduTitle: record.urduTitle,
-      description: record.description,
+      englishDescription: record.englishDescription || record.description,
       malayalamDescription: record.malayalamDescription,
       urduDescription: record.urduDescription,
       imageTitle: record.imageTitle,
@@ -238,13 +238,16 @@ const resetModalState = () => {
             }))
             .filter((videoItem) => videoItem.title || videoItem.url)
         : [];
+      const englishDescriptionValue =
+        values.englishDescription?.toString().trim() || "";
 
       const payload = {
         id: values.id.trim(),
         title: values.title?.trim() || "",
         malayalamTitle: values.malayalamTitle?.trim(),
         urduTitle: values.urduTitle?.trim() || "",
-        description: values.description?.trim() || "",
+        description: englishDescriptionValue,
+        englishDescription: englishDescriptionValue,
         malayalamDescription: values.malayalamDescription?.trim() || "",
         urduDescription: values.urduDescription?.trim() || "",
         imageTitle: values.imageTitle?.trim() || "",
@@ -304,8 +307,18 @@ const resetModalState = () => {
     } catch (error) {
       console.error("Error submitting rituals & culture form", error);
       message.destroy("rituals-culture-submit");
-      if (error?.errorFields) {
-        message.error("Please fix validation errors before submitting.");
+      if (error?.errorFields?.length) {
+        const firstError = error.errorFields[0];
+        if (firstError?.name) {
+          form.scrollToField(firstError.name, {
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+        message.error(
+          firstError?.errors?.[0] ||
+            "Please fix validation errors before submitting."
+        );
       } else {
         message.error(
           error.response?.data?.message ||
@@ -622,7 +635,7 @@ const resetModalState = () => {
             title: "",
             malayalamTitle: "",
             urduTitle: "",
-            description: "",
+            englishDescription: "",
             malayalamDescription: "",
             urduDescription: "",
             imageTitle: "",
@@ -672,7 +685,7 @@ const resetModalState = () => {
 
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item name="description" label="Description (English)">
+              <Form.Item name="englishDescription" label="Description (English)">
                 <TextArea rows={3} placeholder="Enter detailed description..." />
               </Form.Item>
             </Col>
@@ -888,7 +901,11 @@ const resetModalState = () => {
 
             <Card size="small" bordered={false}>
               <Text type="secondary">Description (English)</Text>
-              <div>{detailModal.record.description || "—"}</div>
+              <div>
+                {detailModal.record.englishDescription ||
+                  detailModal.record.description ||
+                  "—"}
+              </div>
             </Card>
 
             <Card size="small" bordered={false}>

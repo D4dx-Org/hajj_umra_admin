@@ -77,11 +77,12 @@ const Sidebar = ({ isOpen }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("hajj");
   const [expandedSections, setExpandedSections] = useState({
-    hajj: true,
+    hajj: false,
     umrah: false,
     "rituals-culture": false,
     "explore-ksa": false,
   });
+  const [isInitialRouteSync, setIsInitialRouteSync] = useState(true);
   const [expandedUmrahSections, setExpandedUmrahSections] = useState({
     essential: false,
     categories: false,
@@ -253,6 +254,11 @@ const handleDeletePage = async () => {
 
   // Automatically set the correct tab based on current route
   useEffect(() => {
+    if (isInitialRouteSync) {
+      setIsInitialRouteSync(false);
+      return;
+    }
+
     if (isUserInteraction.current) {
       isUserInteraction.current = false;
       return;
@@ -392,7 +398,7 @@ const handleDeletePage = async () => {
         "explore-ksa": false,
       });
     }
-  }, [location.pathname, customPages]);
+  }, [location.pathname, customPages, isInitialRouteSync]);
 
   // Hajj related menu items
   const hajjMenuItems = [
@@ -563,30 +569,30 @@ const handleDeletePage = async () => {
       icon: <Calendar size={16} />,
       path: "/umrah-preparation",
     },
-    {
-      id: "umrah-arrived",
-      label: "Arrived In Makkah",
-      icon: <PlaneLanding size={16} />,
-      path: "/umrah-arrived",
-    },
-    {
-      id: "umrah-duas",
-      label: "Duas & Supplication",
-      icon: <BookOpen size={16} />,
-      path: "/umrah-duas",
-    },
-    {
-      id: "umrah-virtual-tour",
-      label: "Virtual Umrah Tour",
-      icon: <Video size={16} />,
-      path: "/umrah-virtual-tour",
-    },
-    {
-      id: "umrah-post",
-      label: "Post Umrah",
-      icon: <PlaneTakeoff size={16} />,
-      path: "/umrah-post",
-    },
+    // {
+    //   id: "umrah-arrived",
+    //   label: "Arrived In Makkah",
+    //   icon: <PlaneLanding size={16} />,
+    //   path: "/umrah-arrived",
+    // },
+    // {
+    //   id: "umrah-duas",
+    //   label: "Duas & Supplication",
+    //   icon: <BookOpen size={16} />,
+    //   path: "/umrah-duas",
+    // },
+    // {
+    //   id: "umrah-virtual-tour",
+    //   label: "Virtual Umrah Tour",
+    //   icon: <Video size={16} />,
+    //   path: "/umrah-virtual-tour",
+    // },
+    // {
+    //   id: "umrah-post",
+    //   label: "Post Umrah",
+    //   icon: <PlaneTakeoff size={16} />,
+    //   path: "/umrah-post",
+    // },
     ...customPages.map((p) => ({
       id: p.route,
       label: p.name,
