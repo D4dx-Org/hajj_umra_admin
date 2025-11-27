@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Table,
   Button,
@@ -24,6 +24,11 @@ import {
   RefreshCcw,
   Images,
   X,
+  Bold,
+  Italic,
+  Underline,
+  Link,
+  Type,
 } from "lucide-react";
 import axios from "axios";
 
@@ -44,6 +49,361 @@ const formatDateTime = (value) => {
     console.warn("Failed to format date:", value);
     return value;
   }
+};
+
+// Rich Text Editor Component
+const RichTextEditor = ({ value, onChange, placeholder, rows = 4, showCount = true, ...props }) => {
+  const [linkModalVisible, setLinkModalVisible] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  const [selectedText, setSelectedText] = useState('');
+  const editorRef = useRef(null);
+
+  const handleFormat = (formatType) => {
+    const editor = editorRef.current;
+    if (editor) {
+      const selection = window.getSelection();
+      if (selection.rangeCount === 0) {
+        message.warning('Please select some text to format');
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      const selectedText = range.toString();
+      
+      if (!selectedText) {
+        message.warning('Please select some text to format');
+        return;
+      }
+
+      // Create the formatted element
+      let formattedElement;
+      switch (formatType) {
+        case 'bold':
+          formattedElement = document.createElement('strong');
+          break;
+        case 'italic':
+          formattedElement = document.createElement('em');
+          break;
+        case 'underline':
+          formattedElement = document.createElement('u');
+          break;
+        default:
+          return;
+      }
+
+      // Wrap the selected text
+      try {
+        range.surroundContents(formattedElement);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Update the form value
+        updateFormValue();
+      } catch (error) {
+        console.error('Error applying format:', error);
+        message.error('Error applying formatting');
+      }
+    }
+  };
+
+  const handleLinkInsert = () => {
+    if (linkUrl && linkText) {
+      const editor = editorRef.current;
+      if (editor) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const linkElement = document.createElement('a');
+          linkElement.href = linkUrl;
+          linkElement.target = '_blank';
+          linkElement.rel = 'noopener noreferrer';
+          linkElement.textContent = linkText;
+          
+          try {
+            range.deleteContents();
+            range.insertNode(linkElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            updateFormValue();
+            setLinkModalVisible(false);
+            setLinkUrl('');
+            setLinkText('');
+            setSelectedText('');
+          } catch (error) {
+            console.error('Error inserting link:', error);
+            message.error('Error inserting link');
+          }
+        }
+      }
+    }
+  };
+
+  const handleLinkClick = () => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const selected = selection.toString();
+      setSelectedText(selected);
+      setLinkText(selected);
+      setLinkModalVisible(true);
+    }
+  };
+
+  const handleClearFormatting = () => {
+    const editor = editorRef.current;
+    if (editor) {
+      const selection = window.getSelection();
+      if (selection.rangeCount === 0) {
+        message.warning('Please select some text to clear formatting');
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      const selectedText = range.toString();
+      
+      if (!selectedText) {
+        message.warning('Please select some text to clear formatting');
+        return;
+      }
+
+      try {
+        // Method 1: Try document.execCommand first
+        const success = document.execCommand('removeFormat', false, null);
+        
+        if (success) {
+          updateFormValue();
+          message.success('Formatting cleared successfully');
+          return;
+        }
+
+        // Method 2: Manual removal of formatting elements
+        const container = range.commonAncestorContainer;
+        const walker = document.createTreeWalker(
+          container,
+          NodeFilter.SHOW_ELEMENT,
+          null,
+          false
+        );
+
+        let node;
+        const elementsToUnwrap = [];
+        
+        // Find all formatting elements within the selection
+        while (node = walker.nextNode()) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName.toLowerCase();
+            if (['strong', 'b', 'em', 'i', 'u', 'a'].includes(tagName)) {
+              elementsToUnwrap.push(node);
+            }
+          }
+        }
+
+        // Unwrap formatting elements
+        elementsToUnwrap.forEach(element => {
+          const parent = element.parentNode;
+          while (element.firstChild) {
+            parent.insertBefore(element.firstChild, element);
+          }
+          parent.removeChild(element);
+        });
+
+        // Method 3: If still no success, use the fallback
+        if (elementsToUnwrap.length === 0) {
+          const textNode = document.createTextNode(selectedText);
+          range.deleteContents();
+          range.insertNode(textNode);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        updateFormValue();
+        message.success('Formatting cleared successfully');
+
+      } catch (error) {
+        console.error('Error clearing formatting:', error);
+        // Final fallback method
+        try {
+          const textNode = document.createTextNode(selectedText);
+          range.deleteContents();
+          range.insertNode(textNode);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          updateFormValue();
+          message.success('Formatting cleared successfully');
+        } catch (fallbackError) {
+          console.error('Fallback error:', fallbackError);
+          message.error('Error clearing formatting');
+        }
+      }
+    }
+  };
+
+  const updateFormValue = () => {
+    if (editorRef.current && onChange) {
+      const htmlContent = editorRef.current.innerHTML;
+      onChange(htmlContent);
+    }
+  };
+
+  const handleInput = () => {
+    updateFormValue();
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+    updateFormValue();
+  };
+
+  const handleKeyDown = (e) => {
+    // Keyboard shortcut for clear formatting: Ctrl+Shift+N
+    if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+      e.preventDefault();
+      handleClearFormatting();
+    }
+  };
+
+  // Update editor content when value changes externally
+  useEffect(() => {
+    if (editorRef.current && value !== editorRef.current.innerHTML) {
+      editorRef.current.innerHTML = value || '';
+    }
+  }, [value]);
+
+  const getCharacterCount = () => {
+    if (editorRef.current) {
+      return editorRef.current.textContent?.length || 0;
+    }
+    return 0;
+  };
+
+  return (
+    <div className="rich-text-editor">
+      {/* Formatting Toolbar */}
+      <div className="flex gap-1 p-2 border border-gray-300 border-b-0 bg-gray-50 rounded-t-lg">
+        <button
+          type="button"
+          onClick={() => handleFormat('bold')}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Bold"
+        >
+          <Bold size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleFormat('italic')}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Italic"
+        >
+          <Italic size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleFormat('underline')}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Underline"
+        >
+          <Underline size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={handleLinkClick}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Insert Link"
+        >
+          <Link size={16} />
+        </button>
+        <div className="w-px h-8 bg-gray-300 mx-1"></div>
+        <button
+          type="button"
+          onClick={handleClearFormatting}
+          className="p-2 hover:bg-gray-200 rounded transition-colors text-gray-600"
+          title="Clear Formatting (Ctrl+Shift+N)"
+        >
+          <Type size={16} />
+        </button>
+      </div>
+
+      {/* ContentEditable Editor */}
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleInput}
+        onPaste={handlePaste}
+        onKeyDown={handleKeyDown}
+        className="min-h-[100px] p-3 border border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        style={{ 
+          fontFamily: placeholder.includes('Malayalam') || placeholder.includes('മലയാള') ? 'Arial, sans-serif' : 
+                    placeholder.includes('Urdu') || placeholder.includes('اردو') ? 'Arial, sans-serif' : 'inherit',
+          minHeight: `${rows * 24}px`,
+          direction: placeholder.includes('Urdu') || placeholder.includes('اردو') ? 'rtl' : 'ltr'
+        }}
+        data-placeholder={placeholder}
+        suppressContentEditableWarning={true}
+      />
+      
+      {/* Placeholder CSS */}
+      <style>{`
+        .rich-text-editor [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+        }
+        .rich-text-editor [contenteditable]:focus:before {
+          content: none;
+        }
+      `}</style>
+
+      {/* Character Count */}
+      {showCount && (
+        <div className="text-right text-xs text-gray-500 mt-1">
+          {getCharacterCount()} characters
+        </div>
+      )}
+
+      {/* Link Modal */}
+      <Modal
+        title="Insert Link"
+        open={linkModalVisible}
+        onOk={handleLinkInsert}
+        onCancel={() => {
+          setLinkModalVisible(false);
+          setLinkUrl('');
+          setLinkText('');
+          setSelectedText('');
+        }}
+        okText="Insert Link"
+        cancelText="Cancel"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Link Text
+            </label>
+            <Input
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              placeholder="Enter link text"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              URL
+            </label>
+            <Input
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://example.com"
+            />
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
 };
 
 const UmrahRitualsCulture = () => {
@@ -238,8 +598,13 @@ const resetModalState = () => {
             }))
             .filter((videoItem) => videoItem.title || videoItem.url)
         : [];
+      // Handle HTML content from RichTextEditor - don't trim as it may contain HTML tags
       const englishDescriptionValue =
-        values.englishDescription?.toString().trim() || "";
+        values.englishDescription?.toString() || "";
+      const malayalamDescriptionValue =
+        values.malayalamDescription?.toString() || "";
+      const urduDescriptionValue =
+        values.urduDescription?.toString() || "";
 
       const payload = {
         id: values.id.trim(),
@@ -248,8 +613,8 @@ const resetModalState = () => {
         urduTitle: values.urduTitle?.trim() || "",
         description: englishDescriptionValue,
         englishDescription: englishDescriptionValue,
-        malayalamDescription: values.malayalamDescription?.trim() || "",
-        urduDescription: values.urduDescription?.trim() || "",
+        malayalamDescription: malayalamDescriptionValue,
+        urduDescription: urduDescriptionValue,
         imageTitle: values.imageTitle?.trim() || "",
         map: values.map?.trim() || "",
       };
@@ -686,7 +1051,11 @@ const resetModalState = () => {
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item name="englishDescription" label="Description (English)">
-                <TextArea rows={3} placeholder="Enter detailed description..." />
+                <RichTextEditor
+                  rows={3}
+                  placeholder="Enter detailed description..."
+                  showCount={true}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -710,12 +1079,20 @@ const resetModalState = () => {
                 name="malayalamDescription"
                 label="Description (Malayalam)"
               >
-                <TextArea rows={3} placeholder="മലയാളത്തിൽ വിവരണം നൽകുക..." />
+                <RichTextEditor
+                  rows={3}
+                  placeholder="മലയാളത്തിൽ വിവരണം നൽകുക..."
+                  showCount={true}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="urduDescription" label="Description (Urdu)">
-                <TextArea rows={3} placeholder="اردو میں تفصیل درج کریں..." />
+                <RichTextEditor
+                  rows={3}
+                  placeholder="اردو میں تفصیل درج کریں..."
+                  showCount={true}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -901,22 +1278,34 @@ const resetModalState = () => {
 
             <Card size="small" bordered={false}>
               <Text type="secondary">Description (English)</Text>
-              <div>
-                {detailModal.record.englishDescription ||
-                  detailModal.record.description ||
-                  "—"}
-              </div>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html:
+                    detailModal.record.englishDescription ||
+                    detailModal.record.description ||
+                    "—",
+                }}
+              />
             </Card>
 
             <Card size="small" bordered={false}>
               <Row gutter={16}>
                 <Col span={12}>
                   <Text type="secondary">Description (Malayalam)</Text>
-                  <div>{detailModal.record.malayalamDescription || "—"}</div>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: detailModal.record.malayalamDescription || "—",
+                    }}
+                  />
                 </Col>
                 <Col span={12}>
                   <Text type="secondary">Description (Urdu)</Text>
-                  <div>{detailModal.record.urduDescription || "—"}</div>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: detailModal.record.urduDescription || "—",
+                    }}
+                    dir="rtl"
+                  />
                 </Col>
               </Row>
             </Card>
