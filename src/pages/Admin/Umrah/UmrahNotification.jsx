@@ -47,11 +47,12 @@ const UmrahNotification = ({ isOpen }) => {
     description: "",
     malayalamDescription: "",
     urduDescription: "",
-    type: "text",
-    content: "",
-    malayalamContent: "",
-    urduContent: "",
+    coverImage: "",
+    coverImageFile: null,
   });
+  const [contents, setContents] = useState([
+    { type: "text", value: "", valueMalayalam: "", valueUrdu: "" },
+  ]);
 
   const notificationTypes = [
     { value: "text", label: "Text", icon: <FileText size={16} /> },
@@ -114,24 +115,70 @@ const UmrahNotification = ({ isOpen }) => {
     setError("");
     setSuccess("");
 
-    if (!formData.title.trim() || !formData.content.trim()) {
-      setError("Title and content are required");
+    if (!formData.title.trim()) {
+      setError("Title is required");
+      return;
+    }
+
+    if (contents.length === 0 || contents.every(c => !c.value.trim())) {
+      setError("At least one content item is required");
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
+
+      // Upload cover image if provided
+      let coverImageUrl = formData.coverImage;
+      if (formData.coverImageFile) {
+        coverImageUrl = await handleFileUpload(formData.coverImageFile);
+        if (!coverImageUrl) {
+          setError("Failed to upload cover image");
+          return;
+        }
+      }
+
+      // Process multiple contents
+      const processedContents = [];
+      for (const content of contents) {
+        if (!content.value.trim()) continue;
+
+        let finalValue = content.value.trim();
+        let finalValueMalayalam = content.valueMalayalam?.trim() || "";
+        let finalValueUrdu = content.valueUrdu?.trim() || "";
+
+        // Upload file if it's a new file for image/pdf
+        if ((content.type === "image" || content.type === "pdf") && content.file) {
+          const uploadedUrl = await handleFileUpload(content.file);
+          if (!uploadedUrl) {
+            setError(`Failed to upload ${content.type} file`);
+            return;
+          }
+          finalValue = uploadedUrl;
+        }
+
+        processedContents.push({
+          type: content.type,
+          value: finalValue,
+          valueMalayalam: finalValueMalayalam,
+          valueUrdu: finalValueUrdu,
+        });
+      }
+
+      if (processedContents.length === 0) {
+        setError("Please add at least one content item");
+        return;
+      }
+
       const submitData = {
         title: formData.title.trim(),
         malayalamTitle: formData.malayalamTitle.trim() || undefined,
         urduTitle: formData.urduTitle.trim() || undefined,
-        description: formData.description.trim(),
+        description: formData.description.trim() || undefined,
         malayalamDescription: formData.malayalamDescription.trim() || undefined,
         urduDescription: formData.urduDescription.trim() || undefined,
-        type: formData.type,
-        content: formData.content.trim(),
-        malayalamContent: formData.malayalamContent.trim() || undefined,
-        urduContent: formData.urduContent.trim() || undefined,
+        coverImage: coverImageUrl || "",
+        contents: processedContents,
       };
 
       let response;
@@ -263,18 +310,17 @@ const UmrahNotification = ({ isOpen }) => {
   };
 
   const resetForm = () => {
-    setFormData({ 
-      title: "", 
+    setFormData({
+      title: "",
       malayalamTitle: "",
       urduTitle: "",
-      description: "", 
+      description: "",
       malayalamDescription: "",
       urduDescription: "",
-      type: "text", 
-      content: "",
-      malayalamContent: "",
-      urduContent: ""
+      coverImage: "",
+      coverImageFile: null,
     });
+    setContents([{ type: "text", value: "", valueMalayalam: "", valueUrdu: "" }]);
     setShowAddForm(false);
     setEditingId(null);
   };
@@ -287,27 +333,73 @@ const UmrahNotification = ({ isOpen }) => {
       description: notification.description || "",
       malayalamDescription: notification.malayalamDescription || "",
       urduDescription: notification.urduDescription || "",
-      type: notification.type,
-      content: notification.content,
-      malayalamContent: notification.malayalamContent || "",
-      urduContent: notification.urduContent || "",
+      coverImage: notification.coverImage || "",
+      coverImageFile: null,
     });
+    
+    // Set contents for editing
+    if (notification.contents && notification.contents.length > 0) {
+      setContents(
+        notification.contents.map((c) => ({
+          type: c.type,
+          value: c.value || "",
+          valueMalayalam: c.valueMalayalam || "",
+          valueUrdu: c.valueUrdu || "",
+          file: null,
+        }))
+      );
+    } else {
+      setContents([{ type: "text", value: "", valueMalayalam: "", valueUrdu: "" }]);
+    }
+    
     setEditingId(notification._id);
     setShowAddForm(true);
   };
 
-  const filteredNotifications = notifications.filter(
-    (notification) =>
-      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (notification.malayalamTitle && notification.malayalamTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (notification.urduTitle && notification.urduTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      notification.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (notification.malayalamDescription && notification.malayalamDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (notification.urduDescription && notification.urduDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      notification.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (notification.malayalamContent && notification.malayalamContent.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (notification.urduContent && notification.urduContent.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const addContentItem = () => {
+    setContents([
+      ...contents,
+      { type: "text", value: "", valueMalayalam: "", valueUrdu: "", file: null },
+    ]);
+  };
+
+  const removeContentItem = (index) => {
+    const newContents = contents.filter((_, i) => i !== index);
+    if (newContents.length === 0) {
+      setContents([{ type: "text", value: "", valueMalayalam: "", valueUrdu: "" }]);
+    } else {
+      setContents(newContents);
+    }
+  };
+
+  const updateContentType = (index, newType) => {
+    const newContents = [...contents];
+    newContents[index].type = newType;
+    newContents[index].value = "";
+    newContents[index].valueMalayalam = "";
+    newContents[index].valueUrdu = "";
+    newContents[index].file = null;
+    setContents(newContents);
+  };
+
+  const filteredNotifications = notifications.filter((notification) => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesTitle =
+      notification.title?.toLowerCase().includes(searchLower) ||
+      notification.malayalamTitle?.toLowerCase().includes(searchLower) ||
+      notification.urduTitle?.toLowerCase().includes(searchLower);
+    const matchesDescription =
+      notification.description?.toLowerCase().includes(searchLower) ||
+      notification.malayalamDescription?.toLowerCase().includes(searchLower) ||
+      notification.urduDescription?.toLowerCase().includes(searchLower);
+    const matchesContent = (notification.contents || []).some(
+      (content) =>
+        content.value?.toLowerCase().includes(searchLower) ||
+        content.valueMalayalam?.toLowerCase().includes(searchLower) ||
+        content.valueUrdu?.toLowerCase().includes(searchLower)
+    );
+    return matchesTitle || matchesDescription || matchesContent;
+  });
 
   const toggleSelectAll = () => {
     if (selectedItems.length === filteredNotifications.length) {
@@ -339,63 +431,69 @@ const UmrahNotification = ({ isOpen }) => {
   };
 
   const renderContent = (notification) => {
-    const { type, content } = notification;
+    const contents = notification.contents || [];
+    if (contents.length === 0) return "-";
 
-    switch (type) {
-      case "image":
-        return (
-          <div className="flex items-center gap-2">
-            <img
-              src={content}
-              alt="Preview"
-              className="w-8 h-8 object-cover rounded"
-            />
-            <span className="text-sm text-gray-600 truncate max-w-xs">
-              {content}
+    return (
+      <div className="space-y-2">
+        {contents.map((content, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-500">
+              {content.type.toUpperCase()}:
             </span>
-          </div>
-        );
-      case "pdf":
-        return (
-          <a
-            href={content}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline text-sm truncate max-w-xs block"
-          >
-            View PDF
-          </a>
-        );
-      case "link":
-        return (
-          <a
-            href={content}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline text-sm truncate max-w-xs block"
-          >
-            {content}
-          </a>
-        );
-      default:
-        return (
-          <div className="space-y-1">
-            <div className="text-sm text-gray-700 truncate max-w-xs">
-              <span className="font-medium">EN:</span> {content}
-            </div>
-            {notification.malayalamContent && (
-              <div className="text-sm text-gray-600 truncate max-w-xs">
-                <span className="font-medium">ML:</span> {notification.malayalamContent}
+            {content.type === "image" && (
+              <div className="flex items-center gap-2">
+                <img
+                  src={content.value}
+                  alt="Preview"
+                  className="w-8 h-8 object-cover rounded"
+                />
+                <span className="text-sm text-gray-600 truncate max-w-xs">
+                  {content.value}
+                </span>
               </div>
             )}
-            {notification.urduContent && (
-              <div className="text-sm text-gray-600 truncate max-w-xs" dir="rtl">
-                <span className="font-medium">UR:</span> {notification.urduContent}
+            {content.type === "pdf" && (
+              <a
+                href={content.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline text-sm truncate max-w-xs"
+              >
+                View PDF
+              </a>
+            )}
+            {content.type === "link" && (
+              <a
+                href={content.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline text-sm truncate max-w-xs"
+              >
+                {content.value}
+              </a>
+            )}
+            {content.type === "text" && (
+              <div className="space-y-1">
+                <div className="text-sm text-gray-700 truncate max-w-xs">
+                  <span className="font-medium">EN:</span> {content.value}
+                </div>
+                {content.valueMalayalam && (
+                  <div className="text-sm text-gray-600 truncate max-w-xs">
+                    <span className="font-medium">ML:</span> {content.valueMalayalam}
+                  </div>
+                )}
+                {content.valueUrdu && (
+                  <div className="text-sm text-gray-600 truncate max-w-xs" dir="rtl">
+                    <span className="font-medium">UR:</span> {content.valueUrdu}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        );
-    }
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -549,30 +647,33 @@ const UmrahNotification = ({ isOpen }) => {
                     />
                   </div>
 
-                  <div className="md:col-span-2 lg:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type *
-                    </label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          type: e.target.value,
-                          content: "",
-                          malayalamContent: "",
-                          urduContent: "",
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {notificationTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                </div>
+
+                {/* Cover Image */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cover Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        coverImageFile: e.target.files[0],
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {formData.coverImage && !formData.coverImageFile && (
+                    <div className="mt-2">
+                      <img
+                        src={formData.coverImage}
+                        alt="Current cover"
+                        className="max-w-xs max-h-48 object-cover rounded"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -623,93 +724,157 @@ const UmrahNotification = ({ isOpen }) => {
                   </div>
                 </div>
 
+                {/* Multiple Contents */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Content *
-                  </label>
-                  {formData.type === "text" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          English Content *
-                        </label>
-                        <textarea
-                          value={formData.content}
-                          onChange={(e) =>
-                            setFormData({ ...formData, content: e.target.value })
-                          }
-                          rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Enter your text content..."
-                          required
-                        />
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Contents *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addContentItem}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      Add Content
+                    </button>
+                  </div>
+                  {contents.map((content, index) => (
+                    <div
+                      key={index}
+                      className="mb-4 p-4 border border-gray-300 rounded-lg"
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <select
+                          value={content.type}
+                          onChange={(e) => updateContentType(index, e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {notificationTypes.map((type) => (
+                            <option key={type.value} value={type.value}>
+                              {type.label}
+                            </option>
+                          ))}
+                        </select>
+                        {contents.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeContentItem(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X size={18} />
+                          </button>
+                        )}
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Malayalam Content
-                        </label>
-                        <textarea
-                          value={formData.malayalamContent}
-                          onChange={(e) =>
-                            setFormData({ ...formData, malayalamContent: e.target.value })
-                          }
-                          rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="മലയാളം ഉള്ളടക്കം നൽകുക..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Urdu Content
-                        </label>
-                        <textarea
-                          value={formData.urduContent}
-                          onChange={(e) =>
-                            setFormData({ ...formData, urduContent: e.target.value })
-                          }
-                          rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="اردو مواد درج کریں..."
-                          dir="rtl"
-                        />
-                      </div>
-                    </div>
-                  )}
 
-                  {formData.type === "link" && (
-                    <input
-                      type="url"
-                      value={formData.content}
-                      onChange={(e) =>
-                        setFormData({ ...formData, content: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://example.com"
-                      required
-                    />
-                  )}
-
-                  {(formData.type === "image" || formData.type === "pdf") && (
-                    <div className="space-y-2">
-                      <input
-                        type="file"
-                        accept={formData.type === "image" ? "image/*" : ".pdf"}
-                        onChange={handleFileSelect}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        disabled={uploadingFile}
-                      />
-                      {uploadingFile && (
-                        <div className="text-sm text-blue-600">
-                          Uploading file...
+                      {content.type === "text" && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              English Content *
+                            </label>
+                            <textarea
+                              value={content.value}
+                              onChange={(e) => {
+                                const newContents = [...contents];
+                                newContents[index].value = e.target.value;
+                                setContents(newContents);
+                              }}
+                              rows={4}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter your text content..."
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Malayalam Content
+                            </label>
+                            <textarea
+                              value={content.valueMalayalam}
+                              onChange={(e) => {
+                                const newContents = [...contents];
+                                newContents[index].valueMalayalam = e.target.value;
+                                setContents(newContents);
+                              }}
+                              rows={4}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="മലയാളം ഉള്ളടക്കം നൽകുക..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Urdu Content
+                            </label>
+                            <textarea
+                              value={content.valueUrdu}
+                              onChange={(e) => {
+                                const newContents = [...contents];
+                                newContents[index].valueUrdu = e.target.value;
+                                setContents(newContents);
+                              }}
+                              rows={4}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="اردو مواد درج کریں..."
+                              dir="rtl"
+                            />
+                          </div>
                         </div>
                       )}
-                      {formData.content && (
-                        <div className="text-sm text-green-600">
-                          File uploaded: {formData.content}
+
+                      {content.type === "link" && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Link URL *
+                          </label>
+                          <input
+                            type="url"
+                            value={content.value}
+                            onChange={(e) => {
+                              const newContents = [...contents];
+                              newContents[index].value = e.target.value;
+                              setContents(newContents);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="https://example.com"
+                            required
+                          />
+                        </div>
+                      )}
+
+                      {(content.type === "image" || content.type === "pdf") && (
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            accept={content.type === "image" ? "image/*" : ".pdf"}
+                            onChange={(e) => {
+                              const newContents = [...contents];
+                              newContents[index].file = e.target.files[0];
+                              setContents(newContents);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={uploadingFile}
+                          />
+                          {uploadingFile && (
+                            <div className="text-sm text-blue-600">
+                              Uploading file...
+                            </div>
+                          )}
+                          {content.value && !content.file && (
+                            <div className="text-sm text-green-600">
+                              Current: {content.type === "image" ? (
+                                <img src={content.value} alt="Current" className="max-w-xs max-h-32 object-cover rounded mt-2" />
+                              ) : (
+                                <a href={content.value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                  View Current PDF
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
+                  ))}
                 </div>
 
                 <div className="flex gap-2">
@@ -761,11 +926,11 @@ const UmrahNotification = ({ isOpen }) => {
                     <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
                       URDU TITLE
                     </th>
-                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-16">
-                      TYPE
+                    <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
+                      COVER IMAGE
                     </th>
                     <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-24">
-                      CONTENT
+                      CONTENTS
                     </th>
                     <th className="px-2 py-2 text-left text-sm font-medium text-gray-700 uppercase tracking-wider w-20">
                       CREATED
@@ -820,12 +985,15 @@ const UmrahNotification = ({ isOpen }) => {
                           )}
                         </td>
                         <td className="px-2 py-2">
-                          <div className="flex items-center gap-2">
-                            {getTypeIcon(notification.type)}
-                            <span className="text-sm text-gray-700 capitalize">
-                              {notification.type}
-                            </span>
-                          </div>
+                          {notification.coverImage ? (
+                            <img
+                              src={notification.coverImage}
+                              alt="Cover"
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-xs">No cover</span>
+                          )}
                         </td>
                         <td className="px-2 py-2">
                           {renderContent(notification)}

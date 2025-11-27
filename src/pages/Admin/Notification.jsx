@@ -18,7 +18,7 @@ import {
     Typography,
     Upload
 } from 'antd';
-import { Bell, Search, AlertTriangle, Trash2, Edit, Plus, UploadCloud } from 'lucide-react';
+import { Bell, Search, AlertTriangle, Trash2, Edit, Plus, UploadCloud, X } from 'lucide-react';
 import axios from 'axios';
 import moment from 'moment';
 import Sidebar from '../../components/Sidebar';
@@ -46,7 +46,7 @@ const Notification = () => {
         total: 0
     });
     const [editingId, setEditingId] = useState(null);
-    const [selectedType, setSelectedType] = useState('text');
+    const [contents, setContents] = useState([{ type: 'text', value: '' }]);
 
     // Fetch notifications
     const fetchNotifications = async (page = 1, pageSize = 10) => {
@@ -92,8 +92,38 @@ const Notification = () => {
             }
             return false; // Prevent automatic upload
         },
-        maxCount: 1,
-        fileList: form.getFieldValue('file') ? [form.getFieldValue('file')] : []
+        maxCount: 1
+    };
+
+    // Handle cover image upload
+    const handleCoverImageUpload = async (file) => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                message.error("No token found. Please log in again.");
+                return null;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const uploadResponse = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/notifications/upload`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            return uploadResponse.data.url;
+        } catch (error) {
+            console.error('Cover image upload error:', error);
+            message.error('Failed to upload cover image');
+            return null;
+        }
     };
 
     // Handle form submission with file upload
@@ -105,57 +135,72 @@ const Notification = () => {
                 return;
             }
 
-            let contentUrl = '';
-            
-            // Handle file upload if type is image or pdf
-            if ((values.type === 'image' || values.type === 'pdf') && values.file?.[0]?.originFileObj) {
-                const formData = new FormData();
-                formData.append('file', values.file[0].originFileObj);
+            // Upload cover image if provided
+            let coverImageUrl = values.coverImage;
+            if (values.coverImageFile?.[0]?.originFileObj) {
+                coverImageUrl = await handleCoverImageUpload(values.coverImageFile[0].originFileObj);
+                if (!coverImageUrl) return;
+            }
 
-                console.log('Uploading file to DigitalOcean:', {
-                    fileName: values.file[0].originFileObj.name,
-                    fileType: values.file[0].originFileObj.type,
-                    fileSize: values.file[0].originFileObj.size
-                });
+            // Process multiple contents
+            const processedContents = [];
+            for (let i = 0; i < contents.length; i++) {
+                const content = contents[i];
+                const contentValue = values[`content_${i}`];
+                const contentFile = values[`file_${i}`];
 
-                try {
-                    const uploadResponse = await axios.post(
-                        `${import.meta.env.VITE_BACKEND_URL}/notifications/upload`,
-                        formData,
-                        {
-                            headers: {
-                                'Content-Type': 'multipart/form-data',
-                                Authorization: `Bearer ${token}`
-                            }
+                let finalValue = '';
+
+                if (content.type === 'image' || content.type === 'pdf') {
+                    if (contentFile?.[0]?.originFileObj) {
+                        // Upload new file
+                        const formData = new FormData();
+                        formData.append('file', contentFile[0].originFileObj);
+
+                        try {
+                            const uploadResponse = await axios.post(
+                                `${import.meta.env.VITE_BACKEND_URL}/notifications/upload`,
+                                formData,
+                                {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data',
+                                        Authorization: `Bearer ${token}`
+                                    }
+                                }
+                            );
+                            finalValue = uploadResponse.data.url;
+                        } catch (error) {
+                            console.error('Content file upload error:', error);
+                            message.error(`Failed to upload ${content.type} file`);
+                            return;
                         }
-                    );
-
-                    if (!uploadResponse.data.url) {
-                        throw new Error('No URL returned from server');
+                    } else {
+                        // Use existing value (when editing and no new file uploaded)
+                        finalValue = content.value || '';
                     }
+                } else {
+                    // For link and text, use the value from form
+                    finalValue = contentValue || content.value || '';
+                }
 
-                    contentUrl = uploadResponse.data.url;
-                    console.log('File uploaded successfully to DigitalOcean:', contentUrl);
-                } catch (error) {
-                    console.error('Upload error:', error.response?.data || error);
-                    message.error(error.response?.data?.message || 'Failed to upload file to DigitalOcean');
-                    return;
+                if (finalValue) {
+                    processedContents.push({
+                        type: content.type,
+                        value: finalValue
+                    });
                 }
-            } else if (values.type === 'link' || values.type === 'text') {
-                contentUrl = values.content;
-            } else if (editingId) {
-                // If editing and no new file is uploaded, keep the existing content
-                const existingNotification = notifications.find(n => n._id === editingId);
-                if (existingNotification) {
-                    contentUrl = existingNotification.content;
-                }
+            }
+
+            if (processedContents.length === 0) {
+                message.error('Please add at least one content item');
+                return;
             }
 
             const notificationData = {
                 title: values.title,
                 description: values.description,
-                type: values.type,
-                content: contentUrl
+                coverImage: coverImageUrl || '',
+                contents: processedContents
             };
 
             console.log('Submitting notification data:', notificationData);
@@ -188,7 +233,7 @@ const Notification = () => {
             setModalVisible(false);
             setEditingId(null);
             form.resetFields();
-            setSelectedType('text');
+            setContents([{ type: 'text', value: '' }]);
             fetchNotifications();
         } catch (error) {
             console.error('Error saving notification:', error.response?.data || error.message);
@@ -324,13 +369,40 @@ const Notification = () => {
         });
     };
 
+    // Add new content item
+    const addContentItem = () => {
+        setContents([...contents, { type: 'text', value: '' }]);
+    };
+
+    // Remove content item
+    const removeContentItem = (index) => {
+        const newContents = contents.filter((_, i) => i !== index);
+        if (newContents.length === 0) {
+            setContents([{ type: 'text', value: '' }]);
+        } else {
+            setContents(newContents);
+        }
+    };
+
+    // Update content type
+    const updateContentType = (index, newType) => {
+        const newContents = [...contents];
+        newContents[index].type = newType;
+        newContents[index].value = '';
+        setContents(newContents);
+    };
+
     // Function to render content field based on type
-    const renderContentField = (type) => {
-        switch (type) {
+    const renderContentField = (content, index) => {
+        const fieldName = content.type === 'image' || content.type === 'pdf' 
+            ? `file_${index}` 
+            : `content_${index}`;
+
+        switch (content.type) {
             case 'link':
                 return (
                     <Form.Item
-                        name="content"
+                        name={fieldName}
                         label="Link URL"
                         rules={[
                             { required: true, message: 'Please enter the link URL' },
@@ -343,7 +415,7 @@ const Notification = () => {
             case 'text':
                 return (
                     <Form.Item
-                        name="content"
+                        name={fieldName}
                         label="Text Content"
                         rules={[{ required: true, message: 'Please enter the text content' }]}
                     >
@@ -353,7 +425,7 @@ const Notification = () => {
             case 'image':
                 return (
                     <Form.Item
-                        name="file"
+                        name={fieldName}
                         label="Upload Image"
                         rules={[{ required: true, message: 'Please upload an image' }]}
                         valuePropName="fileList"
@@ -376,7 +448,7 @@ const Notification = () => {
             case 'pdf':
                 return (
                     <Form.Item
-                        name="file"
+                        name={fieldName}
                         label="Upload PDF"
                         rules={[{ required: true, message: 'Please upload a PDF file' }]}
                         valuePropName="fileList"
@@ -439,19 +511,15 @@ const Notification = () => {
             render: (text) => <span title={text || '-'}>{text || '-'}</span>
         },
         {
-            title: 'Type',
-            dataIndex: 'type',
-            key: 'type',
-            width: 100,
-            render: (type) => (
-                <Tag color={
-                    type === 'link' ? 'blue' :
-                    type === 'image' ? 'green' :
-                    type === 'pdf' ? 'red' : 'default'
-                }>
-                    {type.toUpperCase()}
-                </Tag>
-            )
+            title: 'Cover Image',
+            key: 'coverImage',
+            width: 120,
+            render: (_, record) => {
+                if (record.coverImage) {
+                    return <img src={record.coverImage} alt="Cover" style={{ maxWidth: 80, maxHeight: 80, objectFit: 'cover' }} />;
+                }
+                return <span className="text-gray-400">No cover</span>;
+            }
         },
         {
             title: 'Created At',
@@ -461,23 +529,47 @@ const Notification = () => {
             render: (date) => moment(date).format('YYYY-MM-DD HH:mm')
         },
         {
-            title: 'Content',
-            key: 'content',
-            width: 200,
+            title: 'Contents',
+            key: 'contents',
+            width: 300,
             ellipsis: true,
             render: (_, record) => {
-                switch (record.type) {
-                    case 'link':
-                        return <a href={record.content} target="_blank" rel="noopener noreferrer" title={record.content}>Open Link</a>;
-                    case 'text':
-                        return <span title={record.content}>{record.content.substring(0, 50)}...</span>;
-                    case 'image':
-                        return <img src={record.content} alt="Preview" style={{ maxWidth: 50, maxHeight: 50 }} />;
-                    case 'pdf':
-                        return <a href={record.content} target="_blank" rel="noopener noreferrer" title={record.content}>View PDF</a>;
-                    default:
-                        return '-';
-                }
+                const contents = record.contents || [];
+                if (contents.length === 0) return '-';
+                
+                return (
+                    <div className="space-y-2">
+                        {contents.map((content, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                                <Tag color={
+                                    content.type === 'link' ? 'blue' :
+                                    content.type === 'image' ? 'green' :
+                                    content.type === 'pdf' ? 'red' : 'default'
+                                }>
+                                    {content.type.toUpperCase()}
+                                </Tag>
+                                {content.type === 'link' && (
+                                    <a href={content.value} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-xs truncate max-w-xs">
+                                        {content.value}
+                                    </a>
+                                )}
+                                {content.type === 'text' && (
+                                    <span className="text-xs text-gray-600 truncate max-w-xs" title={content.value}>
+                                        {content.value.substring(0, 30)}...
+                                    </span>
+                                )}
+                                {content.type === 'image' && (
+                                    <img src={content.value} alt="Preview" style={{ maxWidth: 30, maxHeight: 30 }} />
+                                )}
+                                {content.type === 'pdf' && (
+                                    <a href={content.value} target="_blank" rel="noopener noreferrer" className="text-red-600 text-xs">
+                                        View PDF
+                                    </a>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                );
             }
         },
         {
@@ -489,9 +581,27 @@ const Notification = () => {
                     <button
                         onClick={() => {
                             setEditingId(record._id);
-                            form.setFieldsValue({
-                                ...record
-                            });
+                            const formValues = {
+                                title: record.title,
+                                description: record.description,
+                                coverImage: record.coverImage || ''
+                            };
+                            
+                            // Set contents for editing
+                            if (record.contents && record.contents.length > 0) {
+                                setContents(record.contents.map(c => ({ type: c.type, value: c.value })));
+                                record.contents.forEach((content, idx) => {
+                                    if (content.type === 'image' || content.type === 'pdf') {
+                                        formValues[`file_${idx}`] = [];
+                                    } else {
+                                        formValues[`content_${idx}`] = content.value;
+                                    }
+                                });
+                            } else {
+                                setContents([{ type: 'text', value: '' }]);
+                            }
+                            
+                            form.setFieldsValue(formValues);
                             setModalVisible(true);
                         }}
                         className="p-2 hover:bg-gray-100 rounded-full"
@@ -549,10 +659,12 @@ const Notification = () => {
                         )}
                         <Button className='mr-4'
                             type="primary"
-                            onClick={() => {
-                                setEditingId(null);
-                                setModalVisible(true);
-                            }}
+                        onClick={() => {
+                            setEditingId(null);
+                            setContents([{ type: 'text', value: '' }]);
+                            form.resetFields();
+                            setModalVisible(true);
+                        }}
                             icon={<Plus size={18} />}
                         >
                             Create Notification
@@ -630,7 +742,7 @@ const Notification = () => {
                         setModalVisible(false);
                         setEditingId(null);
                         form.resetFields();
-                        setSelectedType('text');
+                        setContents([{ type: 'text', value: '' }]);
                     }}
                     footer={null}
                 >
@@ -653,18 +765,78 @@ const Notification = () => {
                             <TextArea rows={4} />
                         </Form.Item>
                         <Form.Item
-                            name="type"
-                            label="Type"
-                            rules={[{ required: true, message: 'Please select type' }]}
+                            name="coverImageFile"
+                            label="Cover Image"
+                            valuePropName="fileList"
+                            getValueFromEvent={(e) => {
+                                if (Array.isArray(e)) {
+                                    return e;
+                                }
+                                return e?.fileList;
+                            }}
                         >
-                            <Select onChange={(value) => setSelectedType(value)}>
-                                <Option value="link">Link</Option>
-                                <Option value="image">Image</Option>
-                                <Option value="pdf">PDF</Option>
-                                <Option value="text">Text</Option>
-                            </Select>
+                            <Upload
+                                {...uploadProps}
+                                accept="image/*"
+                                listType="picture"
+                            >
+                                <Button icon={<UploadCloud size={18} />}>Upload Cover Image</Button>
+                            </Upload>
                         </Form.Item>
-                        {renderContentField(selectedType)}
+                        {form.getFieldValue('coverImage') && !form.getFieldValue('coverImageFile')?.[0] && (
+                            <div className="mb-4">
+                                <img src={form.getFieldValue('coverImage')} alt="Current cover" style={{ maxWidth: 200, maxHeight: 200 }} />
+                            </div>
+                        )}
+                        <div className="mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium">Contents *</label>
+                                <Button type="dashed" onClick={addContentItem} icon={<Plus size={16} />} size="small">
+                                    Add Content
+                                </Button>
+                            </div>
+                            {contents.map((content, index) => (
+                                <div key={index} className="mb-4 p-4 border border-gray-200 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <Form.Item
+                                            name={`contentType_${index}`}
+                                            initialValue={content.type}
+                                            className="mb-0 flex-1 mr-2"
+                                        >
+                                            <Select onChange={(value) => updateContentType(index, value)}>
+                                                <Option value="link">Link</Option>
+                                                <Option value="image">Image</Option>
+                                                <Option value="pdf">PDF</Option>
+                                                <Option value="text">Text</Option>
+                                            </Select>
+                                        </Form.Item>
+                                        {contents.length > 1 && (
+                                            <Button
+                                                type="text"
+                                                danger
+                                                icon={<X size={16} />}
+                                                onClick={() => removeContentItem(index)}
+                                            >
+                                                Remove
+                                            </Button>
+                                        )}
+                                    </div>
+                                    {renderContentField(content, index)}
+                                    {editingId && (content.type === 'image' || content.type === 'pdf') && content.value && (
+                                        <div className="mt-2">
+                                            <span className="text-xs text-gray-500">Current: </span>
+                                            {content.type === 'image' ? (
+                                                <img src={content.value} alt="Current" style={{ maxWidth: 100, maxHeight: 100 }} />
+                                            ) : (
+                                                <a href={content.value} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-xs">
+                                                    View Current PDF
+                                                </a>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                         <Form.Item>
                             <Space>
                                 <Button type="primary" htmlType="submit" icon={<Plus size={18} />}>
