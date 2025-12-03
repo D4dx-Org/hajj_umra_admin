@@ -782,10 +782,10 @@ const PlaceKSA = () => {
         );
       })
       .sort((a, b) => {
-        // Sort by ID number (extract numeric part and sort numerically)
+        // Sort by ID number in descending order (highest IDs first)
         const aId = parseInt(a.id?.replace(/\D/g, "")) || 0;
         const bId = parseInt(b.id?.replace(/\D/g, "")) || 0;
-        return aId - bId;
+        return bId - aId;
       });
   }, [places, searchTerm]);
 
