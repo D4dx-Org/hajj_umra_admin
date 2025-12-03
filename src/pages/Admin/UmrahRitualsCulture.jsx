@@ -433,20 +433,123 @@ const UmrahRitualsCulture = () => {
 
   const token = useMemo(() => localStorage.getItem("token"), []);
 
+  // Map the UI page number (1, 2, 3...) to the backend page number so that
+  // page 1 in the UI shows the *latest* entries (highest IDs) first.
+  const getBackendPageForUiPage = (uiPage, pageSize, total) => {
+    if (!total || !pageSize) return uiPage;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    return Math.max(1, totalPages - uiPage + 1);
+  };
+
   const fetchRecords = async (
-    page = 1,
+    uiPage = 1,
     pageSize = pagination.pageSize,
-    searchValue = ""
+    searchValue = "",
+    hasRemapped = false
   ) => {
     console.log("Fetching Umrah rituals & culture entries", {
-      page,
+      uiPage,
       pageSize,
       searchValue,
+      hasRemapped,
     });
     setLoading(true);
     try {
+      const currentTotal = pagination.total;
+      
+      // If we don't know the total yet, first fetch page 1 to get the total count
+      if (!currentTotal && !hasRemapped && !searchValue) {
+        const paramsForTotal = new URLSearchParams({
+          page: "1",
+          limit: pageSize.toString(),
+        });
+        
+        const totalResponse = await axios.get(`${API_URL}?${paramsForTotal.toString()}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        
+        const totalFromResponse =
+          totalResponse.data.count ||
+          totalResponse.data.total ||
+          totalResponse.data.recordsCount ||
+          (totalResponse.data.records || totalResponse.data.data || totalResponse.data.entries || []).length;
+        
+        if (totalFromResponse > 0) {
+          // Now we have the total, recalculate and fetch the correct backend page
+          const correctBackendPage = getBackendPageForUiPage(
+            uiPage,
+            pageSize,
+            totalFromResponse
+          );
+          
+          const params = new URLSearchParams({
+            page: correctBackendPage.toString(),
+            limit: pageSize.toString(),
+          });
+          if (searchValue) {
+            params.append("search", searchValue);
+          }
+
+          const response = await axios.get(`${API_URL}?${params.toString()}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+
+          console.log("Rituals & culture fetch response", response.data);
+
+          const dataRaw =
+            response.data.records ||
+            response.data.data ||
+            response.data.entries ||
+            [];
+
+          const total =
+            response.data.count ||
+            response.data.total ||
+            response.data.recordsCount ||
+            totalFromResponse;
+
+          // Within a page, sort records by ID in descending order so that the
+          // highest IDs (latest entries) appear first.
+          const data = [...dataRaw].sort((a, b) => {
+            const idA = a?.id;
+            const idB = b?.id;
+
+            if (idA == null || idB == null) return 0;
+
+            const numA = Number(idA);
+            const numB = Number(idB);
+
+            if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+              return numB - numA;
+            }
+
+            return String(idB).localeCompare(String(idA), undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+          });
+
+          setRecords(data);
+          setPagination((prev) => ({
+            ...prev,
+            current: uiPage,
+            pageSize,
+            total,
+          }));
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Normal flow when we have the total or it's a search
+      const backendPage = getBackendPageForUiPage(
+        uiPage,
+        pageSize,
+        currentTotal
+      );
+
       const params = new URLSearchParams({
-        page: page.toString(),
+        page: backendPage.toString(),
         limit: pageSize.toString(),
       });
       if (searchValue) {
@@ -459,21 +562,43 @@ const UmrahRitualsCulture = () => {
 
       console.log("Rituals & culture fetch response", response.data);
 
-      const data =
+      const dataRaw =
         response.data.records ||
         response.data.data ||
         response.data.entries ||
         [];
+
       const total =
         response.data.count ||
         response.data.total ||
         response.data.recordsCount ||
-        data.length;
+        dataRaw.length;
+
+      // Within a page, sort records by ID in descending order so that the
+      // highest IDs (latest entries) appear first.
+      const data = [...dataRaw].sort((a, b) => {
+        const idA = a?.id;
+        const idB = b?.id;
+
+        if (idA == null || idB == null) return 0;
+
+        const numA = Number(idA);
+        const numB = Number(idB);
+
+        if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+          return numB - numA;
+        }
+
+        return String(idB).localeCompare(String(idA), undefined, {
+          numeric: true,
+          sensitivity: "base",
+        });
+      });
 
       setRecords(data);
       setPagination((prev) => ({
         ...prev,
-        current: page,
+        current: uiPage,
         pageSize,
         total,
       }));
