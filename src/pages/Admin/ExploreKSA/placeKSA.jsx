@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Button,
   Space,
@@ -14,6 +14,7 @@ import {
   Col,
   Typography,
   Upload,
+  InputNumber,
 } from "antd";
 import {
   MapPin,
@@ -26,6 +27,11 @@ import {
   X,
   RotateCcw,
   Download,
+  Bold,
+  Italic,
+  Underline,
+  Link,
+  Type,
 } from "lucide-react";
 import { UploadOutlined, InboxOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -38,6 +44,330 @@ const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 const { Dragger } = Upload;
+
+// Helper function to extract image URL from various formats
+const getImageUrl = (image) => {
+  if (!image) return null;
+  if (typeof image === 'string') return image;
+  if (image?.url && typeof image.url === 'string') return image.url;
+  
+  // Handle case where URL is stored as object with numeric keys (each character as a key)
+  if (typeof image === 'object' && image !== null) {
+    const numericKeys = Object.keys(image)
+      .filter(k => !isNaN(k) && k !== 'title' && k !== '_id')
+      .sort((a, b) => Number(a) - Number(b));
+    
+    if (numericKeys.length > 0) {
+      const reconstructedUrl = numericKeys.map(k => image[k]).join('');
+      console.log('Reconstructed URL from object:', reconstructedUrl);
+      return reconstructedUrl;
+    }
+  }
+  
+  return null;
+};
+
+// Helper function to get image title
+const getImageTitle = (image) => {
+  if (typeof image === 'string') return '';
+  return image?.title || '';
+};
+
+// Rich Text Editor Component
+const RichTextEditor = ({ value, onChange, placeholder, rows = 4, showCount = true, ...props }) => {
+  const [linkModalVisible, setLinkModalVisible] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  const [selectedText, setSelectedText] = useState('');
+  const editorRef = useRef(null);
+
+  const handleFormat = (formatType) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+      message.warning('Please select some text to format');
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString();
+    
+    if (!selectedText) {
+      message.warning('Please select some text to format');
+      return;
+    }
+
+    // Create the formatted element
+    let formattedElement;
+    switch (formatType) {
+      case 'bold':
+        formattedElement = document.createElement('strong');
+        break;
+      case 'italic':
+        formattedElement = document.createElement('em');
+        break;
+      case 'underline':
+        formattedElement = document.createElement('u');
+        break;
+      default:
+        return;
+    }
+
+    // Wrap the selected text
+    try {
+      range.surroundContents(formattedElement);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      // Update the form value
+      updateFormValue();
+    } catch (error) {
+      console.error('Error applying format:', error);
+      message.error('Error applying formatting');
+    }
+  };
+
+  const handleLinkInsert = () => {
+    if (linkUrl && linkText) {
+      const editor = editorRef.current;
+      if (editor) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const linkElement = document.createElement('a');
+          linkElement.href = linkUrl;
+          linkElement.target = '_blank';
+          linkElement.rel = 'noopener noreferrer';
+          linkElement.textContent = linkText;
+          
+          try {
+            range.deleteContents();
+            range.insertNode(linkElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            updateFormValue();
+            setLinkModalVisible(false);
+            setLinkUrl('');
+            setLinkText('');
+            setSelectedText('');
+          } catch (error) {
+            console.error('Error inserting link:', error);
+            message.error('Error inserting link');
+          }
+        }
+      }
+    }
+  };
+
+  const handleLinkClick = () => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const selected = selection.toString();
+      setSelectedText(selected);
+      setLinkText(selected);
+      setLinkModalVisible(true);
+    }
+  };
+
+  const handleClearFormatting = () => {
+    const editor = editorRef.current;
+    if (editor) {
+      const selection = window.getSelection();
+      if (selection.rangeCount === 0) {
+        message.warning('Please select some text to clear formatting');
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      const selectedText = range.toString();
+      
+      if (!selectedText) {
+        message.warning('Please select some text to clear formatting');
+        return;
+      }
+
+      try {
+        const textNode = document.createTextNode(selectedText);
+        range.deleteContents();
+        range.insertNode(textNode);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        updateFormValue();
+        message.success('Formatting cleared successfully');
+      } catch (error) {
+        console.error('Error clearing formatting:', error);
+        message.error('Error clearing formatting');
+      }
+    }
+  };
+
+  const updateFormValue = () => {
+    if (editorRef.current && onChange) {
+      const htmlContent = editorRef.current.innerHTML;
+      onChange(htmlContent);
+    }
+  };
+
+  const handleInput = () => {
+    updateFormValue();
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+    updateFormValue();
+  };
+
+  const handleKeyDown = (e) => {
+    // Keyboard shortcut for clear formatting: Ctrl+Shift+N
+    if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+      e.preventDefault();
+      handleClearFormatting();
+    }
+  };
+
+  // Update editor content when value changes externally
+  useEffect(() => {
+    if (editorRef.current && value !== editorRef.current.innerHTML) {
+      editorRef.current.innerHTML = value || '';
+    }
+  }, [value]);
+
+  const getCharacterCount = () => {
+    if (editorRef.current) {
+      return editorRef.current.textContent?.length || 0;
+    }
+    return 0;
+  };
+
+  return (
+    <div className="rich-text-editor">
+      {/* Formatting Toolbar */}
+      <div className="flex gap-1 p-2 border border-gray-300 border-b-0 bg-gray-50 rounded-t-lg">
+        <button
+          type="button"
+          onClick={() => handleFormat('bold')}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Bold"
+        >
+          <Bold size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleFormat('italic')}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Italic"
+        >
+          <Italic size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleFormat('underline')}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Underline"
+        >
+          <Underline size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={handleLinkClick}
+          className="p-2 hover:bg-gray-200 rounded transition-colors"
+          title="Insert Link"
+        >
+          <Link size={16} />
+        </button>
+        <div className="w-px h-8 bg-gray-300 mx-1"></div>
+        <button
+          type="button"
+          onClick={handleClearFormatting}
+          className="p-2 hover:bg-gray-200 rounded transition-colors text-gray-600"
+          title="Clear Formatting (Ctrl+Shift+N)"
+        >
+          <Type size={16} />
+        </button>
+      </div>
+
+      {/* ContentEditable Editor */}
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleInput}
+        onPaste={handlePaste}
+        onKeyDown={handleKeyDown}
+        className="min-h-[100px] p-3 border border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        style={{ 
+          minHeight: `${rows * 24}px`,
+        }}
+        data-placeholder={placeholder}
+        suppressContentEditableWarning={true}
+      />
+      
+      {/* Placeholder CSS */}
+      <style>{`
+        .rich-text-editor [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+        }
+        .rich-text-editor [contenteditable]:focus:before {
+          content: none;
+        }
+      `}</style>
+
+      {/* Character Count */}
+      {showCount && (
+        <div className="text-right text-xs text-gray-500 mt-1">
+          {getCharacterCount()} characters
+        </div>
+      )}
+
+      {/* Link Modal */}
+      <Modal
+        title="Insert Link"
+        open={linkModalVisible}
+        onOk={handleLinkInsert}
+        onCancel={() => {
+          setLinkModalVisible(false);
+          setLinkUrl('');
+          setLinkText('');
+          setSelectedText('');
+        }}
+        okText="Insert Link"
+        cancelText="Cancel"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Link Text
+            </label>
+            <Input
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              placeholder="Enter link text"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              URL
+            </label>
+            <Input
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://example.com"
+            />
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
 
 const PlaceKSA = () => {
   const [places, setPlaces] = useState([]);
@@ -253,7 +583,9 @@ const PlaceKSA = () => {
   const updateImageTitle = (index, title, isExisting = false) => {
     if (isExisting) {
       const updated = [...existingImages];
-      updated[index] = { ...updated[index], title };
+      const currentImage = updated[index];
+      const imageUrl = getImageUrl(currentImage);
+      updated[index] = { url: imageUrl, title };
       setExistingImages(updated);
     } else {
       setImageTitles((prev) => ({ ...prev, [index]: title }));
@@ -406,11 +738,10 @@ const PlaceKSA = () => {
 
       // Prepare existing images with titles
       let imageObjects = existingImages.map((img, index) => {
-        if (typeof img === 'string') {
-          return { url: img, title: '' };
-        }
-        return { url: img.url || img, title: img.title || '' };
-      });
+        const url = getImageUrl(img);
+        const title = getImageTitle(img);
+        return { url, title };
+      }).filter(img => img.url);
 
       // Upload multiple images if they exist and combine with titles
       if (uploadedFiles.images && uploadedFiles.images.length > 0) {
@@ -469,13 +800,18 @@ const PlaceKSA = () => {
         title: values.title?.trim() || "",
         titleMalayalam: values.titleMalayalam?.trim() || "",
         titleUrdu: values.titleUrdu?.trim() || "",
-        description: values.description?.trim() || "",
-        descriptionMalayalam: values.descriptionMalayalam?.trim() || "",
-        descriptionUrdu: values.descriptionUrdu?.trim() || "",
+        description: values.description || "", // Don't trim - may contain HTML
+        descriptionMalayalam: values.descriptionMalayalam || "", // Don't trim - may contain HTML
+        descriptionUrdu: values.descriptionUrdu || "", // Don't trim - may contain HTML
         images: imageObjects,
         videos: videoObjects,
         coverImage: coverImageUrl,
         map: values.map?.trim() || "", // Map link
+        location: {
+          lat: values.latitude || null,
+          lng: values.longitude || null,
+        },
+        tips: values.tips || "", // Don't trim - may contain HTML
         locationRef: values.locationRef || null,
       };
 
@@ -852,30 +1188,6 @@ const PlaceKSA = () => {
     setViewModalVisible(true);
   };
 
-  // Truncate text with read more functionality
-  const TruncatedText = ({ text, maxLength = 100, className = "" }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    if (!text || text.length <= maxLength) {
-      return <span className={className}>{text || "-"}</span>;
-    }
-
-    return (
-      <div className={className}>
-        <span>{isExpanded ? text : `${text.substring(0, maxLength)}...`}</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded(!isExpanded);
-          }}
-          className="ml-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          {isExpanded ? "Read Less" : "Read More"}
-        </button>
-      </div>
-    );
-  };
-
   // Table columns configuration
   const placeColumns = [
     {
@@ -1003,11 +1315,11 @@ const PlaceKSA = () => {
             onClick={() => {
               setEditingId(row._id);
               
-              // Handle images - convert to objects if needed
-              let recordImages = row.images || [];
-              if (recordImages.length > 0 && typeof recordImages[0] === 'string') {
-                recordImages = recordImages.map(url => ({ url, title: '' }));
-              }
+              // Handle images - convert to proper format
+              let recordImages = (row.images || []).map(img => ({
+                url: getImageUrl(img),
+                title: getImageTitle(img)
+              })).filter(img => img.url);
               
               // Handle videos - convert to array if needed
               let recordVideos = row.videos || [];
@@ -1052,6 +1364,9 @@ const PlaceKSA = () => {
                 descriptionUrdu: row.descriptionUrdu || "",
                 images: recordImages,
                 map: row.map || "",
+                latitude: row.location?.lat || null,
+                longitude: row.location?.lng || null,
+                tips: row.tips || "",
                 locationRef: row.locationRef?._id || undefined,
               });
 
@@ -1079,6 +1394,15 @@ const PlaceKSA = () => {
 
   return (
     <div>
+      {/* CSS for rich text formatting display */}
+      <style>{`
+        .rich-text-display strong { font-weight: 700; }
+        .rich-text-display em { font-style: italic; }
+        .rich-text-display u { text-decoration: underline; }
+        .rich-text-display a { color: #2563eb; text-decoration: underline; }
+        .rich-text-display a:hover { color: #1d4ed8; }
+      `}</style>
+      
       <Sidebar isOpen={sidebarOpen} className="hidden md:block w-64" />
       <Navbar
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -1766,6 +2090,21 @@ const PlaceKSA = () => {
                         </div>
                       </div>
                     )}
+                    {(selectedPlace.location?.lat || selectedPlace.location?.lng) && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Location Coordinates
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded border text-sm">
+                          {selectedPlace.location?.lat && (
+                            <div>Latitude: {selectedPlace.location.lat}</div>
+                          )}
+                          {selectedPlace.location?.lng && (
+                            <div>Longitude: {selectedPlace.location.lng}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1781,10 +2120,12 @@ const PlaceKSA = () => {
                       Description (English)
                     </label>
                     <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
-                      <TruncatedText
-                        text={selectedPlace.description}
-                        maxLength={200}
-                        className="text-gray-700 leading-relaxed"
+                      <div
+                        dangerouslySetInnerHTML={{ __html: selectedPlace.description || "—" }}
+                        className="text-gray-700 leading-relaxed rich-text-display"
+                        style={{ 
+                          wordBreak: 'break-word'
+                        }}
                       />
                     </div>
                   </div>
@@ -1793,10 +2134,12 @@ const PlaceKSA = () => {
                       Description (Malayalam)
                     </label>
                     <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
-                      <TruncatedText
-                        text={selectedPlace.descriptionMalayalam}
-                        maxLength={200}
-                        className="text-gray-700 leading-relaxed"
+                      <div
+                        dangerouslySetInnerHTML={{ __html: selectedPlace.descriptionMalayalam || "—" }}
+                        className="text-gray-700 leading-relaxed rich-text-display"
+                        style={{ 
+                          wordBreak: 'break-word'
+                        }}
                       />
                     </div>
                   </div>
@@ -1805,15 +2148,36 @@ const PlaceKSA = () => {
                       Description (Urdu)
                     </label>
                     <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
-                      <TruncatedText
-                        text={selectedPlace.descriptionUrdu}
-                        maxLength={200}
-                        className="text-gray-700 leading-relaxed"
+                      <div
+                        dangerouslySetInnerHTML={{ __html: selectedPlace.descriptionUrdu || "—" }}
+                        className="text-gray-700 leading-relaxed rich-text-display"
+                        style={{ 
+                          wordBreak: 'break-word',
+                          direction: 'rtl'
+                        }}
                       />
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Tips Section */}
+              {selectedPlace.tips && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Tips & Deep Description
+                  </h3>
+                  <div className="p-3 bg-gray-50 rounded border text-sm min-h-[60px]">
+                    <div
+                      dangerouslySetInnerHTML={{ __html: selectedPlace.tips }}
+                      className="text-gray-700 leading-relaxed rich-text-display"
+                      style={{ 
+                        wordBreak: 'break-word'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Images Gallery */}
               {selectedPlace.images && selectedPlace.images.length > 0 && (
@@ -1823,22 +2187,28 @@ const PlaceKSA = () => {
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {selectedPlace.images.map((image, index) => {
-                      const imageUrl = typeof image === 'string' ? image : image.url;
-                      const imageTitle = typeof image === 'string' ? '' : (image.title || '');
+                      const imageUrl = getImageUrl(image);
+                      const imageTitle = getImageTitle(image);
+                      if (!imageUrl) return null;
                       return (
-                        <div key={index} className="relative group">
+                        <div key={`view-image-${index}`} className="relative group">
                           <div className="aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-100">
                             <img
                               src={imageUrl}
                               alt={imageTitle || `Place image ${index + 1}`}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                               onError={(e) => {
+                                console.error('Image load error:', imageUrl);
                                 e.target.style.display = "none";
-                                e.target.nextSibling.style.display = "flex";
+                                const sibling = e.target.nextElementSibling;
+                                if (sibling) {
+                                  sibling.style.display = "flex";
+                                }
                               }}
                             />
-                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                              Image {index + 1}
+                            <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100 flex-col">
+                              <div>Image {index + 1}</div>
+                              <div className="text-red-500 text-xs mt-1">Failed to load</div>
                             </div>
                           </div>
                           <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
@@ -1927,10 +2297,10 @@ const PlaceKSA = () => {
             </Row>
 
             <Form.Item name="description" label="Description (English)">
-              <TextArea
-                rows={2}
+              <RichTextEditor
+                rows={3}
                 placeholder="Enter a detailed description of the place in English..."
-                showCount
+                showCount={true}
               />
             </Form.Item>
             <Form.Item
@@ -1944,14 +2314,18 @@ const PlaceKSA = () => {
                 { min: 1, message: "Malayalam description cannot be empty" },
               ]}
             >
-              <TextArea
-                rows={2}
+              <RichTextEditor
+                rows={3}
                 placeholder="Enter description in Malayalam..."
+                showCount={true}
               />
             </Form.Item>
             <Form.Item name="descriptionUrdu" label="Description (Urdu)">
-              <TextArea rows={2} className="mt-1 block w-full border border-gray-300 rounded-md p-2 placeholder:text-left " placeholder="Enter description in Urdu" dir="rtl" 
-                  style={{ textAlign: 'right' }} />
+              <RichTextEditor
+                rows={3}
+                placeholder="Enter description in Urdu"
+                showCount={true}
+              />
             </Form.Item>
 
             {/* Cover Image Upload */}
@@ -2146,8 +2520,9 @@ const PlaceKSA = () => {
                         {editingId &&
                           existingImages &&
                           existingImages.map((image, index) => {
-                            const imageUrl = typeof image === 'string' ? image : image.url;
-                            const currentTitle = typeof image === 'string' ? '' : (image.title || '');
+                            const imageUrl = getImageUrl(image);
+                            const currentTitle = getImageTitle(image);
+                            if (!imageUrl) return null;
                             return (
                               <div key={`existing-${index}`} className="flex gap-2 items-start">
                                 <div className="relative group flex-shrink-0">
@@ -2157,12 +2532,17 @@ const PlaceKSA = () => {
                                       alt={`Existing ${index + 1}`}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
+                                        console.error('Error loading existing image:', imageUrl);
                                         e.target.style.display = "none";
-                                        e.target.nextSibling.style.display = "flex";
+                                        const sibling = e.target.nextElementSibling;
+                                        if (sibling) {
+                                          sibling.style.display = "flex";
+                                        }
                                       }}
                                     />
-                                    <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100">
-                                      IMG
+                                    <div className="w-full h-full hidden items-center justify-center text-xs text-gray-500 bg-gray-100 flex-col gap-1">
+                                      <span>IMG</span>
+                                      <span className="text-red-500 text-[10px]">Error</span>
                                     </div>
                                     <div className="absolute top-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-br">
                                       E{index + 1}
@@ -2315,6 +2695,55 @@ const PlaceKSA = () => {
               <Input
                 placeholder="https://maps.google.com/... or any map URL"
                 addonBefore="🗺️"
+              />
+            </Form.Item>
+
+            {/* Location Coordinates */}
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="latitude"
+                  label="Latitude"
+                  help="Enter the latitude coordinate (e.g., 21.4225)"
+                >
+                  <InputNumber
+                    placeholder="e.g., 21.4225"
+                    style={{ width: '100%' }}
+                    step={0.000001}
+                    precision={6}
+                    min={-90}
+                    max={90}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="longitude"
+                  label="Longitude"
+                  help="Enter the longitude coordinate (e.g., 39.8262)"
+                >
+                  <InputNumber
+                    placeholder="e.g., 39.8262"
+                    style={{ width: '100%' }}
+                    step={0.000001}
+                    precision={6}
+                    min={-180}
+                    max={180}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            {/* Tips Field with Rich Text Editor */}
+            <Form.Item
+              name="tips"
+              label="Tips & Deep Description"
+              help="Add detailed tips, advice, or additional information about this place"
+            >
+              <RichTextEditor
+                rows={6}
+                placeholder="Enter detailed tips, advice, or additional information about this place..."
+                showCount={true}
               />
             </Form.Item>
 
